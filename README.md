@@ -1,7 +1,7 @@
 JsonX4 (Json eXtended version 4)
 =================
 
-JsonX3 is a Delphi Json to Objects, Objects to Json parser. It is fast (1M/s Ops), light still simple to use
+JsonX4 is a Delphi Json to Objects, Objects to Json parser. It is fast (1M/s Ops), light still simple to use
 It supports Delphi 10.3 to 12.2 on all the platforms. And, of course, 100% of the json format is supported...
 
 - This project is sponsored by EA4D "Ebay Api 4 Delphi" (https://www.ea4d.com)
@@ -18,7 +18,7 @@ Example : using primitives (Demo01)
 
 ```Delphi
 
-  TPrimitives = class(TJX3Object)
+  TPrimitives = class(TJ4Object)
     Str:   TValue; // As Str
     Bool: TValue; // As Bool
     Num:  TValue; // as Int64
@@ -63,7 +63,7 @@ end;
 
 TInnerObjectDemo = class(TJX4Object)
   S: TValue;
-  SubClass: TSubClassDemo; // a class TJX3Object
+  SubClass: TSubClassDemo; // a class TJX4Object
 end;
 
 ```
@@ -80,7 +80,7 @@ Example : using arrays and dictionaries (Demo03)
 -
 It's where JX4 excel ! You can create any complex types
 ```Delphi
-  TObjectDemo = class(TJX3Object)
+  TObjectDemo = class(TJX4Object)
     Str:  TValue;
     Keys: TJX4ValList;                                // an array(List) of strings : TArray<of any primitives>
     Nums: TJX4ValDict;                                // An dictionary of any primitives (<string, number>)  *JSON allows only strings as key
@@ -105,7 +105,7 @@ JX4 is able to handle any type of Objects as long as they implement 4 mandatory 
   private
     FIsManaged: Boolean;
   public
-    procedure JSONCreate(AManaged: Boolean); // After the constructor being called, JX3 will tell the object if it is managed
+    procedure JSONCreate(AManaged: Boolean); // After the constructor being called, JX4 will tell the object if it is managed
     function  JSONDestroy: Boolean; // see Demo04
     function  JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
     procedure JSONDeserialize(AIOBlock: TJX4IOBlock);
@@ -116,10 +116,10 @@ JX4 is able to handle any type of Objects as long as they implement 4 mandatory 
 ```
 
 ```Delphi
-  TDemoContainer = class(TJX3Object)
+  TDemoContainer = class(TJX4Object)
   public
     StringList : TJSONableStringList; // Creation and destruction will be handle automatically
-    [JX3Unmanaged]
+    [JX4Unmanaged]
     StringListNotManaged : TJSONableStringList; // NOT MANAGED : You HAVE to take care of the Creation/Destruction of this Object;
   end;                                          // It will still be serialized/deserialized and created if necessary (clone for ex.)
 
@@ -138,18 +138,17 @@ JX4 is able to handle any type of Objects as long as they implement 4 mandatory 
 Example : Attributes and Options (Demo05)
 -
 ```Delphi
-  TDemo = class(TJX3Object)
-    [JS3Required]
-    Str:     TJX3Str;                   // A value is required when serializing (Exception)
-    [JX3Name('#href')]                 
-    HrefVar: TJX3Str;                   // a JSON field name to be read/write from/to the Json file as HrefVar.
-    [JX3Default('22')]                  // a default value to be used during deserialization if the field is null
-    Num1:    TJX3Num;
-    __23href2: TJX3Str;                 // name encoding :  __23href = #hef  ('_'+'_'+Hex('#')+'href')
-                                        // instead of usin JX3Name attribute you may use this inline encoding, it is usefull for code generators like OpenAPI 
-    [JX3Default('true')]                // functions NameEncode in uJX3OBject...
-    [JX3Name('NewMix')]
-    Mix: TJX3Bool;                      // Using NewMix as JSON field name with a default value of True;
+  TDemo = class(TJX4Object)
+    [TJX4Required]
+    Str:     TValue;                     // A value is required when serializing (Exception)
+    [TJX4Name('#href')]                  // a name of the matching json name
+    HrefVar: TValue;                     // a name of the json value mapped to "Bool"
+    [TJX4Default('22')]                  // a defualt value to be used at deserialization, if the field is null
+    Num1:    TValue;
+    __23href2: TValue;                   // name encoding :  __23href = #hef    ('_'+'_'+Hex('#')+'href')
+    [TJX4Default('true')]                //                                       ^-- Header
+    [TJX4Name('NewMix')]
+    Mix: TValue;
   end;
 ```
 ```Json
@@ -168,7 +167,7 @@ As simple as that :
     answer:   TValue;
   end;
 
-  TGame = class(TJX3Object)
+  TGame = class(TJX4Object)
     quiz: TJX4Dic<TJX4Dic<TQuestion>>;   // << Double dictionaries
   end;
 
@@ -200,23 +199,21 @@ Example : Parse an Array as payload (Demo07)
 Example : Large JSON, Benchmark.
 -
 In this example we read, serialize, clone (RTTI/Meerging), deserialize and finally save a large ebay's aspects json file (around 1M json fields)
-You will be able to benchmark and compare the output generated json file 'jsx3.json' vs 'aspects100.json' the original ebay's on. (please note that you should enable $DEFINE JX3SPEEDUP in uTJX2Object.pas for large file caching...)  :
-
+You will be able to benchmark and compare the output generated json file 'jsx4.json' vs 'aspects100.json' the original ebay's on.
 ```
-
 Loading ebay's Aspects json file :
   Stream size: 14,358.14 KB
 ==> 14 ms
 
-Convert Json String to JSX3 Objects (Deserialize):
+Convert Json String to JSX4 Objects (Deserialize):
 ==> 1405 ms
 ==> 10,219.32 KB/s
 
-JSX3 Object Cloning (by RTTI):
+JSX4 Object Cloning (by RTTI):
 ==> 1164 ms
 ==> 12,324.59 KB/s
 
-JSX3 Object Cloning (by Merging):
+JSX4 Object Cloning (by Merging):
 ==> 1265 ms
 ==> 11,350.31 KB/s
 
@@ -227,7 +224,7 @@ Revert JX4 Objects to Json String (Serialize)):
 Free Json Objects :
   Freed in 860 ms
 
-Saving Cloned Json file (jsx3.json) :
+Saving Cloned Json file (jsx4.json) :
   Stream size: 14,358.14 KB
 ==> 13 ms
 
