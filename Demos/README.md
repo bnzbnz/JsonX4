@@ -1,4 +1,4 @@
-JsonX3 (Json eXtended version 3)
+JsonX4 (Json eXtended version 4)
 =================
 
 JsonX3 is a Delphi Json to Objects, Objects to Json parser. It is fast (1M/s Ops), light still simple to use
@@ -9,7 +9,7 @@ It supports Delphi 10.3 to 12.2 on all the platforms. And, of course, 100% of th
 
 How to install
 --------------
-1. Clone the JsonX3 repository
+1. Clone the uJsonX4 repository
 2. Add the the unit from the JsonX3/JsonX3 folder to your project.
 
 Usage
@@ -19,14 +19,14 @@ Example : using primitives (Demo01)
 ```Delphi
 
   TPrimitives = class(TJX3Object)
-    Str:   TJX3Str;
-    Bool: TJX3Bool;
-    Num:  TJX3Num; // as Int64
+    Str:   TValue; // As Str
+    Bool: TValue; // As Bool
+    Num:  TValue; // as Int64
   end;
 
   Primitives.Str.Value := 'testing 😜';
-  Primitives.Bool.V := True;        // V being a shortcut for "Value"
-  Primitives.Num.Int64 := -99;
+  Primitives.Bool := True;        // V being a shortcut for "Value"
+  Primitives.Num := -99;
 ```
   JX3 will take care of all owned objects (Constructor/Destrutor), for exmaple 'Primitives.Str" is created and will be destroyed automatically (or pooled) , you don't have take care of it!
 ```Delphi
