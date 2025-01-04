@@ -10,7 +10,7 @@ It supports Delphi 10.3 to 12.2 on all the platforms. And, of course, 100% of th
 How to install
 --------------
 1. Clone the uJsonX4 repository
-2. Add the the unit from the JsonX3/JsonX3 folder to your project.
+2. Add the the units from the JsonX4/uJsonX4 folder to your project.
 
 Usage
 -----
@@ -56,59 +56,62 @@ Result =
 Example : using inner classes (Demo02) 
 ```Delphi
 
-TSubClassDemo = class(TJX3Object)
-  X: TJX3Num;
+TSubClassDemo = class(TJX4Object)
+  X: TValue;
+  PClass: TPrimitives
 end;
 
-TInnerObjectDemo = class(TJX3Object)
-  S: TJX3Str;
-  NullStr: TJX3Str;
-  SubClass: TSubClassDemo; // a class
+TInnerObjectDemo = class(TJX4Object)
+  S: TValue;
+  SubClass: TSubClassDemo; // a class TJX3Object
 end;
 
 ```
 ```Delphi
-  Json := TJX3Object.ToJson(Demo, [joNullToEmpty]);  // Remove null fields
+  Json := Demo.ToJson([joNullToEmpty]); // Remove null fields
 ```
 ```Json
    {"S":"~~😃~~","SubClass":{"X":222}}
 ```
 Obviously you may deserialize the Json string to an TInnerObjectDemo Object.
-Again, JX3 will create the inner classes for you. An inner class can containt any number of sub inner classes...
+Again, JX4 will create the inner classes for you. An inner class may contains any number of sub inner classes...
 
 Example : using arrays and dictionaries (Demo03)
 -
-It's where JX3 excel ! You can create any complex types
+It's where JX4 excel ! You can create any complex types
 ```Delphi
   TObjectDemo = class(TJX3Object)
-    S: TJX3Str;
-    X: TJX3List<TJX3Str>;                         // an array(List) of strings : TArray<string>
-    Y: TJX3Dic<TJX3Num>;                          // An dictionary of Numbers (<string, number>)  *JSON allows only strings as key
-    Z: TJX3List<TPrimitives>;                     // A list of TPrimitives
-    Q: TJX3List<TJX3List<TJX3Str>>;               // A list of string Lists
-    W: TJX3List<TJX3Dic<TJX3List<TPrimitives>>>;  // ouch ! A List of dictionaries of TPrimitives Objects Lists !!!
+    Str:  TValue;
+    Keys: TJX4ValList;                                // an array(List) of strings : TArray<of any primitives>
+    Nums: TJX4ValDict;                                // An dictionary of any primitives (<string, number>)  *JSON allows only strings as key
+    Primitives: TJX4List<TPrimitive>;                 // A list of TPrimitives (object)
+    SLists: TJX4List<TJX4ValList>;                    // A list of primitive Lists
+    PDicList: TJX4List<TJX4Dic<TJX4List<TPrimitive>>>;// ouch ! A List of dictionaries of TPrimitives Objects Lists !!!
   end;
 ```
-Please note that JX3 uses TLists instead of arrays, TList being way easier to use.
+Please note that JX4 uses TLists instead of arrays, TList being way easier to use.
 Filled with value, serializing this (joNullToEmpty), will give you ;
 ```Json
-
-{"S":"~~😃~~","X":["@@@@","EEZZ","OOOO"],"Y":{"Value1":1111,"Value4":4444,"Value2":2222,"Value3":3333},"Z":[{"Bool":true,"e":111},{"Bool":false,"e":333}],"Q":[["TTT","OOO"],["UUU","III"]],"W":[{"DicVal1":[{"Str":"Boolean1","Bool":true}],"DicVal2":[{"Str":"Boolean3","Bool":true}]},{"DicVal1":[{"Str":"Boolean1","Bool":true}],"DicVal2":[{"Str":"Boolean3","Bool":true}]}]}
+{"Str":"~~😃~~","Keys":["Q W E R T Y","A Z E R T Y"],"Nums":{"Double":33.33,"Currency":44.44,"Int64":2222,"Int":1111},"Primitives":[{"Bool":true,"I":111},{"Bool":false,"Dble":333.33}],"SLists":[["TTT","OOO"],["XXX","YYY","ZZZ"]],"PDicList":[{"DicVal1":[{"Str":"Boolean1","Bool":true}],"DicVal2":[{"Str":"Boolean2","Bool":true}]},{"DicVal1":[{"Str":"Boolean1","Bool":true}],"DicVal2":[{"Str":"Boolean2","Bool":true}]}]}
 ```
-This is perfectly deserializable back to a TObjectDemo Object! You may validate this json string at : https://jsonformatter.org/json-parser
+This is perfectly deserializable back to a TObjectDemo Object. You may validate this json string at : https://jsonformatter.org/json-parser
 
 -----
 Example : mapping any type of Objects for JSON serialization/deserialization (Demo04)
-JX3 is able to handle any type of Objects as long as they implement 4 mandatory public methods
+-
+JX4 is able to handle any type of Objects as long as they implement 4 mandatory public methods, without any inheritence...
 ```Delphi
   TJSONableStringList = class(TStringList)  // A SringList to be parsed.
   private
     FIsManaged: Boolean;
   public
-    procedure   JSONCreate(AManaged: Boolean); // After the constructor being called, JX3 will tell the object if it is managed
-    function    JSONSerialize(AInfoBlock: TJX3InfoBlock; AInOutBlock: TJX3InOutBlock): TValue; // see Demo04
-    procedure   JSONDeserialize(AInfoBlock: TJX3InfoBlock; AInOutBlock: TJX3InOutBlock); // see Demo04
-    function    JSONDestroy: Boolean // Return the previous manage flag from JSONCreate;
+    procedure JSONCreate(AManaged: Boolean); // After the constructor being called, JX3 will tell the object if it is managed
+    function  JSONDestroy: Boolean; // see Demo04
+    function  JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
+    procedure JSONDeserialize(AIOBlock: TJX4IOBlock);
+    // Optionals
+    procedure JSONClone(ADestObj: TObject; AOptions: TJX4Options);
+    function  JSONMerge(AMergedWith: TStringList; AOptions: TJX4Options): TValue;
   end;
 ```
 
@@ -134,7 +137,6 @@ JX3 is able to handle any type of Objects as long as they implement 4 mandatory 
 
 Example : Attributes and Options (Demo05)
 -
-It's where JX3 excel ! You can create any complex types
 ```Delphi
   TDemo = class(TJX3Object)
     [JS3Required]
@@ -160,14 +162,14 @@ Extract from : https://github.com/dmjio/json-test/blob/master/example.json
 As simple as that :
 ```Delphi
 
-  TQuestion = class(TJX3Object)
-    question: TJX3Str;
-    options:  TJX3List<TJX3Str>;
-    answer:   TJX3Str;
+  TQuestion = class(TJ43Object)
+    question: TValue;
+    options:  TJX4ValList;
+    answer:   TValue;
   end;
 
   TGame = class(TJX3Object)
-    quiz: TJX3Dic<TJX3Dic<TQuestion>>;   // << Double dictionaries
+    quiz: TJX4Dic<TJX4Dic<TQuestion>>;   // << Double dictionaries
   end;
 
   var GameStr :=
@@ -178,8 +180,8 @@ As simple as that :
     "q2":{"question":"12 - 8 = ?","options":["1","2","3","4"],"answer":"4"}}}}
     ''';
 
-  var Game := TJX3Object.FromJSON<TGame>(GameStr);         // Get the Object from Json
-  Memo1.Text := TJX3.FormatJSON(  TJX3.ToJSON(Game) );     // Get the Json from the Object, and print the formated result
+  var Game := TJX4Object.FromJSON<TGame>(GameStr);               // Get the Object from Json
+  Memo1.Text := TJX4Object.Format( TJX4Object.ToJSON(Game) );    // Get the Json from the Object, and print the formated result
 
   Memo1.Lines.Add('');
   Memo1.Lines.Add('Questions - Options :');
@@ -203,29 +205,31 @@ You will be able to benchmark and compare the output generated json file 'jsx3.j
 ```
 
 Loading ebay's Aspects json file :
-  Stream size: 14358 KB
+  Stream size: 14,358.14 KB
+==> 14 ms
 
 Convert Json String to JSX3 Objects (Deserialize):
-==> 918196 ops in 916 ms
-==> 1002397 /s
+==> 1405 ms
+==> 10,219.32 KB/s
 
-JSX3 Object Cloning (RTTI):
-==> 918196 ops in 912 ms
-==> 1006793 /s
+JSX3 Object Cloning (by RTTI):
+==> 1164 ms
+==> 12,324.59 KB/s
 
-JSX3 Object Cloning (Merging):
-==> 918196 ops in 907 ms
-==> 1012343 /s
+JSX3 Object Cloning (by Merging):
+==> 1265 ms
+==> 11,350.31 KB/s
 
-Revert JSX3 Objects to Json String (Serialize)):
-==> 918196 ops in 692 ms
-==> 1326872 /s
+Revert JX4 Objects to Json String (Serialize)):
+==> 1129 ms
+==> 12,706.32 KB/s
 
-Free Json Object :
-  Freed in 206 ms
+Free Json Objects :
+  Freed in 860 ms
 
 Saving Cloned Json file (jsx3.json) :
-  Stream size: 14358 KB
+  Stream size: 14,358.14 KB
+==> 13 ms
 
 ```
 
