@@ -317,7 +317,7 @@ begin
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 
   Memo1.Lines.add( '' );
-  Memo1.Lines.add( 'Convert Json String to JSX3 Objects (Deserialize):' );
+  Memo1.Lines.add( 'Convert Json String to JSX4 Objects (Deserialize):' );
   LWatch := TStopWatch.StartNew;
   LGitHubExtract := TJX4Object.FromJSON<TGitHubExtract>(LJsonStr, [ joStats, joRaiseException] );
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));

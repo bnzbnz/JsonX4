@@ -198,7 +198,6 @@
         </DCCReference>
         <DCCReference Include="..\..\uJsonX4\uJX4Dict.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4List.pas"/>
-        <DCCReference Include="..\..\uJsonX4\uJX4MiniPool.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Object.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <BuildConfiguration Include="Base">

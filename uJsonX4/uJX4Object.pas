@@ -210,14 +210,13 @@ var
   VInt64:         Int64;
   VBool:          Boolean;
 begin
-  Self := TValue.Empty;
   LJPair := AIOBlock.JObj.Pairs[0];
   if (Assigned(LJPair)) and (not LJPair.null) and (not (LJPair.JsonValue is TJSONNull)) then
   begin
     if LJPair.JsonValue.Value.IsEmpty then
     begin
       LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-      if Assigned(LAttr) then LValue := TJX4Default(LAttr).Value else Self := TValue.Empty;
+      if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := TValue.Empty;
     end
     else if LJPair.JsonValue.ClassType = TJSONString then Self := LJPair.JsonValue.Value
     else if LJPair.JsonValue.ClassType = TJSONBool then Self := StrToBool(LJPair.JsonValue.Value)
@@ -225,8 +224,11 @@ begin
     begin
       if TryStrToInt64(LJPair.JsonValue.ToString, VInt64) then  Self := VInt64
       else if TryStrToFloat(LJPair.JsonValue.ToString, VExt) then Self := VExt
-    end;
-  end;
+      else Self := TValue.Empty;
+    end
+    else Self := TValue.Empty;
+  end
+  else Self := TValue.Empty;
 end;
 
 function TJX4TValueHelper.JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;

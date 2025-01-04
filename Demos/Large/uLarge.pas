@@ -161,7 +161,7 @@ begin
     Memo1.Lines.add( '' );
     LWatch := TStopWatch.StartNew;
     Memo1.Lines.add( 'Saving Cloned Json file (jsx3.json) :' );
-  LJSize := TJX4Object.SaveToFile( 'jsx3.json', LJsonStr, TEncoding.UTF8);
+  LJSize := TJX4Object.SaveToFile( 'jsx4.json', LJsonStr, TEncoding.UTF8);
     Memo1.Lines.add( Format( '  Stream size: %n KB', [ (LJSize / 1024) ] ));
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   end;
