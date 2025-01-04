@@ -55,7 +55,7 @@ var
 begin
   Memo1.Lines.Clear;
 
-  // PLease note that JSX3 owns all objects !
+  // PLease note that JSX4 owns all objects !
   // It handles construction and destruction of them for you...
   // You may add any number of inner/classes.
 

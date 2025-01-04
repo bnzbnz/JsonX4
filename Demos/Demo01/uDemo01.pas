@@ -55,7 +55,7 @@ begin
 
   Primitives := TPrimitives.Create;
   Primitives.Str := 'testing 😜';
-  Primitives.Bool := True;        // V being a shortcut for "Value"
+  Primitives.Bool := True;
 
   Primitives.Num1 := -999;
   Primitives.Num2 := 999;
@@ -63,12 +63,10 @@ begin
   Primitives.Num4 := 22.22;
   Primitives.NullStr := Nil;
 
-  NewPrimitives := Primitives.Clone<TPrimitives>;
   // Raw Json
   Json := NewPrimitives.ToJson([]);
   Memo1.lines.add('Raw Original Object:');
   Memo1.lines.add(Json);
-  NewPrimitives.Free;
 
   //Optimized Json
   Memo1.lines.add('');
@@ -77,7 +75,7 @@ begin
   Memo1.lines.add(Json);
 
   // Converting back to a Primitives Object;
-  NewPrimitives := TJX4Object.FromJSON<TPrimitives>(Json, []);
+  NewPrimitives := TJX4Object.FromJSON<TPrimitives>(Json);
 
   // Serializing the New Object
   Memo1.lines.add('');
