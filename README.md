@@ -24,26 +24,33 @@ Example : using primitives (Demo01)
     Num:  TValue; // as Int64
   end;
 
-  Primitives.Str.Value := 'testing 😜';
-  Primitives.Bool := True;        // V being a shortcut for "Value"
-  Primitives.Num := -99;
+  Primitives := TPrimitives.Create;
+  Primitives.Str := 'testing 😜';
+  Primitives.Bool := True;
+
+  Primitives.Num1 := -999;
+  Primitives.Num2 := 999;
+  Primitives.Num3 := 2.2;
+  Primitives.Num4 := 22.22;
+  Primitives.NullStr := Nil;
+
 ```
-  JX3 will take care of all owned objects (Constructor/Destrutor), for exmaple 'Primitives.Str" is created and will be destroyed automatically (or pooled) , you don't have take care of it!
+  JX4 will take care of all owned objects (Constructor/Destrutor), for exmaple 'Primitives.Str" is created and will be destroyed automatically (or pooled) , you don't have take care of it!
 ```Delphi
-   Json := TJX3Object.ToJson(Primitives, []); // Serialization
+   Json := Primitives.ToJson([]); // Serialization
 ```
 ```Json
 {"Str":"testing 😜","Bool":true,"Num":-99}
 ```
 ```Delphi
-  DeserPrim :=  TJX3Object.FromJSON<TPrimitives>(Json, []);  // Deserialization
+   NewPrimitives := TJX4Object.FromJSON<TPrimitives>(Json);
  ```
   By deserializing from the Json string we made a copy of the TPrimtive object
 ```Delphi
 Result =
-  DeserPrim.Str.Value ==> 'testing 😜';
-  DeserPrim.Bool.V ==> True;       
-  DeserPrim.Num.Int64 ==> -99;
+  DeserPrim.Str.AsString ==> 'testing 😜';
+  DeserPrim.Bool.AsBoolean ==> True;       
+  DeserPrim.Num.AsOrdinal ==> -99;
 ```
 -----
 Example : using inner classes (Demo02) 
