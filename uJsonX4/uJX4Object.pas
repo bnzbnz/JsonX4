@@ -33,6 +33,7 @@ uses
   ;
 
 const
+  cUJX4Version = 010000; // 01.00.00
   cBoolToStr: array[Boolean] of string = ('false','true');
   
 type
@@ -254,10 +255,8 @@ procedure TJX4TValueHelper.JSONDeserialize(AIOBlock: TJX4IOBlock);
 var
   LJPair:         TJSONPair;
   LAttr:          TCustomAttribute;
-  LValue:         string;
   VExt:           Extended;
   VInt64:         Int64;
-  VBool:          Boolean;
 begin
   LJPair := AIOBlock.JObj.Pairs[0];
   if (Assigned(LJPair)) and (not LJPair.null) and (not (LJPair.JsonValue is TJSONNull)) then
@@ -781,7 +780,6 @@ var
   LMgrValue:  TValue;
   LSrcObj:    TObject;
   LMrgObj:    TObject;
-  LTValue:    TValue;
 begin
   for LSrcField in TxRTTI.GetFields(Self) do
   begin
