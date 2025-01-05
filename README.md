@@ -9,8 +9,8 @@ It supports Delphi 10.3 to 12.2 on all the platforms. And, of course, 100% of th
 
 How to install
 --------------
-1. Clone the uJsonX4 repository
-2. Add the the units from the JsonX4/uJsonX4 folder to your project.
+1. Clone the JsonX4 repository
+2. Add the units from the JsonX4/uJsonX4 folder to your project.
 
 Usage
 -----
