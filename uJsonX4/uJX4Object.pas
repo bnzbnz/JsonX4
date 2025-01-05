@@ -20,7 +20,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-*****************************************************************************)
+******************************************************************************)
 unit uJX4Object;
 
 interface
@@ -85,6 +85,10 @@ type
     procedure   JSONDeserialize(AIOBlock: TJX4IOBlock);
     function    JSONClone(AOptions: TJX4Options = []): TValue;
     function    JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
+
+    //Conversion Tools
+    function    BKiBMiB: string;
+    function    Per100(Decimal: Integer = 2): string;
   end;
 
   TJX4Object = class(TObject)
@@ -122,6 +126,51 @@ uses
     System.TypInfo
   , Classes
   ;
+
+function TJX4TValueHelper.BKiBMiB: string;
+var
+  x: Double;
+begin
+    Result := '0 B';
+    x := Self.AsInt64;
+    if x < 0 then
+    begin
+      Result := 'N/A';
+      Exit;
+    end else
+    if (x / 1099511627776 >= 1) then
+    begin
+      Result := Format('%.2f', [x / 1099511627776 ])+ ' TiB';
+      Exit;
+    end else
+
+    if (x / (1024 * 1024 * 1024) >= 1) then
+    begin
+      Result := Format('%.2f', [x /(1024 * 1024 * 1024)] )+ ' GiB';
+      Exit;
+    end else
+    if (x / (1024 * 1024)>= 1) then
+    begin
+      Result := Format('%.2f', [x /(1024 * 1024)] )+ ' MiB';
+      Exit;
+    end else
+    if (x / (1024)) >= 1 then
+    begin
+      Result := Format('%.2f', [x /(1024)] )+ ' KiB';
+    end else begin
+      Result := Format('%.0f', [x] )+ ' B';
+    end;
+end;
+
+function TJX4TValueHelper.Per100(Decimal: Integer): string;
+var
+  x: double;
+begin
+    Result := '0 %';
+    x := Self.AsExtended;
+    if x < 0 then Exit;
+    Result := Format('%.' + Decimal.ToString + 'f', [x * 100] ) + ' %';
+end;
 
 constructor TJX4Name.Create(const AName: string);
 begin

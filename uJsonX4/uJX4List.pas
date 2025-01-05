@@ -20,7 +20,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-*****************************************************************************)
+******************************************************************************)
 unit uJX4List;
 
 interface
@@ -34,6 +34,9 @@ uses
 type
 
   TJX4ListOfValues  = class(TList<TValue>)
+  private
+    FAdded:    TList<TValue>;
+    FDeleted:  TList<TValue>;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -51,6 +54,8 @@ type
     function        Clone(AOptions: TJX4Options = []): TJX4ListOfValues;
     procedure       Merge(AMergedWith: TJX4ListOfValues; AOptions: TJX4Options = []);
 
+    property        EleAdded:    TList<TValue> read FAdded;
+    property        EleDeleted:  TList<TValue> read FDeleted;
   end;
 
   TJX4ValList = class(TJX4ListOfValues);
@@ -99,10 +104,14 @@ uses
 constructor TJX4ListOfValues.Create;
 begin
   inherited Create;
+  FAdded :=  TList<TValue>.Create;
+  FDeleted := TList<TValue>.Create;
 end;
 
 destructor TJX4ListOfValues.Destroy;
 begin
+  FreeAndNil(FAdded);
+  FreeAndNil(FDeleted);
   inherited Destroy;
 end;
 
@@ -524,14 +533,27 @@ var
   end;
 
 begin
+
+  if (jmoStats in AOptions) then
+  begin
+    FAdded.Clear;
+    FDeleted.Clear;
+  end;
+
   if AMergedWith.Count = 0  then Exit;
   for LEle in AMergedWith do
   begin
     LIdx :=  BinIndexOf(LEle);
     if (jmoAdd in AOptions)  and (LIdx = -1)  then
-      Self.Add(LEle)
+    begin
+      if (jmoStats in AOptions) then FAdded.Add(LEle);
+      Self.Add(LEle);
+    end
     else if (jmoDelete in AOptions)  and (LIdx <> -1)  then
+    begin
+      if (jmoStats in AOptions) then FDeleted.Add(Self[LIdx]);
       Self.Delete(LIdx);
+    end;
   end;
 end;
 
