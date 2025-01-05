@@ -1,4 +1,4 @@
-JsonX4 (Json eXtended version 4)
+Delphi JsonX4 (Json eXtended version 4)
 =================
 
 JsonX4 is a Delphi Json to Objects, Objects to Json parser. It is fast (1M/s Ops), light still simple to use
