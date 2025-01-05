@@ -5,12 +5,13 @@ JsonX4 is a Delphi Json to Objects, Objects to Json parser. It is fast (1M/s Ops
 It supports Delphi 10.3 to 12.2 on all the platforms. And, of course, 100% of the json format is supported...
 
 - This project is sponsored by EA4D "Ebay Api 4 Delphi" (https://www.ea4d.com)
+- Projetcs using JsonX4 : qBit4DelphiV2 https://github.com/bnzbnz/qBit4DelphiV2 a qbittorent API for Delphi.
 - Contact : Laurent MEYER JsonX4@lmeyer.fr
 
 How to install
 --------------
-1. Clone the uJsonX4 repository
-2. Add the the units from the JsonX4/uJsonX4 folder to your project.
+1. Clone the JsonX4 repository
+2. Add the units from the JsonX4/uJsonX4 folder to your project.
 
 Usage
 -----
