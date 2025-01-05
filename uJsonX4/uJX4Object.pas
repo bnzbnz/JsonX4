@@ -81,7 +81,16 @@ type
 
   TJX4TValueHelper = record helper for TValue
   private
+    function  GetISO8601: TDateTime;
+    function  GetISO8601Utc: TDateTime;
+    procedure SetISO8601(const AValue: TDateTime);
+    procedure SetISO8601Utc(const AValue: TDateTime);
+    function  GetTimestamp: TDateTime;
+    procedure SetTimestamp(const AValue: TDateTime);
+    function  GetTimestampUtc: TDateTime;
+    procedure SetTimestampUtc(const AValue: TDateTime);
   public
+  
     function    JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
     procedure   JSONDeserialize(AIOBlock: TJX4IOBlock);
     function    JSONClone(AOptions: TJX4Options = []): TValue;
@@ -90,6 +99,10 @@ type
     //Conversion Tools
     function    BKiBMiB: string;
     function    Per100(Decimal: Integer = 2): string;
+    property    ISO8601:    TDateTime read GetISO8601 write SetISO8601;
+    property    ISO8601Utc: TDateTime read GetISO8601Utc write SetISO8601Utc;
+    property    Timestamp: TDateTime read GetTimestamp write SetTimestamp;
+    property    TimestampUtc: TDateTime read GetTimestampUtc write SetTimestampUtc;
   end;
 
   TJX4Object = class(TObject)
@@ -124,53 +137,94 @@ type
 
 implementation
 uses
-    System.TypInfo
+    TypInfo
   , Classes
+  , DateUtils
   ;
 
 function TJX4TValueHelper.BKiBMiB: string;
 var
-  x: Double;
+  x: Extended;
 begin
-    Result := '0 B';
-    x := Self.AsInt64;
-    if x < 0 then
-    begin
-      Result := 'N/A';
-      Exit;
-    end else
-    if (x / 1099511627776 >= 1) then
-    begin
-      Result := Format('%.2f', [x / 1099511627776 ])+ ' TiB';
-      Exit;
-    end else
+  Result := '0 B';
+  x := Self.AsInt64;
+  if x < 0 then
+  begin
+    Result := 'N/A';
+    Exit;
+  end else
+  if (x / 1099511627776 >= 1) then
+  begin
+    Result := Format('%.2f', [x / 1099511627776 ])+ ' TiB';
+    Exit;
+  end else
 
-    if (x / (1024 * 1024 * 1024) >= 1) then
-    begin
-      Result := Format('%.2f', [x /(1024 * 1024 * 1024)] )+ ' GiB';
-      Exit;
-    end else
-    if (x / (1024 * 1024)>= 1) then
-    begin
-      Result := Format('%.2f', [x /(1024 * 1024)] )+ ' MiB';
-      Exit;
-    end else
-    if (x / (1024)) >= 1 then
-    begin
-      Result := Format('%.2f', [x /(1024)] )+ ' KiB';
-    end else begin
-      Result := Format('%.0f', [x] )+ ' B';
-    end;
+  if (x / (1024 * 1024 * 1024) >= 1) then
+  begin
+    Result := Format('%.2f', [x /(1024 * 1024 * 1024)] )+ ' GiB';
+    Exit;
+  end else
+  if (x / (1024 * 1024)>= 1) then
+  begin
+    Result := Format('%.2f', [x /(1024 * 1024)] )+ ' MiB';
+    Exit;
+  end else
+  if (x / (1024)) >= 1 then
+  begin
+    Result := Format('%.2f', [x /(1024)] )+ ' KiB';
+  end else begin
+    Result := Format('%.0f', [x] )+ ' B';
+  end;
 end;
 
 function TJX4TValueHelper.Per100(Decimal: Integer): string;
 var
   x: double;
 begin
-    Result := '0 %';
-    x := Self.AsExtended;
-    if x < 0 then Exit;
-    Result := Format('%.' + Decimal.ToString + 'f', [x * 100] ) + ' %';
+  Result := '0 %';
+  x := Self.AsExtended;
+  if x < 0 then Exit;
+  Result := Format('%.' + Decimal.ToString + 'f', [x * 100] ) + ' %';
+end;
+
+procedure TJX4TValueHelper.SetISO8601(const AValue: TDateTime);
+begin
+  Self := DateToISO8601(AValue, False);  
+end;
+
+procedure TJX4TValueHelper.SetISO8601Utc(const AValue: TDateTime);
+begin
+  Self := DateToISO8601(AValue, True);
+end;
+
+procedure TJX4TValueHelper.SetTimestamp(const AValue: TDateTime);
+begin
+  Self := DateTimeToUnix(AValue, False);
+end;
+
+procedure TJX4TValueHelper.SetTimestampUtc(const AValue: TDateTime);
+begin
+  Self := DateTimeToUnix(AValue, True);
+end;
+
+function TJX4TValueHelper.GetISO8601: TDateTime;
+begin
+  Result := ISO8601ToDate(Self.AsString, False);
+end;
+
+function TJX4TValueHelper.GetISO8601Utc: TDateTime;
+begin
+  Result := ISO8601ToDate(Self.AsString, True);
+end;
+
+function TJX4TValueHelper.GetTimestamp: TDateTime;
+begin
+  Result := UnixToDateTime(Self.AsInt64, False);
+end;
+
+function TJX4TValueHelper.GetTimestampUtc: TDateTime;
+begin
+  Result := UnixToDateTime(Self.AsInt64, True);
 end;
 
 constructor TJX4Name.Create(const AName: string);
