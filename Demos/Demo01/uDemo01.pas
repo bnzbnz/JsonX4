@@ -64,7 +64,7 @@ begin
   Primitives.NullStr := Nil;
 
   // Raw Json
-  Json := NewPrimitives.ToJson([]);
+  Json := Primitives.ToJson([]);
   Memo1.lines.add('Raw Original Object:');
   Memo1.lines.add(Json);
 

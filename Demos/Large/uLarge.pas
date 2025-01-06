@@ -124,7 +124,7 @@ begin
     LWatch := TStopWatch.StartNew;
   LJObj := TJX4Object.FromJSON<TfetchItemAspectsContentType>(LJsonStr, [ joRaiseException] );
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
-    Memo1.Lines.add(Format('==> %n KB/s', [(LJSize / 1024) / (LWatch.ElapsedMilliseconds / 1000)]));
+    Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
 
 
     Memo1.Lines.add( '' );
@@ -132,7 +132,7 @@ begin
     LWatch := TStopWatch.StartNew;
   LJObjClone := LJObj.Clone<TfetchItemAspectsContentType>;
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
-    Memo1.Lines.add(Format('==> %n KB/s', [(LJSize / 1024) / (LWatch.ElapsedMilliseconds / 1000)]));
+    Memo1.Lines.add(Format('==> %n MB/s', [(LJSize /  (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
 
 
     Memo1.Lines.add( '' );
@@ -141,14 +141,14 @@ begin
     LWatch := TStopWatch.StartNew;
   LJObjMerge.Merge(LJObjClone, [ jmoAdd ]);
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
-    Memo1.Lines.add(Format('==> %n KB/s', [(LJSize / 1024) / (LWatch.ElapsedMilliseconds / 1000)]));
+    Memo1.Lines.add(Format('==> %n KM/s', [(LJSize /  (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
 
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'Revert JX4 Objects to Json String (Serialize)):' );
     LWatch := TStopWatch.StartNew;
   LJsonStr := LJObj.ToJson([ joNullToEmpty] );
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
-    Memo1.Lines.add(Format('==> %n KB/s', [(LJSize / 1024) / (LWatch.ElapsedMilliseconds / 1000)]));
+    Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
 
     Memo1.Lines.add( '' );
     LWatch := TStopWatch.StartNew;

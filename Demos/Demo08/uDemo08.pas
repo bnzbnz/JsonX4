@@ -313,7 +313,7 @@ begin
   LWatch := TStopWatch.StartNew;
   Memo1.Lines.add( 'Loading GitHub json file :' );
   LJSize := TJX4Object.LoadFromFile('GitHubExtract.json', LJsonStr, TEncoding.UTF8);
-  Memo1.Lines.add( Format( '  Stream size: %n KB', [ (LJSize / 1024) ] ));
+  Memo1.Lines.add( Format( '  Stream size: %n MB', [ (LJSize / 1024000) ] ));
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 
   Memo1.Lines.add( '' );
@@ -321,7 +321,14 @@ begin
   LWatch := TStopWatch.StartNew;
   LGitHubExtract := TJX4Object.FromJSON<TGitHubExtract>(LJsonStr, [ joStats, joRaiseException] );
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
-  Memo1.Lines.add(Format('==> %n KB/s', [(LJSize / 1024) / (LWatch.ElapsedMilliseconds / 1000)]));
+  Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
+
+  Memo1.Lines.add( '' );
+  Memo1.Lines.add( 'Convert JSX4 Objects to Json String (Serialize):' );
+  LWatch := TStopWatch.StartNew;
+  LGitHubExtract.ToJSON();
+  Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+  Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
 
   Memo1.Lines.add( '' );
   Memo1.Lines.Add(Format('Projects: %d', [LGitHubExtract.GitHub.Count]));
