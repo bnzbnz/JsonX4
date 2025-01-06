@@ -35,6 +35,7 @@ uses
 
 type
   TxRTTI = class abstract
+    class function  GetPropsList(Instance: Pointer; ObjectClass: TClass): TDictionary<string, variant>;
     class function  GetField(AObj: TObject; AField: string): TRTTIFIeld;
     class function  GetFields(aObj: TObject): TArray<TRTTIField>; static;
     class function  GetProps(aObj: TObject): TArray<TRTTIProperty>; static;
@@ -78,6 +79,20 @@ uses
     StrUtils
   , Sysutils
   ;
+
+class function TxRTTI.GetPropsList(Instance: Pointer; ObjectClass: TClass): TDictionary<string, variant>;
+begin
+  Result := TDictionary<string, variant>.Create;
+  var AValue: TValue;
+     for var AField in TxRtti.GetFields(Instance) do
+  begin
+     if (AField.FieldType.TypeKind in [tkRecord])
+      and (AField.FieldType.Handle = TypeInfo(TValue))
+      and (AField.GetValue(Instance).TryAsType<TValue>(AValue))
+   then
+      Result.Add(AField.Name, AValue.AsVariant);
+  end;
+end;
 
 class function TxRTTI.FieldIsTValue(AField: TRttiField; AVisibilities: TMemberVisibilities): Boolean;
 begin
