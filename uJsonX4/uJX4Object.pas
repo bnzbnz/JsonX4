@@ -134,6 +134,8 @@ type
 
  end;
  TJX4Obj = TJX4Object;
+ TJX4    = TJX4Object;
+
 
 implementation
 uses
@@ -256,14 +258,20 @@ var
   LValue: string;
   LAttr:  TCustomAttribute;
 begin
-  Result := TValue.Empty;
+  Result := Nil;
 
   case Self.Kind of
     tkChar, tkString, tkWChar, tkLString, tkWString, tkUString:
       LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString) + '"';
     tkEnumeration: LValue := cBoolToStr[Self.AsBoolean];
     tkInteger, tkInt64: LValue := Self.AsInt64.ToString;
-    tkFloat:  LValue := Self.AsExtended.ToString;
+    tkFloat:
+      begin
+        if  Self.AsExtended.ToString.IndexOf('.') = -1 then
+          LValue := Self.AsExtended.ToString +'.0'
+        else
+          LValue := Self.AsExtended.ToString;
+      end;
   else
     if joNullToEmpty in AIOBlock.Options then Exit;
   end;
@@ -309,28 +317,26 @@ procedure TJX4TValueHelper.JSONDeserialize(AIOBlock: TJX4IOBlock);
 var
   LJPair:         TJSONPair;
   LAttr:          TCustomAttribute;
-  VExt:           Extended;
-  VInt64:         Int64;
 begin
+  Self := Nil;
   LJPair := AIOBlock.JObj.Pairs[0];
   if (Assigned(LJPair)) and (not LJPair.null) and (not (LJPair.JsonValue is TJSONNull)) then
   begin
     if LJPair.JsonValue.Value.IsEmpty then
     begin
       LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-      if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := TValue.Empty;
+      if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
     end
     else if LJPair.JsonValue.ClassType = TJSONString then Self := LJPair.JsonValue.Value
     else if LJPair.JsonValue.ClassType = TJSONBool then Self := StrToBool(LJPair.JsonValue.Value)
     else if LJPair.JsonValue.ClassType = TJSONNumber then
     begin
-      if TryStrToInt64(LJPair.JsonValue.ToString, VInt64) then  Self := VInt64
-      else if TryStrToFloat(LJPair.JsonValue.ToString, VExt) then Self := VExt
-      else Self := TValue.Empty;
-    end
-    else Self := TValue.Empty;
-  end
-  else Self := TValue.Empty;
+        if LJPair.JsonValue.ToString.IndexOf('.') = -1 then
+          Self := TJSONNumber(LJPair.JsonValue).AsInt64
+        else
+          Self := TJSONNumber(LJPair.JsonValue).AsDouble;
+    end;
+  end;
 end;
 
 function TJX4TValueHelper.JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
