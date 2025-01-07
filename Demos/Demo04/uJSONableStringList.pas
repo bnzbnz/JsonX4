@@ -50,7 +50,7 @@ begin
     TJX4Object.EscapeJSONStr(LStr); // String escape to JSON Format
     LArr.Add(LStr);
   end;
-  Result := Format('"%s":%s', [AIOBlock.FieldName, LArr.ToJSON]) ;
+  Result := Format('"%s":%s', [AIOBlock.JsonName, LArr.ToJSON]) ;
   LArr.Free;
 end;
 

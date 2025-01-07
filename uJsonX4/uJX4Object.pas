@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************)
 unit uJX4Object;
+{$HINTS OFF}
 
 interface
 uses
@@ -71,12 +72,12 @@ type
   TJX4IOBlock = class
     // In
     JObj:       TJSONObject;
-    FieldName:  string;
+    JsonName:   string;
     Field:      TRttiField;
     Options:    TJX4Options;
     // Out
-    constructor Create(AFieldName: string = ''; AJObj: TJSONObject = Nil; AField: TRttiField = Nil; AOptions: TJX4Options = []);
-    procedure   Init(AFieldName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
+    constructor Create(AJsonName: string = ''; AJObj: TJSONObject = Nil; AField: TRttiField = Nil; AOptions: TJX4Options = []);
+    procedure   Init(AJsonName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
   end;
 
   TJX4TValueHelper = record helper for TValue
@@ -239,15 +240,15 @@ begin
   Value := AValue;
 end;
 
-constructor TJX4IOBlock.Create(AFieldName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
+constructor TJX4IOBlock.Create(AJsonName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
 begin
-  Init(AFieldName, AJObj, AField, AOptions);
+  Init(AJsonName, AJObj, AField, AOptions);
 end;
 
-procedure TJX4IOBlock.Init(AFieldName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
+procedure TJX4IOBlock.Init(AJsonName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
 begin
   JObj :=       AJObj;
-  FieldName :=  AFieldName;
+  JsonName :=   AJsonName;
   Field :=      AField;
   Options :=    AOptions;
 end;
@@ -259,7 +260,6 @@ var
   LAttr:  TCustomAttribute;
 begin
   Result := Nil;
-
   case Self.Kind of
     tkChar, tkString, tkWChar, tkLString, tkWString, tkUString:
       LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString) + '"';
@@ -268,7 +268,7 @@ begin
     tkFloat:
       begin
         if  Self.AsExtended.ToString.IndexOf('.') = -1 then
-          LValue := Self.AsExtended.ToString +'.0'
+          LValue := Self.AsExtended.ToString + '.0'
         else
           LValue := Self.AsExtended.ToString;
       end;
@@ -282,7 +282,7 @@ begin
     LAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));
     if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
   end else
-    LName := AIOBlock.FieldName;
+    LName := AIOBlock.JsonName;
   LName := TJX4Object.NameDecode(LName);
 
   if Self.IsEmpty then
@@ -307,7 +307,7 @@ begin
     end;
   end;
 
-  if Assigned(AIOBlock) and AIOBlock.FieldName.IsEmpty then
+  if Assigned(AIOBlock) and AIOBlock.JsonName.IsEmpty then
     Result := LValue
   else
     Result := '"' + LName + '":' + LValue;
@@ -320,22 +320,29 @@ var
 begin
   Self := Nil;
   LJPair := AIOBlock.JObj.Pairs[0];
-  if (Assigned(LJPair)) and (not LJPair.null) and (not (LJPair.JsonValue is TJSONNull)) then
+  if not(Assigned(LJPair) and  (not LJPair.null) and not (LJPair.JsonValue is TJSONNull) and not (LJPair.JsonValue.Value.IsEmpty)) then
   begin
-    if LJPair.JsonValue.Value.IsEmpty then
-    begin
-      LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-      if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
-    end
-    else if LJPair.JsonValue.ClassType = TJSONString then Self := LJPair.JsonValue.Value
-    else if LJPair.JsonValue.ClassType = TJSONBool then Self := StrToBool(LJPair.JsonValue.Value)
-    else if LJPair.JsonValue.ClassType = TJSONNumber then
-    begin
-        if LJPair.JsonValue.ToString.IndexOf('.') = -1 then
-          Self := TJSONNumber(LJPair.JsonValue).AsInt64
-        else
-          Self := TJSONNumber(LJPair.JsonValue).AsDouble;
-    end;
+    LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
+    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := Nil;
+    Exit;
+  end;
+
+  if LJPair.JsonValue.Value.IsEmpty then
+  begin
+    LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
+    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
+  end
+  else if LJPair.JsonValue.ClassType = TJSONString then Self := LJPair.JsonValue.Value
+  else if LJPair.JsonValue.ClassType = TJSONBool then Self := StrToBool(LJPair.JsonValue.Value)
+  else if LJPair.JsonValue.ClassType = TJSONNumber then
+  begin
+      if LJPair.JsonValue.ToString.IndexOf('.') = -1 then
+        Self := TJSONNumber(LJPair.JsonValue).AsInt64
+      else
+        Self := TJSONNumber(LJPair.JsonValue).AsDouble;
+  end else begin
+    LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
+    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := Nil;
   end;
 end;
 
@@ -432,6 +439,7 @@ var
   LIOBlock:   TJX4IOBlock;
   LObj:       TOBject;
   LTValue:    TValue;
+  LTValueRec: TValue;
 begin
   Result := TValue.Empty;
 
@@ -453,24 +461,27 @@ begin
       end
       else if TxRTTI.FieldAsTValue(Self, LField, LTValue, [mvPublic]) then
       begin
-        LIOBlock.Init(LField.Name, Nil, LField, AIOBlock.Options);
-        LTValue := LTValue.JSONSerialize(LIOBlock);
-        if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
+        if not ((joNullToEmpty in AIOBlock.Options) and LTValue.IsEmpty) then
+        begin
+          LIOBlock.Init(LField.Name, Nil, LField, AIOBlock.Options);
+          LTValueRec := LTValue.JSONSerialize(LIOBlock);
+          if not LTValueRec.IsEmpty then LParts.Add(LTValueRec.AsString);
+        end;
       end;
     end;
-    
+
     LRes := JsonListToJsonString(LParts);
-    if not AIOBlock.FieldName.IsEmpty then
+    if not AIOBlock.JsonName.IsEmpty then
     begin
       if LRes.IsEmpty then
       begin
         if Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
-          raise Exception.Create(SysUtils.Format('"%s" (TJX3Object) : a value is required', [AIOBlock.FieldName]));
+          raise Exception.Create(SysUtils.Format('"%s" (TJX3Object) : a value is required', [AIOBlock.JsonName]));
 
         if joNullToEmpty in AIOBlock.Options then Exit;
-        Result := '"' + AIOBlock.FieldName + '":null';
+        Result := '"' + AIOBlock.JsonName + '":null';
       end else begin
-        Result := '"' + AIOBlock.FieldName + '":{' + LRes + '}';
+        Result := '"' + AIOBlock.JsonName + '":{' + LRes + '}';
       end;
     end
     else begin
@@ -557,20 +568,17 @@ begin
            LFieldFound := True;
            Break;
          end;
-        if Not LFieldFound then
-          raise Exception.Create(SysUtils.Format('Missing Property %s in class %s, from JOSN fields: %s%s', [LName, Self.ClassName, sLineBreak, LJPairList.Text]));
+        if not LFieldFound then
+          raise Exception.Create(SysUtils.Format('Missing Property %s in class %s, from JSON fields: %s%s', [LName, Self.ClassName, sLineBreak, LJPairList.Text]));
       end;
 
       LFieldFound := False;
       for LJPair in  AIOBlock.JObj do
       begin
-
         if LJPair.JsonValue is TJSONNull then Break;
-
         if LName = LJPair.JsonString.Value then
         begin
-
-          LFieldFound := True;  // ?? Hint: never used ?? WHY ??
+          LFieldFound := True;
 
           LJPair.Owned := False;
           LJPair.JsonString.Owned := False;

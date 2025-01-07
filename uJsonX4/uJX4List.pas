@@ -157,13 +157,13 @@ begin
       if LELe is TJSONObject then
       begin
         LJObj :=  LEle as TJSONObject;
-        LIOBlock.Init(AIOBlock.FieldName, LJObj, AIOBlock.Field, AIOBlock.Options);
+        LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
         LTValue.JSONDeserialize(LIOBlock);
         Add(LTValue);
       end else begin
         LEle.Owned := False;
         LJObj :=  TJSONObject.Create(TJSONPair.Create('', LEle));
-        LIOBlock.Init(AIOBlock.FieldName, LJObj, AIOBlock.Field, AIOBlock.Options);
+        LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
         LTValue.JSONDeserialize(LIOBlock);
         Add(LTValue);
         LJObj.Free;;
@@ -186,7 +186,7 @@ var
 begin
   Result := TValue.Empty;
 
-  LName := AIOBlock.FieldName;
+  LName := AIOBlock.JsonName;
   if Assigned(AIOBlock) and Assigned(AIOBlock.Field) then
   begin
     LNameAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));
@@ -360,7 +360,7 @@ begin
         TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
         Add(LNewObj);
         LJObj :=  LEle as TJSONObject;
-        LIOBlock.Init(AIOBlock.FieldName, LJObj, AIOBlock.Field, AIOBlock.Options);
+        LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
         TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ] );
       end else begin
         LNewObj := T.Create;
@@ -368,7 +368,7 @@ begin
         Add(LNewObj);
         LEle.Owned := False;
         LJObj :=  TJSONObject.Create(TJSONPair.Create('', LEle));
-        LIOBlock.Init(AIOBlock.FieldName, LJObj, AIOBlock.Field, AIOBlock.Options);
+        LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
         TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ] );
         LJObj.Free;;
         LEle.Owned := True;
@@ -406,7 +406,7 @@ var
   LTValue:    TValue;
 begin
   Result := TValue.Empty;
-  LName := AIOBlock.FieldName;
+  LName := AIOBlock.JsonName;
   if Assigned(AIOBlock) and Assigned(AIOBlock.Field) then
   begin
     LNameAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));

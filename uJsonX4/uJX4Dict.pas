@@ -139,7 +139,7 @@ begin
     LNameAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));
     if Assigned(LNameAttr) then LName := TJX4Name(LNameAttr).Name;
   end else
-    LName := AIOBlock.FieldName;
+    LName := AIOBlock.JsonName;
   LName := TJX4Object.NameDecode(LName);
 
   if Count = 0 then
@@ -149,7 +149,7 @@ begin
 
     if joNullToEmpty in AIOBlock.Options then Exit;
 
-    if AIOBlock.FieldName.IsEmpty then
+    if AIOBlock.JsonName.IsEmpty then
       Result := 'null'
     else
       Result := '"' + LName + '":null';
@@ -169,7 +169,7 @@ begin
   LRes := TJX4Object.JsonListToJsonString(LParts);
   LParts.Free;
 
-  if AIOBlock.FieldNAme.IsEmpty then
+  if AIOBlock.JsonName.IsEmpty then
     Result := '{' + LRes + '}'
   else
     Result := '"' + LName + '":{'+ LRes + '}';
@@ -215,7 +215,7 @@ begin
     end else
       LJObj := TJSONObject.Create(LPair);
 
-    LIOBlock.Init(AIOBlock.FieldName, LJObj, AIOBlock.Field, AIOBlock.Options);
+    LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
     LNewObj.JSONDeserialize(LIOBlock);
 
     if LJObjDestroy then FreeAndNil(LJObj);
@@ -311,7 +311,7 @@ begin
     LNameAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));
     if Assigned(LNameAttr) then LName := TJX4Name(LNameAttr).Name;
   end else
-    LName := AIOBlock.FieldName;
+    LName := AIOBlock.JsonName;
   LName := TJX4Object.NameDecode(LName);
 
   if Count = 0 then
@@ -321,7 +321,7 @@ begin
 
     if joNullToEmpty in AIOBlock.Options then Exit;
 
-    if AIOBlock.FieldName.IsEmpty then
+    if AIOBlock.JsonName.IsEmpty then
       Result := 'null'
     else
       Result := '"' + LName + '":null';
@@ -345,7 +345,7 @@ begin
   LRes := TJX4Object.JsonListToJsonString(LParts);
   LParts.Free;
 
-  if AIOBlock.FieldNAme.IsEmpty then
+  if AIOBlock.JsonName.IsEmpty then
     Result := '{' + LRes + '}'
   else
     Result := '"' + LName + '":{'+ LRes + '}';
@@ -399,7 +399,7 @@ begin
     end else
       LJObj := TJSONObject.Create(LPair);
 
-    LIOBlock.Init(AIOBlock.FieldName, LJObj, AIOBlock.Field, AIOBlock.Options);
+    LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
     TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ]);
 
     if LJObjDestroy then FreeAndNil(LJObj);
