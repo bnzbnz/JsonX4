@@ -64,7 +64,7 @@ begin
   var Ex7Clone := Ex7.Clone<TEx7>;                        // for the fun we clone Ex7... :)
   Ex7.Free;
 
-  Memo1.Text := TJX4Obj.Format( TJX4Obj.ToJSON(Ex7Clone, [joNullToEmpty]) );
+  Memo1.Text := TJX4Obj.FormatJSON( TJX4Obj.ToJSON(Ex7Clone, [joNullToEmpty]) );
 
   Ex7Clone.Free;
 end;

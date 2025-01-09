@@ -54,7 +54,7 @@ begin
 
   // TJX3 = TJX3Object
   var Game := TJX4Object.FromJSON<TGame>(GameStr);         // Get the Object from Json
-  Memo1.Text := TJX4Object.Format(  TJX4Object.ToJSON(Game) );     // Get the Json from the Object, and print the formated result
+  Memo1.Text := TJX4Object.FormatJSON(  TJX4Object.ToJSON(Game) );     // Get the Json from the Object, and print the formated result
 
   Memo1.Lines.Add('');
   Memo1.Lines.Add('Questions - Options :');
