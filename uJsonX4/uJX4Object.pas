@@ -80,6 +80,8 @@ type
     procedure   Init(AJsonName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
   end;
 
+  TJX4TValueKind = (tkvUnknown, tkvString, tkvBool, tkvInteger, tkvFloat);
+
   TJX4TValueHelper = record helper for TValue
   private
     function  GetISO8601: TDateTime;
@@ -90,6 +92,8 @@ type
     procedure SetTimestamp(const AValue: TDateTime);
     function  GetTimestampUtc: TDateTime;
     procedure SetTimestampUtc(const AValue: TDateTime);
+    function  GetDateTime: TDateTime;
+    procedure SetDateTime(const AValue: TDateTime);
   public
   
     function    JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
@@ -98,12 +102,19 @@ type
     function    JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
 
     //Conversion Tools
-    function    BKiBMiB: string;
-    function    Per100(Decimal: Integer = 2): string;
-    property    ISO8601:    TDateTime read GetISO8601 write SetISO8601;
-    property    ISO8601Utc: TDateTime read GetISO8601Utc write SetISO8601Utc;
-    property    Timestamp: TDateTime read GetTimestamp write SetTimestamp;
+    function    TypeKind:                         TJX4TValueKind;
+    function    ToBKiBMiB:                          string;
+    function    ToPercent(Decimal: Integer = 2):    string;
+    function    ToStrFloat(Decimal: Integer = 2):   string;
+    function    ToSecondsFromNow:                   string;
+    function    ToSecToDuration:                    string;
+    function    ToString:                           string;
+
+    property    ISO8601:      TDateTime read GetISO8601 write SetISO8601;
+    property    ISO8601Utc:   TDateTime read GetISO8601Utc write SetISO8601Utc;
+    property    Timestamp:    TDateTime read GetTimestamp write SetTimestamp;
     property    TimestampUtc: TDateTime read GetTimestampUtc write SetTimestampUtc;
+    property    DateTime :    TDateTime read GetDateTime write SetDateTime;
   end;
 
   TJX4Object = class(TObject)
@@ -129,7 +140,7 @@ type
     class procedure VarEscapeJSONStr(var AStr: string); overload; static;
     class function  EscapeJSONStr(const AStr: string): string; overload; static;
     class function  JsonListToJsonString(const AList: TList<string>): string; static;
-    class function  Format(const AJson: string; AIndentation: Integer = 2): string; static;
+    class function  FormatJSON(const AJson: string; AIndentation: Integer = 2): string; static;
     class function  LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding): Int64;
     class function  SaveToFile(const Filename: string; const AStr: string; AEncoding: TEncoding): Int64;
 
@@ -145,12 +156,36 @@ uses
   , DateUtils
   ;
 
-function TJX4TValueHelper.BKiBMiB: string;
+function TJX4TValueHelper.TypeKind: TJX4TValueKind;
+begin
+  case Self.Kind of
+    tkChar, tkString, tkWChar, tkLString, tkWString, tkUString: Result := tkvString;
+    tkEnumeration: Result := tkvBool;
+    tkInteger, tkInt64: Result := tkvInteger;
+    tkFloat:Result := tkvFloat;
+  else
+    Result := tkvUnknown;
+  end;
+end;
+
+function TJX4TValueHelper.ToString: String;
+begin
+  case self.TypeKind of
+    tkvString: Result := Self.AsString;
+    tkvBool: Result := cBoolToStr[Self.AsBoolean];
+    tkvInteger: Result := Self.AsInt64.toString;
+    tkvFloat: Result := Self.AsExtended.ToString;
+  else
+    Result := '';
+  end;
+end;
+
+function TJX4TValueHelper.ToBKiBMiB: string;
 var
   x: Extended;
 begin
   Result := '0 B';
-  x := Self.AsInt64;
+  if Self.TypeKind = tkvString then x := Self.AsString.ToInt64 else x := Self.AsInt64;
   if x < 0 then
   begin
     Result := 'N/A';
@@ -180,14 +215,56 @@ begin
   end;
 end;
 
-function TJX4TValueHelper.Per100(Decimal: Integer): string;
+function TJX4TValueHelper.ToSecToDuration: string;
 var
-  x: double;
+  Days, Hours, Mins, Secs: word;
+  totalsecs: Int64;
 begin
+  if Self.TypeKind = tkvString then totalsecs := Self.AsString.ToInt64 else totalsecs := Self.AsInt64;
+  days := totalsecs div SecsPerDay;
+  totalsecs := totalsecs mod SecsPerDay;
+  hours := totalsecs div SecsPerHour;
+  totalsecs := totalsecs mod SecsPerHour;
+  mins := totalsecs div SecsPerMin;
+  totalsecs := totalsecs mod SecsPerMin;
+  secs := totalsecs;
+  if days >0 then
+    Result := Result + days.ToString + 'd ';
+  Result := Result + hours.ToString + 'h ';
+  Result := Result + mins.ToString + 'm ';
+  if days = 0 then
+    Result := Result + secs.ToString + 's ';
+end;
+
+function TJX4TValueHelper.ToPercent(Decimal: Integer): string;
+var
+  x: Double;
+begin
+  if Self.TypeKind = tkvString then x := Self.AsString.ToDouble else x := Self.AsExtended;
   Result := '0 %';
-  x := Self.AsExtended;
   if x < 0 then Exit;
   Result := Format('%.' + Decimal.ToString + 'f', [x * 100] ) + ' %';
+end;
+
+function TJX4TValueHelper.ToSecondsFromNow: string;
+var
+  x: Int64;
+begin
+  if Self.TypeKind = tkvString then x := Self.AsString.ToInt64 else x := Self.AsInt64;
+  Result := DateTimeToStr(IncSecond(Now, x));
+end;
+
+function TJX4TValueHelper.ToStrFloat(Decimal: Integer): string;
+var
+  x: Double;
+begin
+  if Self.TypeKind = tkvString then x := Self.AsString.ToDouble else x := Self.AsExtended;
+  Result := Format('%.' + Decimal.ToString + 'f', [x ]);
+end;
+
+procedure TJX4TValueHelper.SetDateTime(const AValue: TDateTime);
+begin
+  Self := AValue;
 end;
 
 procedure TJX4TValueHelper.SetISO8601(const AValue: TDateTime);
@@ -210,6 +287,14 @@ begin
   Self := DateTimeToUnix(AValue, True);
 end;
 
+function TJX4TValueHelper.GetDateTime: TDateTime;
+var
+  x: Double;
+begin
+  if Self.TypeKind = tkvString then x := Self.AsString.ToDouble else x := Self.AsExtended;
+  Result := TDateTime(x);
+end;
+
 function TJX4TValueHelper.GetISO8601: TDateTime;
 begin
   Result := ISO8601ToDate(Self.AsString, False);
@@ -221,14 +306,21 @@ begin
 end;
 
 function TJX4TValueHelper.GetTimestamp: TDateTime;
+var
+  x: Int64;
 begin
-  Result := UnixToDateTime(Self.AsInt64, False);
+  if Self.TypeKind = tkvString then x := Self.AsString.ToInt64 else x := Self.AsInt64;
+  Result := UnixToDateTime(x, False);
 end;
 
 function TJX4TValueHelper.GetTimestampUtc: TDateTime;
+var
+  x: Int64;
 begin
+  if Self.TypeKind = tkvString then x := Self.AsString.ToInt64 else x := Self.AsInt64;
   Result := UnixToDateTime(Self.AsInt64, True);
 end;
+
 
 constructor TJX4Name.Create(const AName: string);
 begin
@@ -801,7 +893,7 @@ begin
   LSb.Free;
 end;
 
-class function TJX4Object.Format(const AJson: string; AIndentation: Integer): string;
+class function TJX4Object.FormatJSON(const AJson: string; AIndentation: Integer): string;
 var
   TmpJson: TJsonObject;
 begin
