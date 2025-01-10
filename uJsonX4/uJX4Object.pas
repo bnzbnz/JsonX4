@@ -367,8 +367,11 @@ var
   LAttr:  TCustomAttribute;
 begin
   Result := Nil;
-  LAttr := TJX4Excluded(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Excluded));
-  if Assigned(LAttr) then Exit;
+  if Assigned(AIOBlock.Field) then
+  begin
+    LAttr := TJX4Excluded(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Excluded));
+    if Assigned(LAttr) then Exit;
+  end;
   case Self.Kind of
     tkChar, tkString, tkWChar, tkLString, tkWString, tkUString:
       LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString) + '"';
@@ -428,8 +431,11 @@ var
   LAttr:          TCustomAttribute;
 begin
   Self := Nil;
-  LAttr := TJX4Excluded(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Excluded));
-  if Assigned(LAttr) then Exit;
+  if Assigned(AIOBlock.Field) then
+  begin
+    LAttr := TJX4Excluded(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Excluded));
+    if Assigned(LAttr) then Exit;
+  end;
   LJPair := AIOBlock.JObj.Pairs[0];
   if not(Assigned(LJPair) and  (not LJPair.null) and not (LJPair.JsonValue is TJSONNull) and not (LJPair.JsonValue.Value.IsEmpty)) then
   begin
