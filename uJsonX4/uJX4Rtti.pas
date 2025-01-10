@@ -31,7 +31,7 @@ uses
   , System.TypInfo
   ;
 
-{$DEFINE JX3RTTICACHE} // Highly recommended : 200% SpeedUp !
+{$DEFINE JX4RTTICACHE} // Highly recommended : 200% SpeedUp !
 
 type
   TxRTTI = class abstract
@@ -54,7 +54,7 @@ type
     class function  FieldAsTObject(ASelf: TObject; AField: TRttiField; var AObject: TObject; AVisibilities: TMemberVisibilities = [mvPublic]): Boolean;
   end;
 
-  {$IFDEF JX3RTTICACHE}
+  {$IFDEF JX4RTTICACHE}
 var
   _RTTIctx: TRttiContext;
   _RTTILock1: TCriticalSection;
@@ -159,7 +159,7 @@ begin
 end;
 
 class function TxRTTI.GetFields(aObj: TObject): TArray<TRTTIField>;
-{$IFDEF JX3RTTICACHE}
+{$IFDEF JX4RTTICACHE}
 var
   CType: TClass;
 begin
@@ -179,7 +179,7 @@ end;
 {$ENDIF}
 
 class function TxRTTI.GetProps(aObj: TObject): TArray<TRTTIProperty>;
-{$IFDEF JX3RTTICACHE}
+{$IFDEF JX4RTTICACHE}
 var
   CType: TClass;
 begin
@@ -199,7 +199,7 @@ end;
 {$ENDIF}
 
 class function TxRTTI.GetMethods(aObj: TObject): TArray<TRTTIMethod>;
-{$IFDEF JX3RTTICACHE}
+{$IFDEF JX4RTTICACHE}
 var
   CType: TClass;
 begin
@@ -219,7 +219,7 @@ end;
 {$ENDIF}
 
 class function TxRTTI.GetMethod(AObj: TObject; const AName: string): TRTTIMethod;
-{$IFDEF JX3RTTICACHE}
+{$IFDEF JX4RTTICACHE}
 var
   Lx: NativeInt;
 begin
@@ -240,7 +240,7 @@ end;
 
 
 class function TxRTTI.GetMethod(AInstance: TRttiInstanceType; const AName: string): TRTTIMethod;
-{$IFDEF JX3RTTICACHE}
+{$IFDEF JX4RTTICACHE}
 begin
   _RTTILock5.Enter;
   if not _RTTIInstMethsCacheDic.TryGetValue(AInstance, Result) then
@@ -278,7 +278,7 @@ begin
 end;
 
 class function TxRTTI.GetFieldInstance(Field: TRTTIField) : TRttiInstanceType;
-{$IFDEF JX3RTTICACHE}
+{$IFDEF JX4RTTICACHE}
 begin
   _RTTILock6.Enter;
   if not _RTTIInstCacheDic.TryGetValue(Field, Result) then
@@ -296,7 +296,7 @@ end;
 
 
 initialization
-{$IFDEF JX3RTTICACHE}
+{$IFDEF JX4RTTICACHE}
   _RTTIFieldsCacheDic := TDictionary<TClass, TArray<TRttiField>>.Create;
   _RTTIPropsCacheDic := TDictionary<TClass, TArray<TRttiProperty>>.Create;
   _RTTIMethsCacheDic := TDictionary<TClass, TArray<TRttiMEthod>>.Create;
@@ -311,7 +311,7 @@ initialization
   _RTTILock6 := TCriticalSection.Create;
 {$ENDIF}
 finalization
-{$IFDEF JX3RTTICACHE}
+{$IFDEF JX4RTTICACHE}
   _RTTILock6.Free;
   _RTTILock5.Free;
   _RTTILock4.Free;

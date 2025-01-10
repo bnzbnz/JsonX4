@@ -67,6 +67,8 @@ type
 
   TJX4Required = class(TCustomAttribute);
 
+  TJX4Excluded = class(TCustomAttribute);
+
   TJX4Unmanaged = class(TCustomAttribute);
   
   TJX4IOBlock = class
@@ -109,6 +111,7 @@ type
     function    ToSecondsFromNow:                   string;
     function    ToSecToDuration:                    string;
     function    ToString:                           string;
+    function    ToInteger:                          int64;
 
     property    ISO8601:      TDateTime read GetISO8601 write SetISO8601;
     property    ISO8601Utc:   TDateTime read GetISO8601Utc write SetISO8601Utc;
@@ -177,6 +180,18 @@ begin
     tkvFloat: Result := Self.AsExtended.ToString;
   else
     Result := '';
+  end;
+end;
+
+function TJX4TValueHelper.ToInteger: Int64;
+begin
+  case self.TypeKind of
+    tkvString: Result := Self.AsString.ToInt64;
+    tkvBool: Result := Self.AsBoolean.ToInteger;
+    tkvInteger: Result := Self.AsInt64;
+    tkvFloat: Result := Trunc(Self.AsExtended);
+  else
+    Result := 0;
   end;
 end;
 
@@ -352,6 +367,8 @@ var
   LAttr:  TCustomAttribute;
 begin
   Result := Nil;
+  LAttr := TJX4Excluded(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Excluded));
+  if Assigned(LAttr) then Exit;
   case Self.Kind of
     tkChar, tkString, tkWChar, tkLString, tkWString, tkUString:
       LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString) + '"';
@@ -411,6 +428,8 @@ var
   LAttr:          TCustomAttribute;
 begin
   Self := Nil;
+  LAttr := TJX4Excluded(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Excluded));
+  if Assigned(LAttr) then Exit;
   LJPair := AIOBlock.JObj.Pairs[0];
   if not(Assigned(LJPair) and  (not LJPair.null) and not (LJPair.JsonValue is TJSONNull) and not (LJPair.JsonValue.Value.IsEmpty)) then
   begin
