@@ -8,6 +8,11 @@ It supports Delphi 10.3 to 12.2 on all the platforms. And, of course, 100% of th
 - Projetcs using JsonX4 : qBit4DelphiV2 https://github.com/bnzbnz/qBit4DelphiV2 a qbittorent API for Delphi.
 - Contact : Laurent MEYER JsonX4@lmeyer.fr
 
+Projects using JsonX4
+--------------
+-  qBit4DelphiV2 https://github.com/bnzbnz/qBit4DelphiV2 a qbittorent API for Delphi.
+-  ConsoAPI (https://github.com/bnzbnz/ConsoAPI4Delphi) a Delphi API to get data from Enedis  (French)
+
 How to install
 --------------
 1. Clone the JsonX4 repository
