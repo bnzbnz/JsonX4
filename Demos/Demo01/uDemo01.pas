@@ -51,6 +51,8 @@ var
   Primitives, NewPrimitives: TPrimitives;
   Json: string;
 begin
+  caption := 'Version : ' + TJX4Object.GetVersionStr;
+
   Memo1.Lines.Clear;
 
   Primitives := TPrimitives.Create;
