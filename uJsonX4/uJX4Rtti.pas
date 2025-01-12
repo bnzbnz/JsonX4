@@ -36,8 +36,9 @@ uses
 type
   TxRTTI = class abstract
     class function  GetPropsList(Instance: Pointer; ObjectClass: TClass): TDictionary<string, variant>;
-    class function  GetField(AObj: TObject; AField: string): TRTTIFIeld;
-    class function  GetFields(aObj: TObject): TArray<TRTTIField>; static;
+    class function  GetField(AObj: TObject; AField: string): TRTTIFIeld; static;
+    class function  GetFields(aObj: TObject): TArray<TRTTIField>; overload;
+    class function  GetFields(AClass: TClass): TArray<TRttiField>; overload;
     class function  GetProps(aObj: TObject): TArray<TRTTIProperty>; static;
     class function  GetMethods(aObj: TObject): TArray<TRTTIMethod>; static;
     class function  GetMethod(aObj: TObject; const AName: string): TRTTIMethod; overload; static;
@@ -63,6 +64,7 @@ var
   _RTTILock4: TCriticalSection;
   _RTTILock5: TCriticalSection;
   _RTTILock6: TCriticalSection;
+  _RTTILock7: TCriticalSection;
   _RTTIFieldsCacheDic: TDictionary<TClass, TArray<TRttiField>>;
   _RTTIPropsCacheDic: TDictionary<TClass, TArray<TRTTIProperty>>;
   _RTTIMethsCacheDic: TDictionary<TClass, TArray<TRTTIMethod>>;
@@ -177,6 +179,26 @@ begin
   Result := _RTTIctx.GetType(aObj.ClassType).GetFields;
 end;
 {$ENDIF}
+
+class function TxRTTI.GetFields(AClass: TClass): TArray<TRTTIField>;
+{$IFDEF JX4RTTICACHE}
+var
+  CType: TClass;
+begin
+  _RTTILock7.Enter;
+  if not _RTTIFieldsCacheDic.TryGetValue(AClass, Result) then
+  begin
+    Result :=  _RTTIctx.GetType(AClass).GetFields;
+    _RTTIFieldsCacheDic.Add(AClass, Result);
+  end;
+    _RTTILock7.Leave;
+end;
+{$ELSE}
+begin
+  Result := _RTTIctx.GetType(AClass).GetFields;
+end;
+{$ENDIF}
+
 
 class function TxRTTI.GetProps(aObj: TObject): TArray<TRTTIProperty>;
 {$IFDEF JX4RTTICACHE}
@@ -294,7 +316,6 @@ begin
 end;
 {$ENDIF}
 
-
 initialization
 {$IFDEF JX4RTTICACHE}
   _RTTIFieldsCacheDic := TDictionary<TClass, TArray<TRttiField>>.Create;
@@ -309,9 +330,11 @@ initialization
   _RTTILock4 := TCriticalSection.Create;
   _RTTILock5 := TCriticalSection.Create;
   _RTTILock6 := TCriticalSection.Create;
+  _RTTILock7 := TCriticalSection.Create;
 {$ENDIF}
 finalization
 {$IFDEF JX4RTTICACHE}
+  _RTTILock7.Free;
   _RTTILock6.Free;
   _RTTILock5.Free;
   _RTTILock4.Free;
