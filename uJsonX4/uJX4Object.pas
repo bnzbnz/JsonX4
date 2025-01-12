@@ -34,7 +34,7 @@ uses
   ;
 
 const
-  cJX4Version = 01002; // 01.002
+  cJX4Version = $0102; // 01.02
   cBoolToStr: array[Boolean] of string = ('false','true');
   
 type
@@ -141,8 +141,8 @@ type
     procedure       Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
 
     // Utils
-    class function GetVersionStr: string; overload;
-    class function GetVersion:    Integer; overload;
+    class function  GetVersion: string;
+    class function  GetVersionValue: integer;
 
     class function  NameDecode(const ToDecode: string): string; static;
     class procedure VarEscapeJSONStr(var AStr: string); overload; static;
@@ -837,14 +837,18 @@ begin
   end;
 end;
 
-class function TJX4Object.GetVersion: Integer;
+class function TJX4Object.GetVersion: string;
 begin
-  Result := cJX4Version;
+  GetVersionValue;
+  Result := Format('%d.%0.2d', [
+              (cJX4Version and $FF00) shr 8,
+              (cJX4Version and $00FF)
+            ]);
 end;
 
-class function TJX4Object.GetVersionStr: string;
+class function TJX4Object.GetVersionValue: integer;
 begin
-  Result := Format('%4.3f', [GetVersion / 1000]);
+  Result := (((cJX4Version and $FF00) shr 8) * 100) + (cJX4Version and $00FF);
 end;
 
 class function TJX4Object.NameDecode(const ToDecode: string): string;
