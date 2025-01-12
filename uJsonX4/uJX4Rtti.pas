@@ -84,10 +84,11 @@ uses
   ;
 
 class function TxRTTI.GetPropsList(Instance: Pointer; ObjectClass: TClass): TDictionary<string, variant>;
+var
+  AValue: TValue;
 begin
   Result := TDictionary<string, variant>.Create;
-  var AValue: TValue;
-     for var AField in TxRtti.GetFields(Instance) do
+  for var AField in TxRtti.GetFields(ObjectClass) do
   begin
      if (AField.FieldType.TypeKind in [tkRecord])
       and (AField.FieldType.Handle = TypeInfo(TValue))
