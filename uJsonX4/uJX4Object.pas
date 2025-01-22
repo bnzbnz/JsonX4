@@ -1,4 +1,4 @@
-(*****************************************************************************
+﻿(*****************************************************************************
 The MIT License (MIT)
 
 Copyright (c) 2020-2025 Laurent Meyer JsonX3@ea4d.com
@@ -92,9 +92,12 @@ type
     procedure SetISO8601Utc(const AValue: TDateTime);
     function  GetTimestamp: TDateTime;
     procedure SetTimestamp(const AValue: TDateTime);
+    function  GetTimestampStr: string;
     function  GetTimestampUtc: TDateTime;
+    function  GetTimestampUtcStr: string;
     procedure SetTimestampUtc(const AValue: TDateTime);
     function  GetDateTime: TDateTime;
+    function  GetDateTimeStr: string;
     procedure SetDateTime(const AValue: TDateTime);
   public
   
@@ -106,7 +109,8 @@ type
     //Conversion Tools
     function  TypeKind:                           TJX4TValueKind;
     function  ToBKiBMiB:                          string;
-    function  ToPercent(Decimal: Integer = 2):    string;
+    function  ToPercent(Decimal: Integer = 2; Symbol: Boolean = True): string;
+    function  ToLimit:                            string;
     function  ToStrFloat(Decimal: Integer = 2):   string;
     function  ToSecondsFromNow:                   string;
     function  ToSecToDuration:                    string;
@@ -119,7 +123,10 @@ type
     property  ISO8601Utc:   TDateTime read GetISO8601Utc write SetISO8601Utc;
     property  Timestamp:    TDateTime read GetTimestamp write SetTimestamp;
     property  TimestampUtc: TDateTime read GetTimestampUtc write SetTimestampUtc;
+    property  TimestampStr:    string read GetTimestampStr;
+    property  TimestampUtcStr: string read GetTimestampUtcStr;
     property  DateTime :    TDateTime read GetDateTime write SetDateTime;
+    property  DateTimeStr :    string read GetDateTimeStr;
   end;
 
   TJX4Object = class(TObject)
@@ -201,6 +208,12 @@ begin
   end;
 end;
 
+function TJX4TValueHelper.ToLimit: string;
+begin
+  Result := '∞';
+  if Self.AsInt64 > 0  then Result := Self.AsInt64.ToString;
+end;
+
 function TJX4TValueHelper.ToFloat: Extended;
 begin
   case self.TypeKind of
@@ -261,22 +274,26 @@ begin
   mins := totalsecs div SecsPerMin;
   totalsecs := totalsecs mod SecsPerMin;
   secs := totalsecs;
-  if days >0 then
+  if days > 0 then
     Result := Result + days.ToString + 'd ';
-  Result := Result + hours.ToString + 'h ';
-  Result := Result + mins.ToString + 'm ';
+  if hours > 0 then
+    Result := Result + hours.ToString + 'h ';
+  if mins > 0 then
+    Result := Result + mins.ToString + 'm ';
   if days = 0 then
     Result := Result + secs.ToString + 's ';
+  if Self.AsInt64 = 8640000 then Result := '∞';
 end;
 
-function TJX4TValueHelper.ToPercent(Decimal: Integer): string;
+function TJX4TValueHelper.ToPercent(Decimal: Integer; Symbol: Boolean): string;
 var
   x: Double;
 begin
   if Self.TypeKind = tkvString then x := Self.AsString.ToDouble else x := Self.AsExtended;
-  Result := '0 %';
+  Result := '0';
   if x < 0 then Exit;
-  Result := Format('%.' + Decimal.ToString + 'f', [x * 100] ) + ' %';
+  Result := Format('%.' + Decimal.ToString + 'f', [x * 100] );
+  if Symbol then Result := Result + ' %';
 end;
 
 function TJX4TValueHelper.ToSecondsFromNow: string;
@@ -328,6 +345,12 @@ begin
   Result := TDateTime(x);
 end;
 
+function TJX4TValueHelper.GetDateTimeStr: string;
+begin
+  Result := DateTimeToStr(Self.GetDateTime);
+end;
+
+
 function TJX4TValueHelper.GetISO8601: TDateTime;
 begin
   Result := ISO8601ToDate(Self.AsString, False);
@@ -346,6 +369,14 @@ begin
   Result := UnixToDateTime(x, False);
 end;
 
+function TJX4TValueHelper.GetTimestampStr: string;
+var
+  x: Int64;
+begin
+  if Self.TypeKind = tkvString then x := Self.AsString.ToInt64 else x := Self.AsInt64;
+  Result := DateTimeToStr(UnixToDateTime(x, False));
+end;
+
 function TJX4TValueHelper.GetTimestampUtc: TDateTime;
 var
   x: Int64;
@@ -354,6 +385,13 @@ begin
   Result := UnixToDateTime(Self.AsInt64, True);
 end;
 
+function TJX4TValueHelper.GetTimestampUtcStr: string;
+var
+  x: Int64;
+begin
+  if Self.TypeKind = tkvString then x := Self.AsString.ToInt64 else x := Self.AsInt64;
+  Result := DateTimeToStr(UnixToDateTime(Self.AsInt64, True));
+end;
 
 constructor TJX4Name.Create(const AName: string);
 begin
