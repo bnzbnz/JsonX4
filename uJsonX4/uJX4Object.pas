@@ -535,11 +535,8 @@ end;
 function TJX4TValueHelper.JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
 begin
   if jmoUpdate in AOptions then
-  begin
-    if (not AMergedWith.IsEmpty) then
+     if (not AMergedWith.IsEmpty) then
        Self := AMergedWith;
-    Exit;
-  end;
 end;
 
 function TJX4TValueHelper.JSONClone(AOptions: TJX4Options): TValue;
@@ -765,7 +762,6 @@ begin
         if LName = LJPair.JsonString.Value then
         begin
           LFieldFound := True;
-
           LJPair.Owned := False;
           LJPair.JsonString.Owned := False;
           LJPair.JsonValue.Owned := False;
@@ -778,6 +774,7 @@ begin
           if TxRtti.FieldAsTValue(Self, LField, LTValue) then
           begin
             LTValue.JSONDeserialize(LIOBlock);
+            if LTValue.IsEmpty then LTValue := '';
             LField.SetValue(Self, LTValue);
           end else begin
             LObj := LField.GetValue(Self).AsObject;
