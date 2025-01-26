@@ -1054,7 +1054,8 @@ begin
         if TxRtti.FieldAsTValue(Self, LSrcField, LSrcValue) and  TxRtti.FieldAsTValue(AMergedWith, LMrgField, LMgrValue) then
         begin
           LSrcValue.JSONMerge(LMgrValue, AOptions);
-          LSrcField.SetValue(Self, LSrcValue);
+          if LSrcValue.IsEmpty then LSrcValue  := '';
+          LSrcField.SetValue(self, LSrcValue);
           Break;
         end;
         if TxRtti.FieldAsTObject(Self, LSrcField, LSrcObj) and  TxRtti.FieldAsTObject(AMergedWith, LMrgField, LMrgObj) then

@@ -50,6 +50,7 @@ type
     class function  NewAddRange(const AValues: array of TValue): TJX4ListOfValues; overload;
     function        First: TValue;
     function        Last: TValue;
+    function        IndexOfTValue(From: TValue): Integer;
 
     function        Clone(AOptions: TJX4Options = []): TJX4ListOfValues;
     procedure       Merge(AMergedWith: TJX4ListOfValues; AOptions: TJX4Options = []);
@@ -487,67 +488,50 @@ begin
   Result.AddRange(AValues);
 end;
 
+function TJX4ListOfValues.IndexOfTValue(From: TValue): Integer;
+begin
+  Result := -1;
+  for var i := 0 to Self.count - 1  do
+  begin
+    case Self.Items[i].TypeKind of
+      tkvString:
+        if CompareText(From.AsString, Self.Items[i].AsString) = 0 then
+        begin
+          Result := i;
+          Break;
+        end;
+      tkvInteger:
+        if (From.AsInt64 = Self.Items[i].AsInt64) then
+        begin
+          Result := i;
+          Break;
+        end;
+      tkvFloat:
+        if (From.AsExtended = Self.Items[i].AsExtended) then
+        begin
+          Result := i;
+          Break;
+        end;
+    end;
+  end;
+end;
+
 procedure TJX4ListOfValues.JSONMerge(AMergedWith: TJX4ListOfValues;
   AOptions: TJX4Options);
-var
-  LEle: TValue;
-  LIdx: Integer;
-
-  function BinIndexOf(AValue: TValue): Integer;
-  begin
-    Sort(TDelegatedComparer<TValue>.Construct(
-      function (const L, R: TValue): Integer
-      begin
-        Result := CompareText(L.AsString, R.AsString);
-      end
-    ));
-    BinarySearch(AValue, LIdx,
-      TDelegatedComparer<TValue>.Construct(
-      function(const Left, Right: TValue): Integer
-      begin
-        case Left.Kind of
-          tkChar, tkString, tkWChar, tkLString, tkWString, tkUString:
-          begin
-            if Left.AsString > Right.AsString then Exit(1);
-            if Left.AsString < Right.AsString then Exit(-1);
-            Result:= 0;
-          end;
-          tkInteger, tkInt64:
-          begin
-            if Left.AsInt64 > Right.AsInt64 then Exit(1);
-            if Left.AsInt64 < Right.AsInt64 then Exit(-1);
-            Result:= 0;
-          end;
-          tkFloat:
-          begin
-            if Left.AsExtended > Right.AsExtended then Exit(1);
-            if Left.AsExtended < Right.AsExtended then Exit(-1);
-            Result:= 0;
-          end;
-        else
-          Result:= 0;
-        end;
-      end
-    ));
-    if LIdx = Count then Result := -1 else Result := LIdx;
-  end;
-
 begin
-
+  if AMergedWith.Count = 0  then Exit;
   if (jmoStats in AOptions) then
   begin
     FAdded.Clear;
     FDeleted.Clear;
   end;
-
-  if AMergedWith.Count = 0  then Exit;
-  for LEle in AMergedWith do
+  for var i := AMergedWith.Count  - 1 downto 0 do
   begin
-    LIdx :=  BinIndexOf(LEle);
+    var LIdx := Self.IndexOfTValue(AMergedWith.Items[i]);
     if (jmoAdd in AOptions)  and (LIdx = -1)  then
     begin
-      if (jmoStats in AOptions) then FAdded.Add(LEle);
-      Self.Add(LEle);
+      if (jmoStats in AOptions) then FAdded.Add(AMergedWith.Items[i]);
+      Self.Add(AMergedWith.Items[i]);
     end
     else if (jmoDelete in AOptions)  and (LIdx <> -1)  then
     begin
@@ -556,5 +540,6 @@ begin
     end;
   end;
 end;
+
 
 end.
