@@ -92,6 +92,7 @@ type
 implementation
 uses
     uJX4Rtti
+  , uJX4Value
   , SysUtils
   , JSON
   ;

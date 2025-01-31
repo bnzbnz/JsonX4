@@ -95,6 +95,7 @@ implementation
 uses
     Generics.Defaults
   , uJX4Rtti
+  , uJX4Value
   , SysUtils
   , JSON
   , System.TypInfo
