@@ -40,9 +40,17 @@ type
 
     //Conversion Tools
 
+    //Conversion Tools
+
     function  ToBKiBMiB:                          string;
-    function  ToPercent(Decimal: Integer = 2;
-                      Symbol: Boolean = True):    string;
+    function  ToMB:                               real;
+    function  ToMiB:                              real;
+    function  ToGB:                               real;
+    function  ToGiB:                              real;
+    function  ToTB:                               real;
+    function  ToTiB:                              real;
+
+    function  ToPercent(Decimal: Integer = 2; Symbol: Boolean = True):string;
     function  ToLimit:                            string;
     function  FromSecFromNow:                     string;
     function  FromSecToDuration:                  string;
@@ -286,6 +294,36 @@ begin
   end else begin
     Result := Format('%.0f', [x] )+ ' B';
   end;
+end;
+
+function TJX4TValueHelper.ToMB: real;
+begin
+  Result := Self.AsInt64 / 1000000;
+end;
+
+function TJX4TValueHelper.ToMiB: real;
+begin
+  Result := Self.AsInt64 / 1048576;
+end;
+
+function TJX4TValueHelper.ToGB: real;
+begin
+  Result := Self.AsInt64 / 1000000000;
+end;
+
+function TJX4TValueHelper.ToGiB: real;
+begin
+  Result := Self.AsInt64 / 1073741824
+end;
+
+function TJX4TValueHelper.ToTB: real;
+begin
+  Result := Self.AsInt64 / 1000000000000;
+end;
+
+function TJX4TValueHelper.ToTiB: real;
+begin
+  Result := Self.AsInt64 / 1099511627776;
 end;
 
 function TJX4TValueHelper.FromSecToDuration: string;
