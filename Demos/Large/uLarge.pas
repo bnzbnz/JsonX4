@@ -23,9 +23,10 @@ uses
   , System.Generics.Defaults
   , System.Generics.Collections
   , RTTI
+  , uJX4Object
+  , uJX4Value
   , uJX4List
   , uJX4Dict
-  , uJX4Object
   ;
 
 type

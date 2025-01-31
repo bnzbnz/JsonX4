@@ -8,6 +8,7 @@ uses
   FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, FMX.StdCtrls
   , RTTI
   , uJX4Object
+  , uJX4Value
   , uJX4List
   , uJX4Dict
   ;

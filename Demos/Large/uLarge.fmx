@@ -26,7 +26,7 @@ object Form4: TForm4
     Size.Height = 470.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
-    Viewport.Width = 514.000000000000000000
-    Viewport.Height = 470.000000000000000000
+    Viewport.Width = 510.000000000000000000
+    Viewport.Height = 466.000000000000000000
   end
 end
