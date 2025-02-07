@@ -1,7 +1,7 @@
 ﻿(*****************************************************************************
 The MIT License (MIT)
 
-Copyright (c) 2020-2025 Laurent Meyer JsonX3@ea4d.com
+Copyright (c) 2020-2025 Laurent Meyer JsonX4@lmeyer.fr
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -110,8 +110,10 @@ type
     class function  JsonListToJsonString(const AList: TList<string>): string; static;
     class function  FormatJSON(const AJson: string; AIndentation: Integer = 2): string; static;
 
-    class function  LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding): Int64;
-    class function  SaveToFile(const Filename: string; const AStr: string; AEncoding: TEncoding): Int64;
+    class function  LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding): Int64; overload;
+    class function  SaveToFile(const Filename: string; const AStr: string; AEncoding: TEncoding): Int64; overload;
+    class function  LoadFromFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding): T; overload;
+    function        SaveToFile(const AFilename: string; AEncoding: TEncoding): Int64; overload;
 
  end;
  TJX4Obj = TJX4Object;
@@ -611,24 +613,6 @@ begin
   FreeAndNil(TmpJson);
 end;
 
-class function TJX4Object.LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding): Int64;
-var
-  FS : TFileStream;
-  SS: TStringStream;
-begin
-  FS := nil;
-  SS := Nil;
-  try
-    FS := TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite);
-    SS := TStringStream.Create('', AEncoding, True);
-    Result := SS.CopyFrom(FS, -1);
-    AStr := SS.DataString;
-  finally
-    SS.Free;
-    FS.Free;
-  end;
-end;
-
 procedure TJX4Object.Merge(AMergedWith: TObject; AOptions: TJX4Options);
 begin
   try
@@ -675,21 +659,54 @@ begin
   end;
 end;
 
+class function TJX4Object.LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding): Int64;
+var
+  LFS : TFileStream;
+  LSS: TStringStream;
+begin
+  LFS := nil;
+  LSS := Nil;
+  try
+    LFS := TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite);
+    LSS := TStringStream.Create('', AEncoding, True);
+    Result := LSS.CopyFrom(LFS, -1);
+    AStr := LSS.DataString;
+  finally
+    LSS.Free;
+    LFS.Free;
+  end;
+end;
+
+class function TJX4Object.LoadFromFile<T>(const AFilename: string; AEncoding: TEncoding): T;
+var
+  LJstr: string;
+begin
+  Result := Nil;
+  if not FileExists(AFilename) then Exit;
+  LoadFromFile(AFilename, LJStr, AEncoding);
+  Result := TJX4Object.FromJSON<T>(LJStr);
+end;
+
 class function TJX4Object.SaveToFile(const Filename: string; const AStr: string; AEncoding: TEncoding): Int64;
 var
-  FS: TFileStream;
-  SS: TStringStream;
+  LFS: TFileStream;
+  LSS: TStringStream;
 begin
-  FS := nil;
-  SS := Nil;
+  LFS := nil;
+  LSS := Nil;
   try
-    FS := TFileStream.Create(Filename, fmCreate or fmShareDenyWrite);
-    SS := TStringStream.Create(AStr, AEncoding);
-    Result := FS.CopyFrom(SS, -1);
+    LFS := TFileStream.Create(Filename, fmCreate or fmShareDenyWrite);
+    LSS := TStringStream.Create(AStr, AEncoding);
+    Result := LFS.CopyFrom(LSS, -1);
   finally
-    SS.Free;
-    FS.Free;
+    LSS.Free;
+    LFS.Free;
   end;
+end;
+
+function TJX4Object. SaveToFile(const AFilename: string; AEncoding: TEncoding): Int64;
+begin
+  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self), AEncoding);
 end;
 
 end.
