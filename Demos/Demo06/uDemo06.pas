@@ -91,6 +91,9 @@ begin
       Memo1.Lines.Add('==> Answer : ' + LPk2.Value.answer.AsString);
     end;
 
+  Memo1.Lines.add('');
+  Memo1.Lines.add('JSON to YAML :');
+  Memo1.Lines.add(Game.ToYAML());
   Game.Free;                                               // Cleanup
 end;
 
