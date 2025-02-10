@@ -1,21 +1,21 @@
-Delphi JsonX4 (Json eXtended version 4)
+Delphi JsonX4 (Json eXtended version 4) : JSON & YAML
 =================
 
-JsonX4 is a Delphi Json to Objects, Objects to Json parser. It is fast (1M/s Ops), light still simple to use
-It supports Delphi 10.3 to 12.2 on all the platforms. And, of course, 100% of the json format is supported...
+JsonX4 is a Delphi JSON/YAML to Objects, Objects to JSON/YAML parser. It is fast (1M/s Ops), light still simple to use
+It supports Delphi from 10.3 on all platforms. And, of course, 100% of the json format specification are supported...
 
 - This project is sponsored by EA4D "Ebay Api 4 Delphi" (https://www.ea4d.com)
-- Projetcs using JsonX4 : qBit4DelphiV2 https://github.com/bnzbnz/qBit4DelphiV2 a qbittorent API for Delphi.
+- Projetcs using JsonX4 : qBit4DelphiV2 - qNOXifyV2 [https://github.com/bnzbnz/qBit4DelphiV2](https://github.com/bnzbnz/qBit4DelphiV2-qNOXifyV2) a qbittorent API for Delphi.
 - Contact : Laurent MEYER JsonX4@lmeyer.fr
 
 Projects using JsonX4
 --------------
--  qBit4DelphiV2 https://github.com/bnzbnz/qBit4DelphiV2 a qbittorent API for Delphi.
--  ConsoAPI (https://github.com/bnzbnz/ConsoAPI4Delphi) a Delphi API to get data from Enedis  (French)
+-  qBit4DelphiV2 - qNOXifyV2 : https://github.com/bnzbnz/qBit4DelphiV2 a qbittorent API for Delphi.
+-  ConsoAPI : (https://github.com/bnzbnz/ConsoAPI4Delphi) a Delphi API to get data from Enedis  (French)
 
 How to install
 --------------
-1. Clone the JsonX4 repository
+1. Clone the JsonX4 repository, demos should work out of the box.
 2. Add the units from the JsonX4/uJsonX4 folder to your project.
 
 Usage
@@ -160,10 +160,8 @@ Example : Attributes and Options (Demo05)
 ```Json
  {"Str":"Need a Value","#href":"http://","Num1":22,"#href2":"auto enc/dec oding","NewMix":true}
 ```
-Example : A Random Json file parsing (Demo06)
+Example : A Random YAML file parsing (Demo06)
 -
-Extract from : https://github.com/dmjio/json-test/blob/master/example.json
-
 As simple as that :
 ```Delphi
 
@@ -174,18 +172,42 @@ As simple as that :
   end;
 
   TGame = class(TJX4Object)
-    quiz: TJX4Dic<TJX4Dic<TQuestion>>;   // << Double dictionaries
+    quiz: TJX4Dic<TJX4Dic<TQuestion>>;   // << Double dictionaries !! 
   end;
 
   var GameStr :=
     '''
-    {"quiz":{"sport":{"q1":{"question":"Which one is correct team name in NBA?","options":["New York Bulls",
-    "Los Angeles Kings","Golden State Warriros","Huston Rocket"],"answer":"Huston Rocket"}},
-    "maths":{"q1":{"question":"5 + 7 = ?","options":["10","11","12","13"],"answer":"12"},
-    "q2":{"question":"12 - 8 = ?","options":["1","2","3","4"],"answer":"4"}}}}
+    quiz:
+      sport:
+        q1:
+          question: Which one is correct team name in NBA?
+          options:
+            - New York Bulls
+            - Los Angeles Kings
+            - Golden State Warriros
+            - Huston Rocket
+          answer: Huston Rocket
+      maths:
+        q1:
+          question: 5 + 7 = ?
+          options:
+            - '10'
+            - '11'
+            - '12'
+            - '13'
+          answer: '12'
+        q2:
+          question: 12 - 8 = ?
+          options:
+            - '1'
+            - '2'
+            - '3'
+            - '4'
+          answer: '4'
     ''';
 
-  var Game := TJX4Object.FromJSON<TGame>(GameStr);               // Get the Object from Json
+
+  var Game := TJX4Object.FromTAML<TGame>(GameStr);               // Get the Object from YAML
   Memo1.Text := TJX4Object.Format( TJX4Object.ToJSON(Game) );    // Get the Json from the Object, and print the formated result
 
   Memo1.Lines.Add('');
@@ -204,8 +226,8 @@ Example : Parse an Array as payload (Demo07)
 -
 Example : Large JSON, Benchmark.
 -
-In this example we read, serialize, clone (RTTI/Meerging), deserialize and finally save a large ebay's aspects json file (around 1M json fields)
-You will be able to benchmark and compare the output generated json file 'jsx4.json' vs 'aspects100.json' the original ebay's on.
+In this example we read, serialize, clone (RTTI/Meerging), deserialize and finally save a large ebay's aspects  JSON and YAML file (around 1M json fields)
+You will be able to benchmark and compare the output generated json file 'jsx4.json' vs 'aspects100.json' the original ebay's on. (You'll find also the generated jsx4.yml file)
 ```
 Loading ebay's Aspects json file :
   Stream size: 14,358.14 KB
