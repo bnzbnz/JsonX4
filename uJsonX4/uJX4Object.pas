@@ -95,7 +95,7 @@ type
     class function  New<T:class, constructor>: T;
     class function  ToJSON(AObj: TObject; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     function        ToJSON(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
-    class function  FromJSON<T:class, constructor>(const AJson: string; AOptions: TJX4Options = []): T; overload;
+    class function  FromJSON<T:class, constructor>(const AJson: string; AOptions: TJX4Options = []): T;
 
     function        Clone<T:class, constructor>(AOptions: TJX4Options= []): T; overload;
     procedure       Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
@@ -109,11 +109,24 @@ type
     class function  EscapeJSONStr(const AStr: string): string; overload; static;
     class function  JsonListToJsonString(const AList: TList<string>): string; static;
     class function  FormatJSON(const AJson: string; AIndentation: Integer = 2): string; static;
+    class function  IsJSON(AStr: string): Boolean;
+
+    // Common
 
     class function  LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding): Int64; overload;
     class function  SaveToFile(const Filename: string; const AStr: string; AEncoding: TEncoding): Int64; overload;
-    class function  LoadFromFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding): T; overload;
-    function        SaveToFile(const AFilename: string; AEncoding: TEncoding): Int64; overload;
+    
+    // JSON
+    class function  LoadFromJSONFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding): T; overload;
+    function        SaveToJSONFile(const AFilename: string; AEncoding: TEncoding): Int64; overload;
+
+     // YAML
+    class function  ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
+    function        ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
+    class function  FromYAML<T:class, constructor>(const AYaml: string; AOptions: TJX4Options = []): T;
+    class function  LoadFromYAMLFile<T:class, constructor>(const AFilename: string): T;
+    class function  SaveToYAMLFile(const Filename: string; const AStr: string): Int64; overload;
+    function        SaveToYAMLFile(const AFilename: string): Int64; overload;
 
  end;
  TJX4Obj = TJX4Object;
@@ -124,8 +137,9 @@ implementation
 uses
     TypInfo
   , Classes
-  , DateUtils
+  , StrUtils
   , uJX4Value
+  , uJX4YAML
   ;
 
 constructor TJX4Name.Create(const AName: string);
@@ -492,6 +506,19 @@ begin
   end;
 end;
 
+class function TJX4Object.FromYAML<T>(const AYaml: string; AOptions: TJX4Options = []): T;
+begin
+  Result := TJX4Object.FromJSON<T>(TYAMLUtils.YamlToJson(AYaml), AOptions);
+end;
+
+class function TJX4Object.IsJSON(AStr: string): Boolean;
+begin
+  Result := False;
+  var Sub := Copy(AStr,1, 1000).Trim;
+  if Sub.IsEmpty then Exit;
+  Result := (Pos('{', AStr, 1) = 1) or (Pos(AStr, '[') = 1) ;
+end;
+
 class function TJX4Object.Version: string;
 begin
   Result := Format('%0.2d.%0.2d', [
@@ -677,7 +704,7 @@ begin
   end;
 end;
 
-class function TJX4Object.LoadFromFile<T>(const AFilename: string; AEncoding: TEncoding): T;
+class function TJX4Object.LoadFromJSONFile<T>(const AFilename: string; AEncoding: TEncoding): T;
 var
   LJstr: string;
 begin
@@ -704,9 +731,39 @@ begin
   end;
 end;
 
-function TJX4Object. SaveToFile(const AFilename: string; AEncoding: TEncoding): Int64;
+class function TJX4Object.ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string;
+begin
+  Result := TYAMLUtils.JsonToYaml(TJX4Object.ToJSON(AObj));
+end;
+
+function TJX4Object.ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string;
+begin
+  Result := ToYAML(Self, AOptions);
+end;
+
+function TJX4Object.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding): Int64;
 begin
   Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self), AEncoding);
+end;
+
+class function TJX4Object.SaveToYAMLFile(const Filename: string; const AStr: string): Int64;
+begin
+  Result := SaveToFile(Filename, AStr, TEncoding.UTF8);
+end;
+
+function TJX4Object.SaveToYAMLFile(const AFilename: string): Int64;
+begin
+  Result := TJX4Object.SaveToYAMLFile(AFilename, TYAMLUtils.JsonToYaml( TJX4Object.ToJSON(Self, [joNullToEmpty])))
+end;
+
+class function TJX4Object.LoadFromYAMLFile<T>(const AFilename: string): T;
+var
+  LJstr: string;
+begin
+  Result := Nil;
+  if not FileExists(AFilename) then Exit;
+  LoadFromFile(AFilename, LJStr, TEncoding.UTF8);
+  Result := TJX4Object.FromJSON<T>(TYAMLUtils.YAMLToJSON(LJStr,0));
 end;
 
 end.

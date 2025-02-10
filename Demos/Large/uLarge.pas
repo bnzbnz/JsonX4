@@ -101,6 +101,7 @@ implementation
 
 uses
     System.Diagnostics
+    , uJX4YAML
   ;
 
 {$R *.fmx}
@@ -116,9 +117,10 @@ begin
 
     LWatch := TStopWatch.StartNew;
     Memo1.Lines.add( 'Loading ebay''s Aspects json file :' );
-  LJSize := TJX4Object.LoadFromFile('aspects100.json', LJsonStr, TEncoding.UTF8);
+    LJSize := TJX4Object.LoadFromFile('aspects100.json', LJsonStr, TEncoding.UTF8);
     Memo1.Lines.add( Format( '  Stream size: %n KB', [ (LJSize / 1024) ] ));
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+
 
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'Convert Json String to JSX3 Objects (Deserialize):' );
@@ -152,6 +154,12 @@ begin
     Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
 
     Memo1.Lines.add( '' );
+    Memo1.Lines.add( 'YAMLize' );
+    LWatch := TStopWatch.StartNew;
+    var YAMLstr := LJObj.ToYAML;
+    Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+
+    Memo1.Lines.add( '' );
     LWatch := TStopWatch.StartNew;
     Memo1.Lines.add( 'Free Json Objects :' );
   LJObj.Free;
@@ -161,8 +169,9 @@ begin
 
     Memo1.Lines.add( '' );
     LWatch := TStopWatch.StartNew;
-    Memo1.Lines.add( 'Saving Cloned Json file (jsx3.json) :' );
+    Memo1.Lines.add( 'Saving Cloned Json file (jsx4.json) and YAML (jsx4.yml):' );
   LJSize := TJX4Object.SaveToFile( 'jsx4.json', LJsonStr, TEncoding.UTF8);
+  TJX4Object.SaveToYAMLFile( 'jsxy.yml', YAMLstr);
     Memo1.Lines.add( Format( '  Stream size: %n KB', [ (LJSize / 1024) ] ));
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   end;
