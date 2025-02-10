@@ -108,7 +108,7 @@ type
     class procedure VarEscapeJSONStr(var AStr: string); overload; static;
     class function  EscapeJSONStr(const AStr: string): string; overload; static;
     class function  JsonListToJsonString(const AList: TList<string>): string; static;
-    class function  FormatJSON(const AJson: string; AIndentation: Integer = 2): string; static;
+    class function  FormatJSON(const AJson: string; AMinify: Boolean = False; AIndentation: Integer = 2): string; static;
     class function  IsJSON(AStr: string): Boolean;
 
     // Common
@@ -127,6 +127,10 @@ type
     class function  LoadFromYAMLFile<T:class, constructor>(const AFilename: string): T;
     class function  SaveToYAMLFile(const Filename: string; const AStr: string): Int64; overload;
     function        SaveToYAMLFile(const AFilename: string): Int64; overload;
+
+    // Tools
+    class function  YAMLtoJSON(const AYaml: string): string;
+    class function  JSONtoYAML(const AJson: string): string;
 
  end;
  TJX4Obj = TJX4Object;
@@ -631,13 +635,17 @@ begin
   LSb.Free;
 end;
 
-class function TJX4Object.FormatJSON(const AJson: string; AIndentation: Integer): string;
+class function TJX4Object.FormatJSON(const AJson: string; AMinify: Boolean; AIndentation: Integer): string;
 var
   TmpJson: TJsonObject;
 begin
-  TmpJson := TJSONObject.ParseJSONValue(AJson) as TJSONObject;
-  Result := TJSONAncestor(TmpJson).Format(AIndentation);
-  FreeAndNil(TmpJson);
+  if AMinify then
+    Result := TYamlUtils.JsonMinify(AJson)
+  else begin
+    TmpJson := TJSONObject.ParseJSONValue(AJson) as TJSONObject;
+    Result := TJSONAncestor(TmpJson).Format(AIndentation);
+    FreeAndNil(TmpJson);
+  end;
 end;
 
 procedure TJX4Object.Merge(AMergedWith: TObject; AOptions: TJX4Options);
@@ -765,5 +773,16 @@ begin
   LoadFromFile(AFilename, LJStr, TEncoding.UTF8);
   Result := TJX4Object.FromJSON<T>(TYAMLUtils.YAMLToJSON(LJStr,0));
 end;
+
+class function TJX4Object.JSONtoYAML(const AJson: string): string;
+begin
+  Result := TYAMLUtils.JsonToYaml(AJson);
+end;
+
+class function TJX4Object.YAMLtoJSON(const AYaml: string): string;
+begin
+  Result := TYAMLUtils.YamlToJson(AYaml);
+end;
+
 
 end.
