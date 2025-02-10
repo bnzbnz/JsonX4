@@ -1,4 +1,4 @@
-Delphi JsonX4 (Json eXtended version 4)
+Delphi JsonX4 (Json eXtended version 4) : JSON & YAML
 =================
 
 JsonX4 is a Delphi JSON/YAML to Objects, Objects to JSON/YAML parser. It is fast (1M/s Ops), light still simple to use
