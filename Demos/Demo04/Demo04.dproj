@@ -152,6 +152,7 @@
             <Form>$R *.res</Form>
         </DCCReference>
         <DCCReference Include="..\..\uJsonX4\uJX4Value.pas"/>
+        <DCCReference Include="..\..\uJsonX4\uJX4YAML.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

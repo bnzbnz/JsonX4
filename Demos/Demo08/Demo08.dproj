@@ -142,6 +142,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="..\..\uJsonX4\uJX4Dict.pas"/>
+        <DCCReference Include="..\..\uJsonX4\uJX4YAML.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4List.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Object.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>

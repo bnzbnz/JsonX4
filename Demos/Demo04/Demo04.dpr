@@ -8,8 +8,9 @@ uses
   uJX4List in '..\..\uJsonX4\uJX4List.pas',
   uJX4Object in '..\..\uJsonX4\uJX4Object.pas',
   uJX4Rtti in '..\..\uJsonX4\uJX4Rtti.pas',
-  uJSONableStringList in 'uJSONableStringList.pas' {$R *.res},
-  uJX4Value in '..\..\uJsonX4\uJX4Value.pas';
+  uJSONableStringList in 'uJSONableStringList.pas',
+  uJX4Value in '..\..\uJsonX4\uJX4Value.pas',
+  uJX4YAML in '..\..\uJsonX4\uJX4YAML.pas';
 
 {$R *.res}
 
