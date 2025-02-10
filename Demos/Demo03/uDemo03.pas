@@ -127,7 +127,7 @@ begin
 
   Memo1.lines.add('');                                                    // Format
   Memo1.lines.add('Formatted:');
-  Memo1.lines.add(TJX4Object.FormatJSON(Json, 4));
+  Memo1.lines.add(TJX4Object.FormatJSON(Json, False, 4));
 
   Demo.Free;
 end;
