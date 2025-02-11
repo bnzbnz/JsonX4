@@ -171,7 +171,7 @@ begin
     LWatch := TStopWatch.StartNew;
     Memo1.Lines.add( 'Saving Cloned Json file (jsx4.json) and YAML (jsx4.yml):' );
   LJSize := TJX4Object.SaveToFile( 'jsx4.json', LJsonStr, TEncoding.UTF8);
-  TJX4Object.SaveToYAMLFile( 'jsxy.yml', YAMLstr);
+  TJX4Object.SaveToYAMLFile( 'jsx4.yaml', YAMLstr);
     Memo1.Lines.add( Format( '  Stream size: %n KB', [ (LJSize / 1024) ] ));
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   end;
