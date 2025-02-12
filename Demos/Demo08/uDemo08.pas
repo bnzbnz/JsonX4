@@ -327,15 +327,21 @@ begin
   Memo1.Lines.add( '' );
   Memo1.Lines.add( 'Convert JSX4 Objects to Json String (Serialize):' );
   LWatch := TStopWatch.StartNew;
-  LGitHubExtract.ToJSON();
+  LGitHubExtract.ToJSON;
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
 
   Memo1.Lines.add( '' );
-  Memo1.Lines.Add(Format('Projects: %d', [LGitHubExtract.GitHub.Count]));
+  Memo1.Lines.add( 'Convert JSX4 Objects to YAML String' );
+  LWatch := TStopWatch.StartNew;
+  LGitHubExtract.ToYAML;
+  Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+  Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
+
+  Memo1.Lines.add( '' );
+  Memo1.Lines.Add(Format('Projects Count: %d', [LGitHubExtract.GitHub.Count]));
 
   LGitHubExtract.Free;
-
 end;
 
 end.
