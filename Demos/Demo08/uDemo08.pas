@@ -313,7 +313,7 @@ begin
 
   LWatch := TStopWatch.StartNew;
   Memo1.Lines.add( 'Loading GitHub json file :' );
-  LJSize := TJX4Object.LoadFromFile('GitHubExtract.json', LJsonStr, TEncoding.UTF8);
+  LJSize := TJX4Object.LoadFromFile('GitHubExtract.json', LJsonStr);
   Memo1.Lines.add( Format( '  Stream size: %n MB', [ (LJSize / 1024000) ] ));
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 

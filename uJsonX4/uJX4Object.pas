@@ -26,7 +26,8 @@ unit uJX4Object;
 
 interface
 uses
-  System.Generics.Collections
+  Classes
+  , System.Generics.Collections
   , RTTI
   , JSON
   , SysUtils
@@ -38,6 +39,8 @@ const
   CBoolToStr: array[Boolean] of string = ('false','true');
   
 type
+
+  sFormatType= (sftYAML, sftJSON);
 
   TJX4Option  = (
         joNullToEmpty
@@ -83,6 +86,8 @@ type
   end;
 
   TJX4Object = class(TObject)
+  protected
+    class function  GetStreamEncoding(AStream: TStream): TEncoding;
   public
     constructor     Create;
     destructor      Destroy; override;
@@ -112,19 +117,18 @@ type
     class function  IsJSON(AStr: string): Boolean;
 
     // Common
+    class function  LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding = Nil): Int64; overload;
+    class function  SaveToFile(const Filename: string; const AStr: string; AEncoding: TEncoding = Nil; UseBOM: Boolean = False): Int64; overload;
 
-    class function  LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding): Int64; overload;
-    class function  SaveToFile(const Filename: string; const AStr: string; AEncoding: TEncoding): Int64; overload;
-    
     // JSON
-    class function  LoadFromJSONFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding): T; overload;
-    function        SaveToJSONFile(const AFilename: string; AEncoding: TEncoding): Int64; overload;
+    class function  LoadFromJSONFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding = Nil): T; overload;
+    function        SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AUseBOM: Boolean = False): Int64; overload;
 
      // YAML
     class function  ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     function        ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     class function  FromYAML<T:class, constructor>(const AYaml: string; AOptions: TJX4Options = []): T;
-    class function  LoadFromYAMLFile<T:class, constructor>(const AFilename: string): T;
+    class function  LoadFromYAMLFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding = Nil): T;
     class function  SaveToYAMLFile(const Filename: string; const AStr: string): Int64; overload;
     function        SaveToYAMLFile(const AFilename: string): Int64; overload;
 
@@ -140,7 +144,6 @@ type
 implementation
 uses
     TypInfo
-  , Classes
   , StrUtils
   , uJX4Value
   , uJX4YAML
@@ -694,21 +697,101 @@ begin
   end;
 end;
 
+class function TJX4Object.GetStreamEncoding(AStream: TStream): TEncoding;
+var
+  LBytes: TBytes;
+  LIdx: Integer;
+  LByteCount: Integer;
+  LIsAscii, LIsUTF8: Boolean;
+begin
+  Result := TEncoding.ANSI;;
+  LIsAscii := True; LIsUTF8 := True;
+  LIdx := 0;
+  LByteCount := 0;
+
+  if AStream.Size < 4 then Exit;
+
+  AStream.Position := 0;
+  SetLength(LBytes, 4);
+  AStream.Read(LBytes, 4);
+  AStream.Position := 0;
+
+  // BOM
+  if (LBytes[0] = $EF) and (LBytes[1] = $BB) and (LBytes[2] = $BF) then
+    begin Result := TEncoding.UTF8; AStream.Position := 3; exit end
+  else if (LBytes[0] = $FE) and (LBytes[1] = $FF) then
+    begin Result := TEncoding.BigEndianUnicode; AStream.Position := 2; exit; end
+  else if (LBytes[0] = $FF) and (LBytes[1] = $FE) then
+    begin Result := TEncoding.Unicode; AStream.Position := 2; exit; end
+  else if (LBytes[0] = $00) and (LBytes[1] = $00) and (LBytes[2] = $FE) and (LBytes[3] = $FF) then
+      raise Exception.Create('UTF-32 BE not implemented in TEncoding')  // UTF-32 BE
+  else if (LBytes[0] = $FF) and (LBytes[1] = $FE) and (LBytes[2] = $00) and (LBytes[3] = $00) then
+      raise Exception.Create('UTF-32 LE not implemented in TEncoding'); // UTF-32 LE
+
+  // No BOM
+  AStream.Position := 0;
+  SetLength(LBytes, AStream.Size);
+  AStream.Read(LBytes, AStream.Size);
+  AStream.Position := 0;
+
+  while LIdx < Length(LBytes) do
+  begin
+    LIsAscii := LIsAscii and (LBytes[LIdx] and $80 = 0);
+    if LByteCount = 0 then
+    begin
+      if (LBytes[LIdx] and $80) = 0 then
+        LByteCount := 0
+      else if (LBytes[LIdx] and $E0) = $C0 then
+        LByteCount := 1
+      else if (LBytes[LIdx] and $F0) = $E0 then
+        LByteCount := 2
+      else if (LBytes[LIdx] and $F8) = $F0 then
+        LByteCount := 3
+      else
+      begin
+        LIsUTF8 := False;
+        Break;
+      end;
+    end
+    else
+    begin
+      if (LBytes[LIdx] and $C0) <> $80 then
+      begin
+        LIsUTF8 := False;
+        Break;
+      end;
+      Dec(LByteCount);
+    end;
+    Inc(LIdx);
+  end;
+  if LByteCount > 0 then LIsUTF8 := False;
+
+  if LIsAscii then
+    Result := TEncoding.ASCII
+  else if LIsUTF8 then
+    Result := TEncoding.UTF8;
+end;
+
 class function TJX4Object.LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding): Int64;
 var
-  LFS : TFileStream;
-  LSS: TStringStream;
+  LFs : TFileStream;
+  LSs: TStringStream;
 begin
-  LFS := nil;
-  LSS := Nil;
+  LFs := nil;
+  LSs := Nil;
   try
-    LFS := TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite);
-    LSS := TStringStream.Create('', AEncoding, True);
-    Result := LSS.CopyFrom(LFS, -1);
+    LFs := TFileStream.Create(AFilename, fmOpenRead + fmShareDenyNone);
+
+    if Assigned(AEncoding) then
+      LSs := TStringStream.Create('', AEncoding)
+    else
+      LSs := TStringStream.Create('', GetStreamEncoding(LFs));
+
+    Result := LSs.CopyFrom(LFs, LFs.Size - LFs.Position);
     AStr := LSS.DataString;
   finally
-    LSS.Free;
-    LFS.Free;
+    LSs.Free;
+    LFs.Free;
   end;
 end;
 
@@ -722,7 +805,7 @@ begin
   Result := TJX4Object.FromJSON<T>(LJStr);
 end;
 
-class function TJX4Object.SaveToFile(const Filename: string; const AStr: string; AEncoding: TEncoding): Int64;
+class function TJX4Object.SaveToFile(const Filename: string; const AStr: string; AEncoding: TEncoding; UseBOM: Boolean): Int64;
 var
   LFS: TFileStream;
   LSS: TStringStream;
@@ -731,6 +814,12 @@ begin
   LSS := Nil;
   try
     LFS := TFileStream.Create(Filename, fmCreate or fmShareDenyWrite);
+    if Assigned(AEncoding) then
+    begin
+      if (AEncoding = TEncoding.UTF8) and UseBOM then LFs.writeData($00BFBBEF, 3);
+      if AEncoding = TEncoding.BigEndianUnicode then LFs.writeData($FFFE, 2);
+      if AEncoding = TEncoding.Unicode then LFs.writeData($FEFF, 2);
+    end;
     LSS := TStringStream.Create(AStr, AEncoding);
     Result := LFS.CopyFrom(LSS, -1);
   finally
@@ -749,9 +838,9 @@ begin
   Result := ToYAML(Self, AOptions);
 end;
 
-function TJX4Object.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding): Int64;
+function TJX4Object.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AUseBOM: Boolean): Int64;
 begin
-  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self), AEncoding);
+  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self), AEncoding, AUseBOM);
 end;
 
 class function TJX4Object.SaveToYAMLFile(const Filename: string; const AStr: string): Int64;
@@ -764,13 +853,13 @@ begin
   Result := TJX4Object.SaveToYAMLFile(AFilename, TYAMLUtils.JsonToYaml( TJX4Object.ToJSON(Self, [joNullToEmpty])))
 end;
 
-class function TJX4Object.LoadFromYAMLFile<T>(const AFilename: string): T;
+class function TJX4Object.LoadFromYAMLFile<T>(const AFilename: string; AEncoding: TEncoding): T;
 var
   LJstr: string;
 begin
   Result := Nil;
   if not FileExists(AFilename) then Exit;
-  LoadFromFile(AFilename, LJStr, TEncoding.UTF8);
+  LoadFromFile(AFilename, LJStr, AEncoding);
   Result := TJX4Object.FromJSON<T>(TYAMLUtils.YAMLToJSON(LJStr,0));
 end;
 
@@ -783,6 +872,5 @@ class function TJX4Object.YAMLtoJSON(const AYaml: string): string;
 begin
   Result := TYAMLUtils.YamlToJson(AYaml);
 end;
-
 
 end.
