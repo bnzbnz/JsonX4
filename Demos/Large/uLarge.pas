@@ -123,7 +123,7 @@ begin
 
 
     Memo1.Lines.add( '' );
-    Memo1.Lines.add( 'Convert Json String to JSX3 Objects (Deserialize):' );
+    Memo1.Lines.add( 'Convert Json String to JSX4 Objects (Deserialize):' );
     LWatch := TStopWatch.StartNew;
   LJObj := TJX4Object.FromJSON<TfetchItemAspectsContentType>(LJsonStr, [ joRaiseException] );
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
@@ -131,7 +131,7 @@ begin
 
 
     Memo1.Lines.add( '' );
-    Memo1.Lines.add( 'JSX3 Object Cloning (by RTTI):' );
+    Memo1.Lines.add( 'JSX4 Object Cloning (by RTTI):' );
     LWatch := TStopWatch.StartNew;
   LJObjClone := LJObj.Clone<TfetchItemAspectsContentType>;
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
@@ -139,7 +139,7 @@ begin
 
 
     Memo1.Lines.add( '' );
-    Memo1.Lines.add( 'JSX3 Object Cloning (by Merging):' );
+    Memo1.Lines.add( 'JSX4 Object Cloning (by Merging):' );
   LJObjMerge := TfetchItemAspectsContentType.Create;
     LWatch := TStopWatch.StartNew;
   LJObjMerge.Merge(LJObjClone, [ jmoAdd ]);
