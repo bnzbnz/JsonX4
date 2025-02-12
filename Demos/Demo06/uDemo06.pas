@@ -44,7 +44,7 @@ implementation
 
 procedure TForm4.ButtonClick(Sender: TObject);
 begin
-  // Random json found on the internet
+  // Random YAML found on the internet
   var GameStr :=
     '''
     quiz:
