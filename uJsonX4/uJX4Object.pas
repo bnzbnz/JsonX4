@@ -110,6 +110,7 @@ type
     class function  VersionValue: integer;
 
     class function  NameDecode(const ToDecode: string): string; static;
+    class function  NameEncode(const ToEncode: string): string; static;
     class procedure VarEscapeJSONStr(var AStr: string); overload; static;
     class function  EscapeJSONStr(const AStr: string): string; overload; static;
     class function  JsonListToJsonString(const AList: TList<string>): string; static;
@@ -559,6 +560,22 @@ begin;
         Inc(Index, 1);
       end;
     end;
+end;
+
+class function TJX4Object.NameEncode(const ToEncode: string): string;
+var
+  Encoded: Boolean;
+begin
+  Result := '';
+  Encoded := False;
+  for var i := 1 to Length(ToEncode) do
+    if CharInSet(ToEncode[i], ['0'..'9', 'a'..'z', 'A'..'Z']) then
+      Result := Result + ToEncode[i]
+    else begin
+      Encoded := True;
+      Result := Result + '_' + Format('%2x', [Ord(ToEncode[i])]);
+    end;
+  if Encoded then Result := '_'  + Result;
 end;
 
 class function TJX4Object.New<T>: T;

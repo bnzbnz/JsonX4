@@ -70,7 +70,7 @@ begin
   Memo1.lines.add('Raw Original Object:');
   Memo1.lines.add(Json);
 
-  //Optimized Json
+  // Optimized Json
   Memo1.lines.add('');
   Json := Primitives.ToJson([joNullToEmpty]);
   Memo1.lines.add('Optimized Original Object:');
