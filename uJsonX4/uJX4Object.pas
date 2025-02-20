@@ -64,8 +64,11 @@ type
 
   TJX4Default = class(TCustomAttribute)
   public
-    Value:      string;
-    constructor Create(const AValue: string);
+    Value:      TValue;
+    constructor Create(const AValue: string); overload;
+    constructor Create(const AValue: Int64); overload;
+    constructor Create(const AValue: Boolean); overload;
+    constructor Create(const AValue: Extended); overload;
   end;
 
   TJX4Required = class(TCustomAttribute);
@@ -156,6 +159,21 @@ begin
 end;
 
 constructor TJX4Default.Create(const AValue: string);
+begin
+  Value := AValue;
+end;
+
+constructor TJX4Default.Create(const AValue: Int64); 
+begin
+  Value := AValue;
+end;
+
+constructor TJX4Default.Create(const AValue: Boolean); 
+begin
+  Value := AValue;
+end;
+
+constructor TJX4Default.Create(const AValue: Extended); 
 begin
   Value := AValue;
 end;

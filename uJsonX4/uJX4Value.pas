@@ -140,7 +140,7 @@ begin
     if Assigned(AIOBlock.Field) then
     begin
       LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-      if Assigned(LAttr) then LValue := TJX4Default(LAttr).Value;
+      if Assigned(LAttr) then LValue := TJX4Default(LAttr).Value.ToString;
     end;
     if not Assigned(LAttr) then
     begin
@@ -235,7 +235,7 @@ begin
     tkvString: Result := Self.AsString;
     tkvBool: Result := cBoolToStr[Self.AsBoolean];
     tkvInteger: Result := Self.AsInt64.toString;
-    tkvFloat: Result :=FloatToStrF(Self.AsExtended, ffFixed, 16, Decimal);
+    tkvFloat: Result := FloatToStrF(Self.AsExtended, ffFixed, 16, Decimal);
   else
     Result := '';
   end;
