@@ -118,7 +118,8 @@ type
     class function  EscapeJSONStr(const AStr: string): string; overload; static;
     class function  JsonListToJsonString(const AList: TList<string>): string; static;
     class function  FormatJSON(const AJson: string; AMinify: Boolean = False; AIndentation: Integer = 2): string; static;
-    class function  IsJSON(AStr: string): Boolean;
+    class function  ValidateJSON(const AJson: string): string; static;
+    class function  IsJSON(AStr: string): Boolean; static;
 
     // Common
     class function  LoadFromFile(const AFilename: string; var AStr: string; AEncoding: TEncoding = Nil): Int64; overload;
@@ -163,7 +164,7 @@ begin
   Value := AValue;
 end;
 
-constructor TJX4Default.Create(const AValue: Int64); 
+constructor TJX4Default.Create(const AValue: Int64);
 begin
   Value := AValue;
 end;
@@ -684,6 +685,22 @@ begin
     Result := TJSONAncestor(TmpJson).Format(AIndentation);
     FreeAndNil(TmpJson);
   end;
+end;
+
+class function TJX4Object.ValidateJSON(const AJson: string): string;
+var
+  LJObj: TJSONObject;
+begin
+  LJObj := Nil;
+  try
+    LJObj := TJSONObject.ParseJSONValue(AJson, True, True) as TJSONObject;
+  except
+    on Ex:Exception do
+    begin
+      Result := Ex.Message;
+    end;
+  end;
+  LJObj.Free;
 end;
 
 procedure TJX4Object.Merge(AMergedWith: TObject; AOptions: TJX4Options);
