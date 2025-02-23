@@ -107,6 +107,7 @@ type
 
     function        Clone<T:class, constructor>(AOptions: TJX4Options= []): T; overload;
     procedure       Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
+    function        Format(AMinify: Boolean = False; AIndentation: Integer = 2): string;
 
     // Utils
     class function  Version: string;
@@ -118,6 +119,7 @@ type
     class function  EscapeJSONStr(const AStr: string): string; overload; static;
     class function  JsonListToJsonString(const AList: TList<string>): string; static;
     class function  FormatJSON(const AJson: string; AMinify: Boolean = False; AIndentation: Integer = 2): string; static;
+
     class function  ValidateJSON(const AJson: string): string; static;
     class function  IsJSON(AStr: string): Boolean; static;
 
@@ -548,7 +550,7 @@ end;
 
 class function TJX4Object.Version: string;
 begin
-  Result := Format('%0.2d.%0.2d', [
+  Result := SysUtils.Format('%0.2d.%0.2d', [
               (CJX4Version and $FF00) shr 8,
               (CJX4Version and $00FF)
             ]);
@@ -592,7 +594,7 @@ begin
       Result := Result + ToEncode[i]
     else begin
       Encoded := True;
-      Result := Result + '_' + Format('%2x', [Ord(ToEncode[i])]);
+      Result := Result + '_' + SysUtils.Format('%2x', [Ord(ToEncode[i])]);
     end;
   if Encoded then Result := '_'  + Result;
 end;
@@ -685,6 +687,11 @@ begin
     Result := TJSONAncestor(TmpJson).Format(AIndentation);
     FreeAndNil(TmpJson);
   end;
+end;
+
+function TJX4Object.Format(AMinify: Boolean; AIndentation: Integer): string;
+begin
+  Result := TJX4Object.FormatJSON(Self.ToJSON, AMinify, AIndentation);
 end;
 
 class function TJX4Object.ValidateJSON(const AJson: string): string;
