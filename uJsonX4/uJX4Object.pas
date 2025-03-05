@@ -200,20 +200,28 @@ constructor TJX4Object.Create;
 var
   LField:     TRTTIField;
   LNewObj:    TObject;
+  LAttr:      TCustomAttribute;
 begin
   inherited Create;
   for LField in TxRTTI.GetFields(Self) do
   begin
-    if  (LField.FieldType.TypeKind in [tkClass]) and (LField.Visibility in [mvPublic]) then
+    if  (LField.Visibility in [mvPublic]) then
     begin
-      if not Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Unmanaged)) then
+      if LField.FieldType.TypeKind in [tkRecord] then
       begin
-        LNewObj := TxRTTI.CreateObject(LField.FieldType.AsInstance);
-        if not Assigned(LNewObj) then Continue;
-        TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
-        LField.SetValue(Self, LNewObj);
-      end else begin
-        LField.SetValue(Self, Nil);
+        LAttr := TxRTTI.GetFieldAttribute(LField, TJX4Default);
+        if Assigned(LAttr) then LField.SetValue(Self, TJX4Default(LAttr).Value);
+      end else
+      if (LField.FieldType.TypeKind in [tkClass]) then
+      begin
+        if not Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Unmanaged)) then
+        begin
+          LNewObj := TxRTTI.CreateObject(LField.FieldType.AsInstance);
+          if not Assigned(LNewObj) then Continue;
+          TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
+          LField.SetValue(Self, LNewObj);
+        end else
+          LField.SetValue(Self, Nil);
       end;
     end;
   end;
