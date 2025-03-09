@@ -70,7 +70,7 @@ begin
     Memo1.Lines.Add('Serialization: ' + JDemo.ToJSON([joNulltoEmpty]));
 
     Memo1.Lines.Add('');
-    Demo.__23href2 := 'auto enc/dec oding';       // Name encoding: start by '_' and special characters: '_'+Hex Value : # => _23
+    Demo.__23href2 := 'auto enc/decoding';       // Name encoding: start by '_' and special characters: '_'+Hex Value : # => _23
     Memo1.Lines.Add('Name encoding : ' +  JDemo.ToJSON([joNulltoEmpty]));
 
     //Cloning :
