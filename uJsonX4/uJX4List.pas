@@ -56,6 +56,8 @@ type
     function        Clone(AOptions: TJX4Options = []): TJX4ListOfValues;
     procedure       Merge(AMergedWith: TJX4ListOfValues; AOptions: TJX4Options = []);
 
+    function        SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AUseBOM: Boolean = False): Int64;
+
     property        EleAdded:    TList<TValue> read FAdded;
     property        EleDeleted:  TList<TValue> read FDeleted;
   end;
@@ -253,6 +255,11 @@ class function TJX4ListOfValues.NewAddRange(const AValues: array of TValue): TJX
 begin
   Result := New;
   Result.AddRange(AValues);
+end;
+
+function TJX4ListOfValues.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AUseBOM: Boolean): Int64;
+begin
+  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self), AEncoding, AUseBOM);
 end;
 
 procedure TJX4ListOfValues.Merge(AMergedWith: TJX4ListOfValues; AOptions: TJX4Options);
