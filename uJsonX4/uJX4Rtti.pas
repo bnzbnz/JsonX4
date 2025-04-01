@@ -128,6 +128,7 @@ class procedure TxRTTI.CallMethodProc(const AMethod: string; const AObj: TObject
 var
   LMeth: TRttiMethod;
 begin
+  if not Assigned(AObj) then Exit;
   LMeth := TxRTTI.GetMethod(AObj, AMethod);
   if Assigned(LMeth) then LMeth.Invoke(AObj, AArgs);
 end;
@@ -136,6 +137,7 @@ class function TxRTTI.CallMethodFunc(const AMethod: string; const AObj: TObject;
 var
   LMeth: TRttiMethod;
 begin
+  if not Assigned(AObj) then Exit;
   LMeth := TxRTTI.GetMethod(AObj, AMethod);
   if not Assigned(LMeth) then Exit(TValue.Empty);
   Result := LMeth.Invoke(AObj, AArgs);
