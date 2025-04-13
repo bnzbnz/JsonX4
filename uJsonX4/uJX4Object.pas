@@ -566,7 +566,6 @@ begin
   try
   try
     LIOBlock := TJX4IOBlock.Create('', nil, nil, AOptions, aAbort);
-    var z :=  TxRTTI.CallMethodFunc('JSONSerialize', AObj, [LIOBlock]).AsString ;
     Result := TStringStream.Create( TxRTTI.CallMethodFunc('JSONSerialize', AObj, [LIOBlock]).AsString );
     if Assigned(AAbort) and AAbort^ then FreeAndNil(Result);
     if Assigned(Result) then Result.Position := 0;
