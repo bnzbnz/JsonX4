@@ -26,6 +26,7 @@ unit uJX4Dict;
 interface
 uses
     System.Generics.Collections
+  , System.SysUtils
   , RTTI
   , uJX4List
   , uJX4Object
@@ -43,6 +44,8 @@ type
     procedure JSONDeserialize(AIOBlock: TJX4IOBlock);
     procedure JSONClone(ADestDict: TJX4DictOfValues; AOptions: TJX4Options = []);
     procedure JSONMerge(AMergedWith: TJX4DictOfValues; AOptions: TJX4Options = []);
+
+    function  SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AOptions: TJX4Options = [joNullToEmpty]; AUseBOM: Boolean = False): Int64;
 
     class function New: TJX4DictOfValues;
     class function NewAdd(AKey: string; AValue: TValue): TJX4DictOfValues;
@@ -79,6 +82,7 @@ type
     function       Clone<T:class, constructor>(AOptions: TJX4Options = []): T; overload;
     procedure      Merge(AMergedWith: TJX4Dict<V>; AOptions: TJX4Options = []); overload;
     procedure      Merge(AMergedWith: TJX4ValList; AOptions: TJX4Options = []); overload;
+    function       SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AOptions: TJX4Options = [joNullToEmpty]; AUseBOM: Boolean = False): Int64;
 
     property       EleAdded:    TStringList read FAdded;
     property       EleModified: TStringList read FModified;
@@ -93,7 +97,6 @@ implementation
 uses
     uJX4Rtti
   , uJX4Value
-  , SysUtils
   , JSON
   ;
 
@@ -251,6 +254,11 @@ begin
   Result := TJX4DictOfValues.New;
   for LCnt := 0  to Length(AKeys) -1 do
     Result.Add(AKeys[LCnt], AValues[LCnt]);
+end;
+
+function TJX4DictOfValues.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AOptions: TJX4Options; AUseBOM: Boolean): Int64;
+begin
+  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AUseBOM);
 end;
 
 { TJX3Dic<V> }
@@ -528,5 +536,9 @@ begin
   end;
 end;
 
+function TJX4Dict<V>.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AOptions: TJX4Options; AUseBOM: Boolean): Int64;
+begin
+  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AUseBOM);
+end;
 
 end.

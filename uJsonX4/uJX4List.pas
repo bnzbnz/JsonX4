@@ -56,7 +56,7 @@ type
     function        Clone(AOptions: TJX4Options = []): TJX4ListOfValues;
     procedure       Merge(AMergedWith: TJX4ListOfValues; AOptions: TJX4Options = []);
 
-    function        SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AUseBOM: Boolean = False): Int64;
+    function        SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AOptions: TJX4Options = [joNullToEmpty]; AUseBOM: Boolean = False): Int64;
 
     property        EleAdded:    TList<TValue> read FAdded;
     property        EleDeleted:  TList<TValue> read FDeleted;
@@ -87,7 +87,7 @@ type
 
     function        Clone<V:class, constructor>(AOptions: TJX4Options = []): V; overload;
 
-    function        SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AUseBOM: Boolean = False): Int64;
+    function        SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AOptions: TJX4Options = [joNullToEmpty]; AUseBOM: Boolean = False): Int64;
 
     property       EleAdded:    TStringList read FAdded;
     property       EleModified: TStringList read FModified;
@@ -206,7 +206,7 @@ begin
       raise Exception.Create(Format('"%s" (TJX3ListValue) : a value is required', [LName]));
     if joNullToEmpty in AIOBlock.Options then Exit;
     if LName.IsEmpty then
-      Result := 'null'
+      Result :=  '[{}]'
     else
       Result := '"' + LName + '":null';
     Exit;
@@ -261,9 +261,9 @@ begin
   Result.AddRange(AValues);
 end;
 
-function TJX4ListOfValues.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AUseBOM: Boolean): Int64;
+function TJX4ListOfValues.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AOptions: TJX4Options; AUseBOM: Boolean): Int64;
 begin
-  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self), AEncoding, AUseBOM);
+  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AUseBOM);
 end;
 
 procedure TJX4ListOfValues.Merge(AMergedWith: TJX4ListOfValues; AOptions: TJX4Options);
@@ -438,7 +438,7 @@ begin
       raise Exception.Create(Format('"%s" (TJX3List) : a value is required', [LName]));
     if joNullToEmpty in AIOBlock.Options then Exit;
     if LName.IsEmpty then
-      Result := 'null'
+      Result := '[]'
     else
       Result := '"' + LName + '":null';
     Exit;
@@ -558,9 +558,9 @@ begin
   end;
 end;
 
-function TJX4List<T>.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AUseBOM: Boolean): Int64;
+function TJX4List<T>.SaveToJSONFile(const AFilename: string; AEncoding: TEncoding; AOptions: TJX4Options; AUseBOM: Boolean): Int64;
 begin
-  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self), AEncoding, AUseBOM);
+  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AUseBOM);
 end;
 
 

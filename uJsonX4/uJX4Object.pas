@@ -35,7 +35,7 @@ uses
   ;
 
 const
-  CJX4Version = $0102; // 01.02
+  CJX4Version = $0103; // 01.03
   CBoolToStr: array[Boolean] of string = ('false','true');
   
 type
@@ -69,6 +69,7 @@ type
     constructor Create(const AValue: Int64); overload;
     constructor Create(const AValue: Boolean); overload;
     constructor Create(const AValue: Extended); overload;
+    constructor Create(const ANilValue: Pointer); overload;
   end;
 
   TJX4Required = class(TCustomAttribute);
@@ -105,6 +106,8 @@ type
     class function  ToJSON(AObj: TObject; AOptions: TJX4Options = [ joNullToEmpty ]; AAbort: PBoolean = Nil): string; overload;
     function        ToJSON(AOptions: TJX4Options = [ joNullToEmpty ]; AAbort: PBoolean = Nil): string; overload;
     class function  FromJSON<T:class, constructor>(const AJson: string; AOptions: TJX4Options = []; AAbort: PBoolean = Nil): T; overload;
+    class function  ToJSONStream(AObj: TObject; AOptions: TJX4Options = []; AAbort: PBoolean = Nil): TStream; overload;
+
 
     function        Clone<T:class, constructor>(AOptions: TJX4Options= []): T; overload;
     procedure       Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
@@ -177,10 +180,16 @@ begin
   Value := AValue;
 end;
 
-constructor TJX4Default.Create(const AValue: Extended); 
+constructor TJX4Default.Create(const AValue: Extended);
 begin
   Value := AValue;
 end;
+
+constructor TJX4Default.Create(const ANilValue: Pointer);
+begin
+  Value := Nil;
+end;
+
 
 constructor TJX4IOBlock.Create(AJsonName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options; AAbort: PBoolean);
 begin
@@ -546,6 +555,30 @@ begin
   finally
     LJObj.Free;
     LIOBlock.Free;
+  end;
+end;
+
+class function TJX4Object.ToJSONStream(AObj: TObject; AOptions: TJX4Options; AAbort: PBoolean): TStream;
+var
+  LIOBlock: TJX4IOBlock;
+begin
+  LIOBlock := Nil;
+  try
+  try
+    LIOBlock := TJX4IOBlock.Create('', nil, nil, AOptions, aAbort);
+    var z :=  TxRTTI.CallMethodFunc('JSONSerialize', AObj, [LIOBlock]).AsString ;
+    Result := TStringStream.Create( TxRTTI.CallMethodFunc('JSONSerialize', AObj, [LIOBlock]).AsString );
+    if Assigned(AAbort) and AAbort^ then FreeAndNil(Result);
+    if Assigned(Result) then Result.Position := 0;
+  finally
+    LIOBlock.Free;
+  end;
+  except
+    on Ex: Exception do
+    begin
+      FreeAndNil(Result);
+      if joRaiseException in AOptions then raise;
+    end;
   end;
 end;
 
