@@ -64,7 +64,7 @@ begin
   Demo.Str := '~~😃~~'; // UTF8 Support
 
   // TJX3List<TJX3Str> : Array<string>
-  Memo1.lines.add('TJX3List<TJX3Str> : Array<string> :');
+  Memo1.lines.add('TJX4List<TJX3Str> : Array<string> :');
   Demo.Keys.Add('Q W E R T Y');
   Demo.Keys.Add('A Z E R T Y');
   Json := TJX4Object.ToJson(Demo, [joNullToEmpty]);
@@ -72,7 +72,7 @@ begin
 
   // + TJX3Dic<TJX3Num> : Dictionary<string, number> (JSON only allows strings as keys)
   Memo1.lines.add('');
-  Memo1.lines.add('TJX3Dic<TJX3Num> : Dictionary<string, number> :');
+  Memo1.lines.add('TJX4Dic<TJX3Num> : Dictionary<string, number> :');
   Demo.Nums.Add('Int', 1111);
   Demo.Nums.Add('Int64', 2222);
   Demo.Nums.Add('Double', 33.33);
@@ -94,7 +94,7 @@ begin
 
   // TJX3List<TJX3List<TJX3Str>> : Array<Array<string>>>
   Memo1.lines.add('');
-  Memo1.lines.add('TJX3List<TJX3List<TJX3Str>> : Array<Array<string>>> :');
+  Memo1.lines.add('TJX4List<TJX4List<TJX4Str>> : Array<Array<string>>> :');
   S := TJX4ValList.Create;
   S.Add('TTT');
   S.Add('OOO');
@@ -110,7 +110,7 @@ begin
 
   // TJX3List<TJX3Dic<TJX3List<TPrimitives>>> : Array<Dictionary<string, Array<TPrimitives>>> :)
   Memo1.lines.add('');
-  Memo1.lines.add('TJX3List<TJX3Dic<TJX3List<TPrimitives>>>  : Array<Dictionary<string, Array<TPrimitives>>>');
+  Memo1.lines.add('TJX4List<TJX4Dic<TJX4List<TPrimitives>>>  : Array<Dictionary<string, Array<TPrimitives>>>');
   var p1 := TJX4List<TPrimitive>.NewAdd(TPrimitive.Create);              // Create a 2 elements Primitives array
   p1.First.Str := 'Boolean1';                                            // Acdess the Last item (which is also the first in this case)
   p1.First.Bool := True;

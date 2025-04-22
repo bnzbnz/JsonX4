@@ -833,9 +833,9 @@ begin
   else if (LBytes[0] = $FF) and (LBytes[1] = $FE) then
     begin Result := TEncoding.Unicode; AStream.Position := 2; exit; end
   else if (LBytes[0] = $00) and (LBytes[1] = $00) and (LBytes[2] = $FE) and (LBytes[3] = $FF) then
-      raise Exception.Create('UTF-32 BE not implemented in TEncoding')  // UTF-32 BE
+      raise Exception.Create('UTF-32 BE Encoding not implemented')  // UTF-32 BE
   else if (LBytes[0] = $FF) and (LBytes[1] = $FE) and (LBytes[2] = $00) and (LBytes[3] = $00) then
-      raise Exception.Create('UTF-32 LE not implemented in TEncoding'); // UTF-32 LE
+      raise Exception.Create('UTF-32 LE Encoding not implemented'); // UTF-32 LE
 
   // No BOM
   AStream.Position := 0;

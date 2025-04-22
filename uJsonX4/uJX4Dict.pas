@@ -101,7 +101,7 @@ uses
   , JSON
   ;
 
-{ TJX3DictOfValues }
+{ TJX4DictOfValues }
 
 function TJX4DictOfValues.Clone(AOptions: TJX4Options): TJX4DictOfValues;
 begin
@@ -150,7 +150,7 @@ begin
   if Count = 0 then
   begin
     if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
-      raise Exception.Create(Format('"%s" (TJX3Dic) : a value is required', [LName]));
+      raise Exception.Create(Format('"%s" (TJX4Dic) : a value is required', [LName]));
 
     if joNullToEmpty in AIOBlock.Options then Exit;
 
@@ -261,7 +261,7 @@ begin
   Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AZipIt, AUseBOM);
 end;
 
-{ TJX3Dic<V> }
+{ TJX4Dic<V> }
 
 function TJX4Dict<V>.Clone<T>(AOptions: TJX4Options): T;
 begin
@@ -326,7 +326,7 @@ begin
   if Count = 0 then
   begin
     if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
-      raise Exception.Create(Format('"%s" (TJX3Dic) : a value is required', [LName]));
+      raise Exception.Create(Format('"%s" (TJX4Dic) : a value is required', [LName]));
 
     if joNullToEmpty in AIOBlock.Options then Exit;
 

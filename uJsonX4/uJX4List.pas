@@ -106,7 +106,7 @@ uses
   , System.TypInfo
   ;
 
-{ TJX3ListOfValues }
+{ TJX4ListOfValues }
 
 constructor TJX4ListOfValues.Create;
 begin
@@ -203,10 +203,10 @@ begin
   if Count = 0 then
   begin
     if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
-      raise Exception.Create(Format('"%s" (TJX3ListValue) : a value is required', [LName]));
+      raise Exception.Create(Format('"%s" (TJX4ListValue) : a value is required', [LName]));
     if joNullToEmpty in AIOBlock.Options then Exit;
     if LName.IsEmpty then
-      Result :=  '[{}]'
+      Result :=  '[]'
     else
       Result := '"' + LName + '":null';
     Exit;
@@ -435,7 +435,7 @@ begin
   if Count = 0 then
   begin
     if Assigned(AIOBlock.Field) and  Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
-      raise Exception.Create(Format('"%s" (TJX3List) : a value is required', [LName]));
+      raise Exception.Create(Format('"%s" (TJX4List) : a value is required', [LName]));
     if joNullToEmpty in AIOBlock.Options then Exit;
     if LName.IsEmpty then
       Result := '[]'
@@ -560,6 +560,7 @@ end;
 
 function TJX4List<T>.SaveToJSONFile(const AFilename: string; AOptions: TJX4Options; AEncoding: TEncoding; AZipIT: TCompressionLevel; AUseBOM: Boolean): Int64;
 begin
+  if not Assigned(AEncoding) then AEncoding := TEncoding.UTF8;
   Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AZipIt, AUseBOM);
 end;
 
