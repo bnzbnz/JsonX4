@@ -47,7 +47,7 @@ begin
   LArr := TJSONArray.Create;
   for LStr in Self do
   begin
-    TJX4Object.EscapeJSONStr(LStr); // String escape to JSON Format
+    TJX4Object.EscapeJSONStr(LStr, False); // String escape to JSON Format
     LArr.Add(LStr);
   end;
   Result := Format('"%s":%s', [AIOBlock.JsonName, LArr.ToJSON]) ;
