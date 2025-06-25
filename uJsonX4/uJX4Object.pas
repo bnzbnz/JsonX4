@@ -47,6 +47,7 @@ type
         joNullToEmpty
       , joRaiseException
       , joRaiseOnMissingField
+      , joSlashEncode
       , joStats
       //Merge
       , jmoDelete
@@ -120,8 +121,8 @@ type
 
     class function  NameDecode(const ToDecode: string): string; static;
     class function  NameEncode(const ToEncode: string): string; static;
-    class procedure VarEscapeJSONStr(var AStr: string); overload; static;
-    class function  EscapeJSONStr(const AStr: string): string; overload; static;
+    class procedure VarEscapeJSONStr(var AStr: string; const SlashEncode: Boolean); overload; static;
+    class function  EscapeJSONStr(const AStr: string; const SlashEncode: Boolean): string; overload; static;
     class function  JsonListToJsonString(const AList: TList<string>): string; static;
     class function  FormatJSON(const AJson: string; AMinify: Boolean = False; AIndentation: Integer = 2): string; static;
 
@@ -653,7 +654,7 @@ begin
   Result := T.Create;
 end;
 
-class procedure TJX4Object.VarEscapeJSONStr(var AStr: string);
+class procedure TJX4Object.VarEscapeJSONStr(var AStr: string; const SlashEncode: Boolean);
 const
   HexChars: array[0..15] of Char = '0123456789abcdef';
 var
@@ -667,8 +668,15 @@ begin
   LEndP := LP + Length(AStr);
   while LP < LendP do
   begin
-    case LP^ of
-      #0..#31, '\', '/', '"' : begin LMatch := LP; Break; end;
+    if SlashEncode then
+    begin
+      case LP^ of
+        #0..#31, '\', '/', '"' : begin LMatch := LP; Break; end;
+      end;
+    end else begin
+      case LP^ of
+        #0..#31, '\', '"' : begin LMatch := LP; Break; end;
+      end;
     end;
     Inc(LP);
   end;
@@ -693,7 +701,7 @@ begin
       #13: LSb.Append('\r');
       '\': LSb.Append('\\');
       '"': LSb.Append('\"');
-      '/': LSb.Append('\/');
+      '/': if SlashEncode then LSb.Append('\/') else LSb.Append('/')
     else
       LSb.Append(LP^);
     end;
@@ -703,10 +711,10 @@ begin
   LSb.Free;
 end;
 
-class function TJX4Object.EscapeJSONStr(const AStr: string): string;
+class function TJX4Object.EscapeJSONStr(const AStr: string; const SlashEncode: Boolean): string;
 begin
   Result := AStr;
-  VarEscapeJSONStr(Result);
+  VarEscapeJSONStr(Result, SlashEncode);
 end;
 
 class function TJX4Object.JsonListToJsonString(const AList: TList<string>): string;
@@ -927,7 +935,7 @@ begin
     if Assigned(AEncoding) then
       Res := TStringStream.Create('', AEncoding)
     else
-      Res := TStringStream.Create('', GetStreamEncoding(&Out));
+      Res := TStringStream.Create('', GetStreamEncoding(&Tmp));
 
     Result := Res.CopyFrom(&Tmp);
     AStr := Res.DataString;
@@ -959,23 +967,23 @@ begin
   &In   := Nil;
   Zip   := Nil;
   try
+    CreateDir(ExtractFilePath(AFilename));
+    &Out := TFileStream.Create(AFilename, fmCreate);
+
     if not Assigned(AEncoding) then AEncoding := TEncoding.UTF8;
     if (AEncoding = TEncoding.UTF8) and UseBOM then &Out.writeData($00BFBBEF, 3);
     if  AEncoding = TEncoding.BigEndianUnicode then &Out.writeData($FFFE, 2);
     if  AEncoding = TEncoding.Unicode then &Out.writeData($FEFF, 2);
 
     &In := TStringStream.Create(AStr, AEncoding);
-    CreateDir(ExtractFilePath(AFilename));
-    &Out := TFileStream.Create(AFilename, fmCreate);
-
-   if AZipIt <> clNone then
+    if AZipIt <> clNone then
     begin
       Zip := TZCompressionStream.Create(AZipIt, &Out);
       Zip.CopyFrom(&In);
       Result := &Out.Size;
     end else begin
-       &Out.CopyFrom(&In);
-       Result := &Out.Size;
+      &Out.CopyFrom(&In);
+      Result := &Out.Size;
     end;
   finally
     Zip.Free;

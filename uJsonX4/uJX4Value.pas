@@ -111,7 +111,7 @@ begin
     if Assigned(LAttr) then Exit;
   end;
   case Self.TypeKind of
-    tkvString:  LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString) + '"';
+    tkvString:  LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString, joSlashEncode in AIOBlock.Options) + '"';
     tkvBool:    LValue := cBoolToStr[Self.AsBoolean];
     tkvInteger: LValue := Self.AsInt64.ToString;
     tkvFloat:
