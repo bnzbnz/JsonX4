@@ -229,33 +229,44 @@ Example : Large JSON, Benchmark.
 In this example we read, serialize, clone (RTTI/Meerging), deserialize and finally save a large ebay's aspects  JSON and YAML file (around 1M json fields)
 You will be able to benchmark and compare the output generated json file 'jsx4.json' vs 'aspects100.json' the original ebay's on. (You'll find also the generated jsx4.yml file)
 ```
-Loading ebay's Aspects json file :
+Used Memory 58 MB
+Loading ebay's "aspects" json file :
   Stream size: 14,358.14 KB
-==> 14 ms
+==> 36 ms
+Used Memory 86 MB
 
 Convert Json String to JSX4 Objects (Deserialize):
-==> 1405 ms
-==> 10,219.32 KB/s
+==> 986 ms
+==> 14.56 MB/s
+Used Memory 383 MB
 
 JSX4 Object Cloning (by RTTI):
-==> 1164 ms
-==> 12,324.59 KB/s
+==> 804 ms
+==> 17.86 MB/s
+Used Memory 517 MB
 
 JSX4 Object Cloning (by Merging):
-==> 1265 ms
-==> 11,350.31 KB/s
+==> 916 ms
+==> 15.67 KM/s
+Used Memory 706 MB
 
 Revert JX4 Objects to Json String (Serialize)):
-==> 1129 ms
-==> 12,706.32 KB/s
+==> 948 ms
+==> 15.13 MB/s
+Used Memory 709 MB
+
+YAMLize
+==> 1242 ms
+Used Memory 743 MB
+
+Saving Cloned Json file (jsx4.json) and YAML (jsx4.yaml):
+  Stream size: 14,358.14 KB
+==> 40 ms
+Used Memory 743 MB
 
 Free Json Objects :
-  Freed in 860 ms
-
-Saving Cloned Json file (jsx4.json) :
-  Stream size: 14,358.14 KB
-==> 13 ms
-
+  Freed in 559 ms
+Used Memory 140 MB
 ```
 
 
