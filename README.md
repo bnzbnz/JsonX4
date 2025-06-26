@@ -2,7 +2,7 @@ Delphi JsonX4 (Json eXtended version 4) : JSON & YAML
 =================
 
 JsonX4 is a Delphi JSON/YAML to Objects, Objects to JSON/YAML parser. It is fast (1M/s Ops), light still simple to use
-and of course, the full json specification are supported ... DELPHI 12 ONLY ...
+and, of course, the full json specifications are supported ... DELPHI 12 ONLY ...
 
 - This project is sponsored by EA4D "Ebay Api 4 Delphi" (https://www.ea4d.com)
 - Projetcs using JsonX4 : qBit4DelphiV2 - qNOXifyV2 [https://github.com/bnzbnz/qBit4DelphiV2](https://github.com/bnzbnz/qBit4DelphiV2-qNOXifyV2) a qbittorent API for Delphi.
