@@ -104,6 +104,7 @@ uses
     , uJX4YAML
     , Windows
     , PSApi
+    , ZLib
   ;
 
 {$R *.fmx}
@@ -124,6 +125,7 @@ end;
 procedure TForm4.ButtonClick( Sender : TObject );
   var
     LJObj, LJObjClone, LJObjMerge: TfetchItemAspectsContentType;
+    LYAMLstr: string;
     LJsonStr : string;
     LWatch : TStopWatch;
     LJSize: Int64;
@@ -182,16 +184,17 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'YAMLize' );
     LWatch := TStopWatch.StartNew;
-    var YAMLstr := LJObj.ToYAML;
+  LYAMLstr := LJObj.ToYAML;
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     MB := GetMemoryUsed div (1024*1024);
     Memo1.Lines.add( Format( 'Used Memory %d MB', [ MB ] ) );
 
     Memo1.Lines.add( '' );
     LWatch := TStopWatch.StartNew;
-    Memo1.Lines.add( 'Saving Cloned Json file (jsx4.json) and YAML (jsx4.yaml):' );
-  LJSize := TJX4Object.SaveToFile( 'jsx4.json', LJsonStr, TEncoding.UTF8);
-  TJX4Object.SaveToYAMLFile( 'jsx4.yaml', YAMLstr);
+    Memo1.Lines.add( 'Saving Cloned Json file (jsx4.json), Compressed Json (jsx4.cjson) and YAML (jsx4.yaml):' );
+  TJX4Object.SaveToFile( 'jsx4.json', LJsonStr, TEncoding.UTF8);
+  TJX4Object.SaveToFile( 'jsx4.cjson', LJsonStr, TEncoding.UTF8, clFastest);
+  TJX4Object.SaveToYAMLFile( 'jsx4.yaml', LYAMLstr);
     Memo1.Lines.add( Format( '  Stream size: %n KB', [ (LJSize / 1024) ] ));
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     MB := GetMemoryUsed div (1024*1024);

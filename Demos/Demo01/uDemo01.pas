@@ -62,18 +62,18 @@ begin
   Primitives.Num1 := -999;
   Primitives.Num2 := 999;
   Primitives.Num3 := 2.2;
-  Primitives.Num4 := 22.22;
+  Primitives.Num4 := 22.0; // Make sure this is a decimal value not an Integer
   Primitives.NullStr := Nil;
 
   // Raw Json
   Json := Primitives.ToJson([]);
-  Memo1.lines.add('Raw Original Object:');
+  Memo1.lines.add('Raw String Object:');
   Memo1.lines.add(Json);
 
   // Optimized Json
   Memo1.lines.add('');
   Json := Primitives.ToJson([joNullToEmpty]);
-  Memo1.lines.add('Optimized Original Object:');
+  Memo1.lines.add('Optimized String Object (null removed):');
   Memo1.lines.add(Json);
 
   // Converting back to a Primitives Object;
