@@ -177,7 +177,7 @@ begin
   JPosts.Free;
 
     // Albums
-  Memo1.lines.add('Get Comments:');
+  Memo1.lines.add('Get Albums:');
   Res := Http.Get('https://jsonplaceholder.typicode.com/albums');
   JAlbums := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
