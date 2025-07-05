@@ -126,8 +126,11 @@ var
 
 implementation
 uses
-  System.Net.HttpClient,
-  System.Diagnostics;
+    System.Net.HttpClient
+  , System.Diagnostics
+  , System.Net.URLClient
+  , System.NetConsts
+  ;
 
 {$R *.fmx}
 
