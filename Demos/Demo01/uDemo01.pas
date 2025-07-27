@@ -29,14 +29,12 @@ type
   end;
 
   TPrimitives = class(TJX4Object)
-    Str:     TValue;
-    Bool:    TValue;
-    Num1:    TValue;
-    Num2:    TValue;
-    Num3:    TValue;
-    Num4:    TValue; // as UInt64
-    NullStr: TValue;
-    // ...
+    Str:  TValue;  // a String
+    Bool: TValue;  // a Boolean
+    Int: TValue;  // an Int64
+    Dec: TValue;  // a Decimal
+    Cur: TValue;  // a Currenty
+    NullStr: TValue; // a Null String Value
   end;
 
 var
@@ -58,11 +56,9 @@ begin
   Primitives := TPrimitives.Create;
   Primitives.Str := 'testing 😜';
   Primitives.Bool := True;
-
-  Primitives.Num1 := -999;
-  Primitives.Num2 := 999;
-  Primitives.Num3 := 2.2;
-  Primitives.Num4 := 22.0; // Make sure this is a decimal value not an Integer
+  Primitives.Int := -999;
+  Primitives.Dec := 2.2;
+  Primitives.Cur := 22.0; // Make sure this is a decimal value not an Integer
   Primitives.NullStr := Nil;
 
   // Raw Json
@@ -89,8 +85,9 @@ begin
   Memo1.lines.add('');
   Memo1.lines.add('Checking the New Object Values:');
   Memo1.lines.add('Str: ' + NewPrimitives.Str.AsString);
-  Memo1.lines.add('Int64: ' + NewPrimitives.Num2.AsOrdinal.ToString);
-  Memo1.lines.add('Currency: ' + NewPrimitives.Num4.AsCurrency.ToString);
+  Memo1.lines.add('Int64: ' + NewPrimitives.Int.AsOrdinal.ToString);
+  Memo1.lines.add('Decimal: ' + NewPrimitives.Dec.AsExtended .ToString);
+  Memo1.lines.add('Currency: ' + NewPrimitives.Cur.AsCurrency.ToString);
 
   // Formatted Json
   Memo1.lines.add('');
