@@ -92,7 +92,7 @@ begin
   // Formatted Json
   Memo1.lines.add('');
   Memo1.lines.add('Formatted:');
-  Memo1.lines.add(TJX4Object.FormatJSON(Json));
+  Memo1.lines.add(NewPrimitives.Format);
 
   NewPrimitives.Free;
   Primitives.Free;
