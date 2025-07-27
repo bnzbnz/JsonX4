@@ -23,40 +23,48 @@ Usage
 Example : using primitives (Demo01)
 
 ```Delphi
-
-  TPrimitives = class(TJ4Object)
-    Str:   TValue; // As Str
-    Bool: TValue; // As Bool
-    Num:  TValue; // as Int64
+  // Definition
+  TPrimitives = class(TJX4Object)
+    Str:  TValue;  // a String
+    Bool: TValue;  // a Boolean
+    Int: TValue;  // an Int64
+    Dec: TValue;  // a Decimal
+    Cur: TValue;  // a Currenty
+    NullStr: TValue; // a Null String Value
   end;
 
+  // Initialization
   Primitives := TPrimitives.Create;
   Primitives.Str := 'testing 😜';
   Primitives.Bool := True;
-
-  Primitives.Num1 := -999;
-  Primitives.Num2 := 999;
-  Primitives.Num3 := 2.2;
-  Primitives.Num4 := 22.22;
+  Primitives.Int := -999;
+  Primitives.Dec := 2.2;
+  Primitives.Cur := 22.0; // Make sure this is a decimal value not an Integer
   Primitives.NullStr := Nil;
 
 ```
-  JX4 will take care of all owned objects (Constructor/Destrutor), for exmaple 'Primitives.Str" is created and will be destroyed automatically (or pooled) , you don't have take care of it!
+  JX4 will take care of all owned objects (Constructor/Destrutor), for exmaple 'Primitives.Str" is created and will be destroyed automatically, you don't have take care of it!
 ```Delphi
-   Json := Primitives.ToJson([]); // Serialization
+  // Primitives Serialization
+  Json := Primitives.ToJson([]); 
 ```
+Json =
 ```Json
-{"Str":"testing 😜","Bool":true,"Num":-99}
+{"Str":"testing 😜","Bool":true,"Int":-999,"Dec":2.2,"Cur":22.0,"NullStr":null}
 ```
 ```Delphi
+  // Json Serialization to NewPrimitives
    NewPrimitives := TJX4Object.FromJSON<TPrimitives>(Json);
  ```
-  By deserializing from the Json string we made a copy of the TPrimtive object
+  By deserializing the Json string we basically making a copy of the TPrimtive object
 ```Delphi
-Result =
-  DeserPrim.Str.AsString ==> 'testing 😜';
-  DeserPrim.Bool.AsBoolean ==> True;       
-  DeserPrim.Num.AsOrdinal ==> -99;
+  NewPrimitives.Str := 'testing 😜';
+  NewPrimitives.Bool := True;
+  NewPrimitives.Int := -999;
+  NewPrimitives.Dec := 2.2;
+  NewPrimitives.Cur := 22.0; // Make sure this is a decimal value not an Integer
+  NewPrimitives.NullStr := Nil;
+  ...
 ```
 -----
 Example : using inner classes (Demo02) 
