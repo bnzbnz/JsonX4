@@ -46,24 +46,30 @@ Example : using primitives (Demo01)
   JX4 will take care of all owned objects (Constructor/Destrutor), for exmaple 'Primitives.Str" is created and will be destroyed automatically, you don't have take care of it!
 ```Delphi
   // Primitives Serialization
-  Json := Primitives.ToJson([]); 
-```
+  // Exact Json representation of "Primitives"
+  Json := Primitives.ToJson([]);
+  
+  // Json representation of "Primitives" without the null value  
+  Json := Primitives.ToJson([joNullToEmpty]);  
+ ```
 Json =
 ```Json
 {"Str":"testing 😜","Bool":true,"Int":-999,"Dec":2.2,"Cur":22.0,"NullStr":null}
+{"Str":"testing 😜","Bool":true,"Int":-999,"Dec":2.2,"Cur":22.0}
 ```
 ```Delphi
   // Json Serialization to NewPrimitives
    NewPrimitives := TJX4Object.FromJSON<TPrimitives>(Json);
  ```
   By deserializing the Json string we basically making a copy of the TPrimtive object
+  (we should use .Clone, It's faster...)
 ```Delphi
-  NewPrimitives.Str := 'testing 😜';
-  NewPrimitives.Bool := True;
-  NewPrimitives.Int := -999;
-  NewPrimitives.Dec := 2.2;
-  NewPrimitives.Cur := 22.0; // Make sure this is a decimal value not an Integer
-  NewPrimitives.NullStr := Nil;
+   Memo1.lines.add('');
+   Memo1.lines.add('Checking the New Object Values:');
+   Memo1.lines.add('Str: ' + NewPrimitives.Str.AsString);
+   Memo1.lines.add('Int64: ' + NewPrimitives.Int.AsOrdinal.ToString);
+   Memo1.lines.add('Decimal: ' + NewPrimitives.Dec.AsExtended .ToString);
+   Memo1.lines.add('Currency: ' + NewPrimitives.Cur.AsCurrency.ToString);
   ...
 ```
 -----
