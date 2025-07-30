@@ -109,7 +109,9 @@ type
     function        ToJSON(AOptions: TJX4Options = [ joNullToEmpty ]; AAbort: PBoolean = Nil): string; overload;
     class function  FromJSON<T:class, constructor>(const AJson: string; AOptions: TJX4Options = []; AAbort: PBoolean = Nil): T; overload;
     class function  ToJSONStream(AObj: TObject; AOptions: TJX4Options = []; AAbort: PBoolean = Nil): TStream; overload;
-
+    class function  ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
+    function        ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
+    class function  FromYAML<T:class, constructor>(const AYaml: string; AOptions: TJX4Options = []): T;
 
     function        Clone<T:class, constructor>(AOptions: TJX4Options= []): T; overload;
     procedure       Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
@@ -144,9 +146,6 @@ type
                     ): Int64; overload;
 
      // YAML
-    class function  ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
-    function        ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
-    class function  FromYAML<T:class, constructor>(const AYaml: string; AOptions: TJX4Options = []): T;
 
     class function  LoadFromYAMLFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding = Nil): T;
     function        SaveToYAMLFile(
@@ -163,9 +162,9 @@ type
     class function  JSONtoYAML(const AJson: string): string;
 
  end;
+
  TJX4Obj = TJX4Object;
  TJX4    = TJX4Object;
-
 
 implementation
 uses

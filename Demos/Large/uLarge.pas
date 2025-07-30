@@ -199,8 +199,8 @@ begin
   LJObjClone.SaveToJSONFile( 'jsx4.json', False);
   // As we already have the serialized Json (LJsonStr), it is way faster :
   // TJX4Object.SaveToFile('jsx4-2.json', LJsonStr, TEncoding.UTF8, clNone);
-  LJObjClone.SaveToJSONFile( 'jsx4_formatted.json', True, [], TEncoding.UTF8, clNone);
-  LJObjClone.SaveToJSONFile( 'jsx4.Cjson', False, [], TEncoding.UTF8, clMax);
+  LJObjClone.SaveToJSONFile( 'jsx4_formatted.json', True, [joNullToEmpty], TEncoding.UTF8, clNone);
+  LJObjClone.SaveToJSONFile( 'jsx4.Cjson', False, [joNullToEmpty], TEncoding.UTF8, clMax);
   LJObj.SaveToYAMLFile('jsx4.yaml');
   LJObj.SaveToYAMLFile('jsx4.Cyaml',[joNullToEmpty], TEncoding.UTF8, clMax);
 
