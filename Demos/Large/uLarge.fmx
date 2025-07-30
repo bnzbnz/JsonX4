@@ -2,15 +2,15 @@ object Form4: TForm4
   Left = 0
   Top = 0
   Caption = 'Large JSON'
-  ClientHeight = 511
-  ClientWidth = 514
+  ClientHeight = 624
+  ClientWidth = 640
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
   object Button: TButton
     Align = Top
-    Size.Width = 514.000000000000000000
+    Size.Width = 640.000000000000000000
     Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
@@ -21,12 +21,20 @@ object Form4: TForm4
   object Memo1: TMemo
     Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
     DataDetectorTypes = []
+    Lines.Strings = (
+      
+        'The file to be processed contains 1 million json elements (strin' +
+        'g, integer, array, etc ...)'
+      
+        'Il will be copied, serialized, deserialized, cloned ,merged, sav' +
+        'ed 4 times with different format'
+      'Depending of your system, It may take a while !!')
     Align = Client
-    Size.Width = 514.000000000000000000
-    Size.Height = 470.000000000000000000
+    Size.Width = 640.000000000000000000
+    Size.Height = 583.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
-    Viewport.Width = 510.000000000000000000
-    Viewport.Height = 466.000000000000000000
+    Viewport.Width = 640.000000000000000000
+    Viewport.Height = 583.000000000000000000
   end
 end

@@ -113,7 +113,7 @@ type
 
     function        Clone<T:class, constructor>(AOptions: TJX4Options= []): T; overload;
     procedure       Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
-    function        Format(AMinify: Boolean = False; AIndentation: Integer = 2): string;
+    function        Format(AIndentation: Integer = 2): string;
 
     // Utils
     class function  Version: string;
@@ -124,7 +124,7 @@ type
     class procedure VarEscapeJSONStr(var AStr: string; const SlashEncode: Boolean); overload; static;
     class function  EscapeJSONStr(const AStr: string; const SlashEncode: Boolean): string; overload; static;
     class function  JsonListToJsonString(const AList: TList<string>): string; static;
-    class function  FormatJSON(const AJson: string; AMinify: Boolean = False; AIndentation: Integer = 2): string; static;
+    class function  FormatJSON(const AJson: string; ABeautify: Boolean = True; AIndentation: Integer = 2): string; static;
 
     class function  ValidateJSON(const AJson: string): string; static;
     class function  IsJSON(AStr: string): Boolean; static;
@@ -135,18 +135,30 @@ type
 
     // JSON
     class function  LoadFromJSONFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding = Nil): T; overload;
-    function        SaveToJSONFile(const AFilename: string; Options: TJX4Options; AEncoding: TEncoding;  ABeautify: Boolean = False; AZipIt: TCompressionLevel = clNone; AUseBOM: Boolean = False; AAbort: PBoolean = Nil): Int64; overload;
-    function        SaveToJSONFile(const AFilename: string; ABeautify: Boolean = False): Int64; overload;
+    function        SaveToJSONFile(  const AFilename: string;
+                      ABeautify: Boolean = False;
+                      AOptions: TJX4Options = [ joNullToEmpty ];
+                      AEncoding: TEncoding = Nil;
+                      AZip: TCompressionLevel = clNone;
+                      AAbort: PBoolean = Nil
+                    ): Int64; overload;
 
      // YAML
     class function  ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     function        ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     class function  FromYAML<T:class, constructor>(const AYaml: string; AOptions: TJX4Options = []): T;
+
     class function  LoadFromYAMLFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding = Nil): T;
-    class function  SaveToYAMLFile(const Filename: string; const AStr: string): Int64; overload;
-    function        SaveToYAMLFile(const AFilename: string): Int64; overload;
+    function        SaveToYAMLFile(
+      const AFilename: string;
+      AOptions: TJX4Options = [ joNullToEmpty ];
+      AEncoding: TEncoding = Nil;
+      AZip: TCompressionLevel = clNone;
+      AAbort: PBoolean = Nil
+    ): Int64; overload;
 
     // Tools
+
     class function  YAMLtoJSON(const AYaml: string): string;
     class function  JSONtoYAML(const AJson: string): string;
 
@@ -735,22 +747,22 @@ begin
   LSb.Free;
 end;
 
-class function TJX4Object.FormatJSON(const AJson: string; AMinify: Boolean; AIndentation: Integer): string;
+class function TJX4Object.FormatJSON(const AJson: string; ABeautify: Boolean; AIndentation: Integer): string;
 var
   TmpJson: TJsonObject;
 begin
-  if AMinify then
-    Result := TYamlUtils.JsonMinify(AJson)
-  else begin
+  if ABeautify then
+  begin
     TmpJson := TJSONObject.ParseJSONValue(AJson) as TJSONObject;
     Result := TJSONAncestor(TmpJson).Format(AIndentation);
     FreeAndNil(TmpJson);
-  end;
+  end else
+   Result := TYamlUtils.JsonMinify(AJson);
 end;
 
-function TJX4Object.Format(AMinify: Boolean; AIndentation: Integer): string;
+function TJX4Object.Format(AIndentation: Integer): string;
 begin
-  Result := TJX4Object.FormatJSON(Self.ToJSON, AMinify, AIndentation);
+  Result := TJX4Object.FormatJSON(Self.ToJSON, True, AIndentation);
 end;
 
 class function TJX4Object.ValidateJSON(const AJson: string): string;
@@ -1003,29 +1015,32 @@ begin
   Result := ToYAML(Self, AOptions);
 end;
 
-function TJX4Object.SaveToJSONFile(const AFilename: string; ABeautify: Boolean): Int64;
-begin
-  Result := Self.SaveToJSONFile(AFilename, [joNullToEmpty], TEncoding.UTF8, ABeautify, clNone, False, Nil);
-end;
-
-function TJX4Object.SaveToJSONFile(const AFilename: string; Options: TJX4Options; AEncoding: TEncoding; ABeautify: Boolean; AZipIt: TCompressionLevel; AUseBOM: Boolean; AAbort: PBoolean): Int64;
+function TJX4Object.SaveToJSONFile(
+  const AFilename: string;
+  ABeautify: Boolean = False;
+  AOptions: TJX4Options = [ joNullToEmpty ];
+  AEncoding: TEncoding = Nil;
+  AZip: TCompressionLevel = clNone;
+  AAbort: PBoolean = Nil
+): Int64;
 begin
   Result := 0;
   if Assigned(AAbort) and (AAbort^) then Exit;
   if ABeautify then
-    Result := TJX4Object.SaveToFile(AFilename,  TJX4Object.FormatJSON( TJX4Object.ToJSON(Self, Options, AAbort), False) , AEncoding, AZipIt, AUseBOM, AAbort)
+    Result := TJX4Object.SaveToFile(AFilename,  TJX4Object.FormatJSON( TJX4Object.ToJSON(Self, AOptions, AAbort) ) , AEncoding, AZip, False, AAbort)
   else
-    Result := TJX4Object.SaveToFile(AFilename,  TJX4Object.ToJSON(Self, Options, AAbort), AEncoding, AZipIt, AUseBOM, AAbort);
+    Result := TJX4Object.SaveToFile(AFilename,  TJX4Object.ToJSON(Self, AOptions, AAbort), AEncoding, AZip, False, AAbort);
 end;
 
-class function TJX4Object.SaveToYAMLFile(const Filename: string; const AStr: string): Int64;
+function TJX4Object.SaveToYAMLFile(
+  const AFilename: string;
+  AOptions: TJX4Options = [ joNullToEmpty ];
+  AEncoding: TEncoding = Nil;
+  AZip: TCompressionLevel = clNone;
+  AAbort: PBoolean = Nil
+): Int64;
 begin
-  Result := SaveToFile(Filename, AStr, TEncoding.UTF8);
-end;
-
-function TJX4Object.SaveToYAMLFile(const AFilename: string): Int64;
-begin
-  Result := TJX4Object.SaveToYAMLFile(AFilename, TYAMLUtils.JsonToYaml( TJX4Object.ToJSON(Self, [joNullToEmpty])))
+  Result := TJX4Object.SaveToFile(AFilename, Self.ToYAML, AEncoding, AZip, False, AAbort);
 end;
 
 class function TJX4Object.LoadFromYAMLFile<T>(const AFilename: string; AEncoding: TEncoding): T;

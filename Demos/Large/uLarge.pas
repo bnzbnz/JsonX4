@@ -128,10 +128,12 @@ procedure TForm4.ButtonClick( Sender : TObject );
     LYAMLstr: string;
     LJsonStr : string;
     LWatch : TStopWatch;
+    LGWatch : TStopWatch;
     LJSize: Int64;
 begin
 
     Memo1.Lines.Clear;
+    LGWatch := TStopWatch.StartNew;
 
     var MB := GetMemoryUsed div (1024*1024);
     Memo1.Lines.add( Format( 'Used Memory %d MB', [ MB ] ) );
@@ -191,10 +193,17 @@ begin
 
     Memo1.Lines.add( '' );
     LWatch := TStopWatch.StartNew;
-    Memo1.Lines.add( 'Saving Cloned Json file (jsx4.json), Compressed Json (jsx4.cjson) and YAML (jsx4.yaml):' );
-  TJX4Object.SaveToFile( 'jsx4.json', LJsonStr, TEncoding.UTF8);
-  TJX4Object.SaveToFile( 'jsx4.cjson', LJsonStr, TEncoding.UTF8, clFastest);
-  TJX4Object.SaveToYAMLFile( 'jsx4.yaml', LYAMLstr);
+    Memo1.Lines.add( 'Saving Cloned Json file (jsx4.json), Beautified (jsx4_formatted.json), Compressed (jsx4.cjson) and ' );
+    Memo1.Lines.add( 'YAML (jsx4.yaml) and Compressed YAML (jsx4.Cyaml) :' );
+
+  LJObjClone.SaveToJSONFile( 'jsx4.json', False);
+  // As we already have the serialized Json (LJsonStr), it is way faster :
+  // TJX4Object.SaveToFile('jsx4-2.json', LJsonStr, TEncoding.UTF8, clNone);
+  LJObjClone.SaveToJSONFile( 'jsx4_formatted.json', True, [], TEncoding.UTF8, clNone);
+  LJObjClone.SaveToJSONFile( 'jsx4.Cjson', False, [], TEncoding.UTF8, clMax);
+  LJObj.SaveToYAMLFile('jsx4.yaml');
+  LJObj.SaveToYAMLFile('jsx4.Cyaml',[joNullToEmpty], TEncoding.UTF8, clMax);
+
     Memo1.Lines.add( Format( '  Stream size: %n KB', [ (LJSize / 1024) ] ));
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     MB := GetMemoryUsed div (1024*1024);
@@ -210,6 +219,8 @@ begin
     MB := GetMemoryUsed div (1024*1024);
     Memo1.Lines.add( Format( 'Used Memory %d MB', [ MB ] ) );
 
-  end;
+  Memo1.Lines.add( '' );
+  Memo1.Lines.add( Format( '==>  Total Time %d ms', [ LGWatch.ElapsedMilliseconds ] ) );
+end;
 
 end.
