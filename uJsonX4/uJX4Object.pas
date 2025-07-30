@@ -135,7 +135,8 @@ type
 
     // JSON
     class function  LoadFromJSONFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding = Nil): T; overload;
-    function        SaveToJSONFile(const AFilename: string; Options: TJX4Options; AEncoding: TEncoding;  AZipIt: TCompressionLevel = clNone; AUseBOM: Boolean = False; AAbort: PBoolean = Nil): Int64; overload;
+    function        SaveToJSONFile(const AFilename: string; Options: TJX4Options; AEncoding: TEncoding;  ABeautify: Boolean = False; AZipIt: TCompressionLevel = clNone; AUseBOM: Boolean = False; AAbort: PBoolean = Nil): Int64; overload;
+    function        SaveToJSONFile(const AFilename: string; ABeautify: Boolean = False): Int64; overload;
 
      // YAML
     class function  ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
@@ -1002,11 +1003,19 @@ begin
   Result := ToYAML(Self, AOptions);
 end;
 
-function TJX4Object.SaveToJSONFile(const AFilename: string; Options: TJX4Options; AEncoding: TEncoding; AZipIt: TCompressionLevel; AUseBOM: Boolean; AAbort: PBoolean): Int64;
+function TJX4Object.SaveToJSONFile(const AFilename: string; ABeautify: Boolean): Int64;
+begin
+  Result := Self.SaveToJSONFile(AFilename, [joNullToEmpty], TEncoding.UTF8, ABeautify, clNone, False, Nil);
+end;
+
+function TJX4Object.SaveToJSONFile(const AFilename: string; Options: TJX4Options; AEncoding: TEncoding; ABeautify: Boolean; AZipIt: TCompressionLevel; AUseBOM: Boolean; AAbort: PBoolean): Int64;
 begin
   Result := 0;
   if Assigned(AAbort) and (AAbort^) then Exit;
-  Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, Options, AAbort), AEncoding, AZipIt, AUseBOM, AAbort);
+  if ABeautify then
+    Result := TJX4Object.SaveToFile(AFilename,  TJX4Object.FormatJSON( TJX4Object.ToJSON(Self, Options, AAbort), False) , AEncoding, AZipIt, AUseBOM, AAbort)
+  else
+    Result := TJX4Object.SaveToFile(AFilename,  TJX4Object.ToJSON(Self, Options, AAbort), AEncoding, AZipIt, AUseBOM, AAbort);
 end;
 
 class function TJX4Object.SaveToYAMLFile(const Filename: string; const AStr: string): Int64;
