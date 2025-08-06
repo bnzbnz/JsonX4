@@ -33,7 +33,7 @@ type
   end;
 
   TJPosts = class(TJX4Object)
-    container: TJX4List<TJPost>;
+    ctnr: TJX4List<TJPost>;
   end;
 
   // Comments:
@@ -49,17 +49,6 @@ type
     container: TJX4List<TJComment>;
   end;
 
-  // Albums:
-  TJAlbum = class(TJX4Object)
-    userId: TValue; // Integer
-    id: TValue; // Integer
-    title: TValue; // string
-  end;
-
-  TJAlbums = class(TJX4Object)
-    ctnr: TJX4List<TJAlbum>;
-  end;
-
   // Photos
   TJPhoto = class(TJX4Object)
     albumId: TValue; // Integer
@@ -71,6 +60,19 @@ type
 
   TJPhotos = class(TJX4Object)
     ctnr: TJX4List<TJPhoto>;
+  end;
+
+  // Albums:
+  TJAlbum = class(TJX4Object)
+    userId: TValue; // Integer
+    id: TValue; // Integer
+    title: TValue; // string
+
+    Photos: TJX4List<TJPhoto>;  // Generated
+  end;
+
+  TJAlbums = class(TJX4Object)
+    ctnr: TJX4List<TJAlbum>;
   end;
 
   // Todos
@@ -114,22 +116,29 @@ type
     phone: TValue; // string
     website: TValue; // string
     company: TJCompany;
+
+    Albums: TJX4List<TJAlbum>; // Generated
+    Posts: TJX4List<TJPost>; // Generated
+    Todos: TJX4List<TJTodo>; //Generated
+
   end;
 
   TJUsers = class(TJX4Object)
     ctnr: TJX4List<TJUser>;
   end;
 
-
 var
   Form4: TForm4;
 
 implementation
 uses
-    System.Net.HttpClient
+    Math
+  , UJX4Rtti
+  , System.Net.HttpClient
   , System.Diagnostics
   , System.Net.URLClient
   , System.NetConsts
+  , System.Generics.Defaults
   ;
 
 {$R *.fmx}
@@ -145,109 +154,52 @@ var
   JPhotos : TJPhotos;
   JTodos: TJTodos;
   JUSers: TJUsers;
-  i: Integer;
+  Watch: TStopwatch;
+
 begin
   Memo1.Lines.Clear;
 
-  var Watch := TStopwatch.StartNew;
+  Watch := TStopwatch.StartNew;
 
   Http := THTTPClient.Create;
   Http.AutomaticDecompression := [THTTPCompressionMethod.Any];
   Http.ContentType := 'application/json';
 
   // Posts
-  Memo1.lines.add('Get Posts:');
   Res := Http.Get('https://jsonplaceholder.typicode.com/posts');
   JPosts := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
   begin
-    Json := '{"container":' + Res.ContentAsString(TEncoding.UTF8) + '}';
+    Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
     JPosts := TJX4Object.FromJSON<TJPosts>(Json);
-    Memo1.Lines.Add('Count: ' + JPosts.container.Count.ToString + ': ');
-    for i := 0 to 1 do
-    begin
-      Memo1.Lines.Add('');
-      Memo1.Lines.Add('  Id:     ' + JPosts.container[i].id.ToString);
-      Memo1.Lines.Add('  UserId: ' + JPosts.container[i].userId.ToString);
-      Memo1.Lines.Add('  Title:  ' + JPosts.container[i].title.ToString);
-      Memo1.Lines.Add('  Body:   ' + JPosts.container[i].body.ToString);
-    end;
-    Memo1.Lines.Add('');
-    Memo1.Lines.Add('>>>>>>>>>>>>> And More...');
-    Memo1.Lines.Add('');
-    Memo1.Lines.Add('');
   end;
-  JPosts.Free;
 
     // Albums
-  Memo1.lines.add('Get Albums:');
   Res := Http.Get('https://jsonplaceholder.typicode.com/albums');
   JAlbums := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
   begin
     Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
     JAlbums := TJX4Object.FromJSON<TJAlbums>(Json);
-    Memo1.Lines.Add('Count: ' + JAlbums.ctnr.Count.ToString + ': ');
-    for i := 0 to 1 do
-    begin
-      Memo1.Lines.Add('');
-      Memo1.Lines.Add('  UserId: ' + JAlbums.ctnr[i].userId.ToString);
-      Memo1.Lines.Add('  Id:     ' + JAlbums.ctnr[i].id.ToString);
-      Memo1.Lines.Add('  Title:  ' + JAlbums.ctnr[i].Title.ToString);
-    end;
-    Memo1.Lines.Add('');
-    Memo1.Lines.Add('>>>>>>>>>>>>> And More...');
-    Memo1.Lines.Add('');
-    Memo1.Lines.Add('');
   end;
-  JAlbums.Free;
 
-
-    // Photos
-  Memo1.lines.add('Get Photos:');
+  // Photos
   Res := Http.Get('https://jsonplaceholder.typicode.com/photos');
   JPhotos := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
   begin
     Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
     JPhotos := TJX4Object.FromJSON<TJPhotos>(Json);
-    Memo1.Lines.Add('Count: ' + JPhotos.ctnr.Count.ToString + ': ');
-    for i := 0 to 1 do
-    begin
-      Memo1.Lines.Add('');
-      Memo1.Lines.Add('  AlbumId: ' + JPhotos.ctnr[i].albumId.ToString);
-      Memo1.Lines.Add('  Id:      ' + JPhotos.ctnr[i].Id.ToString);
-      Memo1.Lines.Add('  Title:   ' + JPhotos.ctnr[i].title.ToString);
-      Memo1.Lines.Add('  Url:     ' + JPhotos.ctnr[i].url.ToString);
-    end;
-    Memo1.Lines.Add('');
-    Memo1.Lines.Add('>>>>>>>>>>>>> And More...');
-    Memo1.Lines.Add('');
   end;
-  JPhotos.Free;
 
   // Todos
-  Memo1.lines.add('Get Todos:');
   Res := Http.Get('https://jsonplaceholder.typicode.com/todos');
   JTodos := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
   begin
     Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
     JTodos := TJX4Object.FromJSON<TJTodos>(Json);
-    Memo1.Lines.Add('Count: ' + JTodos.ctnr.Count.ToString + ': ');
-    for i := 0 to 1 do
-    begin
-      Memo1.Lines.Add('');
-      Memo1.Lines.Add('  UserId:    ' + JTodos.ctnr[i].userId.ToString);
-      Memo1.Lines.Add('  Id:        ' + JTodos.ctnr[i].Id.ToString);
-      Memo1.Lines.Add('  Title:     ' + JTodos.ctnr[i].title.ToString);
-      Memo1.Lines.Add('  Completed: ' + JTodos.ctnr[i].completed.ToString);
-    end;
-    Memo1.Lines.Add('');
-    Memo1.Lines.Add('>>>>>>>>>>>>> And More...');
-    Memo1.Lines.Add('');
   end;
-  JTodos.Free;
 
   // Users
   Memo1.lines.add('Get Users:');
@@ -257,22 +209,45 @@ begin
   begin
     Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
     JUsers := TJX4Object.FromJSON<TJUsers>(Json);
-    Memo1.Lines.Add('Count: ' + JUsers.ctnr.Count.ToString + ': ');
-    for i := 0 to 1 do
-    begin
-      Memo1.Lines.Add('');
-      Memo1.Lines.Add(TJX4Object.FormatJSON(JUsers.ctnr[i].ToJSON()));
-    end;
-    Memo1.Lines.Add('');
-    Memo1.Lines.Add('>>>>>>>>>>>>> And More...');
-    Memo1.Lines.Add('');
   end;
-  JUsers.Free;
 
   HTTP.Free;
 
+  if assigned(JPhotos) and assigned(JAlbums) then
+    for var Photo := 0 to JPhotos.ctnr.count - 1 do
+      for var Album := 0 to JAlbums.ctnr.count -1 do
+        if JPhotos.ctnr[Photo].albumId.AsInteger = JAlbums.ctnr[Album].id.AsInteger then
+           JAlbums.ctnr[Album].Photos.add( JPhotos.ctnr[Photo].Clone<TJPhoto> );
+  JPhotos.Free;
+
+  if assigned(JAlbums) and assigned(JUsers) then
+    for var Album := 0 to JAlbums.ctnr.count - 1 do
+      for var User := 0 to JUsers.ctnr.count -1 do
+        if JAlbums.ctnr[Album].userId.AsInteger = JUsers.ctnr[User].id.AsInteger then
+           JUsers.ctnr[User].Albums.add( JAlbums.ctnr[Album].Clone<TJAlbum> );
+  JAlbums.Free;
+
+  if assigned(JTodos) and assigned(JUsers) then
+    for var Todo := 0 to JTodos.ctnr.count - 1 do
+      for var User := 0 to JUsers.ctnr.count -1 do
+        if JTodos.ctnr[Todo].userId.AsInteger = JUsers.ctnr[User].id.AsInteger then
+          JUsers.ctnr[User].Todos.add( JTodos.ctnr[Todo].Clone<TJTodo> );
+  JTodos.Free;
+
+  if assigned(JPosts) and assigned(JUsers) then
+    for var Post := 0 to JPosts.ctnr.count - 1 do
+      for var User := 0 to JUsers.ctnr.count -1 do
+        if JPosts.ctnr[Post].userId.AsInteger = JUsers.ctnr[User].id.AsInteger then
+          JUsers.ctnr[User].Posts.add( JPosts.ctnr[Post].Clone<TJPost> );
+  JPosts.Free;
+
+
+  Memo1.Text :=  JUsers.Format();
   Memo1.Lines.Add('>> Total Duration : ' + Watch.ElapsedMilliseconds.ToString + ' ms');
 
-end;
+  JUsers.SaveToJSONFile('d:\Temp\json.json');
+  JUsers.Free;
+
+  end;
 
 end.
