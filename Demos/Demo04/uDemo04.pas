@@ -36,6 +36,9 @@ var
   Form4: TForm4;
 
 implementation
+uses
+    System.Diagnostics
+  ;
 
 {$R *.fmx}
 
@@ -44,7 +47,11 @@ var
   Json: string;
   Obj, NewObj: TDemoContainer;
   MyList:  TJSONableStringList;
+  LWatch: TStopWatch;
 begin
+
+  LWatch := TStopWatch.StartNew;
+
   Memo1.Lines.Clear;
 
   MyList :=  TJSONableStringList.Create;      // we create a "jsonable" object
@@ -89,6 +96,9 @@ begin
   Obj.Free;
 
   MyList.Free; // we destroy the unmanaged list...
+
+  Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+
 end;
 
 end.

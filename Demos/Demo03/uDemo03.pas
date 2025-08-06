@@ -49,6 +49,9 @@ var
   Form4: TForm4;
 
 implementation
+uses
+    System.Diagnostics
+  ;
 
 {$R *.fmx}
 
@@ -57,7 +60,11 @@ var
   Demo: TObjectDemo;
   Json: string;
   s: TJX4ValList;
+  LWatch: TStopWatch;
 begin
+
+  LWatch := TStopWatch.StartNew;
+
   Memo1.Lines.Clear;
 
   Demo := TObjectDemo.Create;
@@ -130,6 +137,8 @@ begin
   Memo1.lines.add(TJX4Object.FormatJSON(Json, False, 4));
 
   Demo.Free;
+
+  Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 end;
 
 end.

@@ -54,20 +54,30 @@ var
   Form4: TForm4;
 
 implementation
+ uses
+    System.Diagnostics
+  ;
 
 {$R *.fmx}
 
 procedure TForm4.ButtonClick(Sender: TObject);
+var
+  LWatch: TStopWatch;
 begin
+
+  LWatch := TStopWatch.StartNew;
+
   var Json := '{"container":' + Memo1.Lines.Text + '}';     // << because the provided json is an array, we enclose it with a TJXObject container
   var Ex7 := TJX4Obj.FromJSON<TEx7>(Json);
 
   var Ex7Clone := Ex7.Clone<TEx7>;                        // for the fun we clone Ex7... :)
   Ex7.Free;
 
-  Memo1.Text := TJX4Obj.FormatJSON( TJX4Obj.ToJSON(Ex7Clone, [joNullToEmpty]) );
+  Memo1.Text := Ex7Clone.Format;
 
   Ex7Clone.Free;
+
+  Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 end;
 
 end.

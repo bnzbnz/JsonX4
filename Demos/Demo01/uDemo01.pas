@@ -41,6 +41,9 @@ var
   Form4: TForm4;
 
 implementation
+uses
+    System.Diagnostics
+  ;
 
 {$R *.fmx}
 
@@ -48,7 +51,11 @@ procedure TForm4.ButtonClick(Sender: TObject);
 var
   Primitives, NewPrimitives: TPrimitives;
   Json: string;
+  LWatch: TStopWatch;
 begin
+
+  LWatch := TStopWatch.StartNew;
+
   caption := 'Version : ' + TJX4Object.Version;
 
   Memo1.Lines.Clear;
@@ -96,6 +103,8 @@ begin
 
   NewPrimitives.Free;
   Primitives.Free;
+
+  Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 
 end;
 

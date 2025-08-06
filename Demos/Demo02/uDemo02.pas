@@ -46,6 +46,9 @@ var
   Form4: TForm4;
 
 implementation
+uses
+    System.Diagnostics
+  ;
 
 {$R *.fmx}
 
@@ -53,7 +56,11 @@ procedure TForm4.ButtonClick(Sender: TObject);
 var
   Demo, NewDemo, CloneDemo: TInnerObjectDemo;
   Json: string;
+  LWatch: TStopWatch;
 begin
+
+  LWatch := TStopWatch.StartNew;
+
   Memo1.Lines.Clear;
 
   // PLease note that JSX4 owns all objects !
@@ -100,6 +107,8 @@ begin
   CloneDemo.Free;
   NewDemo.Free;
   Demo.Free;
+
+  Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 
 end;
 

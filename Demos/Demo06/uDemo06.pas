@@ -39,11 +39,17 @@ var
   Form4: TForm4;
 
 implementation
+uses
+    System.Diagnostics
+  ;
 
 {$R *.fmx}
 
 procedure TForm4.ButtonClick(Sender: TObject);
+var
+  LWatch: TStopWatch;
 begin
+  LWatch := TStopWatch.StartNew;
   // Random YAML found on the internet
   var GameStr :=
     '''
@@ -95,6 +101,9 @@ begin
   Memo1.Lines.add('JSON to YAML :');
   Memo1.Lines.add(Game.ToYAML());
   Game.Free;                                               // Cleanup
+
+  Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+
 end;
 
 end.
