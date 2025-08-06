@@ -27,7 +27,7 @@ object Form4: TForm4
         'g, integer, array, etc ...)'
       
         'Il will be copied, serialized, deserialized, cloned ,merged, sav' +
-        'ed 4 times with different format'
+        'ed 5 times with different formats'
       'Depending of your system, It may take a while !!')
     Align = Client
     Size.Width = 640.000000000000000000

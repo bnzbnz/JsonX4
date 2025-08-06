@@ -193,19 +193,45 @@ begin
 
     Memo1.Lines.add( '' );
     LWatch := TStopWatch.StartNew;
-    Memo1.Lines.add( 'Saving Cloned Json file (jsx4.json), Beautified (jsx4_formatted.json), Compressed (jsx4.cjson) and ' );
+    Memo1.Lines.add( 'Saving Cloned Json file (jsx4.json), Beautified (jsx4_formatted.json), Compressed (jsx4.cjson), ' );
     Memo1.Lines.add( 'YAML (jsx4.yaml) and Compressed YAML (jsx4.Cyaml) :' );
 
-  LJObjClone.SaveToJSONFile( 'jsx4.json', False);
-  // As we already have the serialized Json (LJsonStr), it is way faster :
-  // TJX4Object.SaveToFile('jsx4-2.json', LJsonStr, TEncoding.UTF8, clNone);
-  LJObjClone.SaveToJSONFile( 'jsx4_formatted.json', True, [joNullToEmpty], TEncoding.UTF8, clNone);
-  LJObjClone.SaveToJSONFile( 'jsx4.Cjson', False, [joNullToEmpty], TEncoding.UTF8, clMax);
-  LJObj.SaveToYAMLFile('jsx4.yaml');
-  LJObj.SaveToYAMLFile('jsx4.Cyaml',[joNullToEmpty], TEncoding.UTF8, clMax);
+    Memo1.Lines.add( '' );
+    Memo1.Lines.add( 'Saving Serialized Clone String to jsx4.json' );
+    LWatch := TStopWatch.StartNew;
+  TJX4Object.SaveToFile('jsx4.json', LJsonStr, TEncoding.UTF8, clNone);
+    Memo1.Lines.add( Format('jsx4.json: %d Bytes, %d ms', [LJSize, LWatch.ElapsedMilliseconds ]));
 
-    Memo1.Lines.add( Format( '  Stream size: %n KB', [ (LJSize / 1024) ] ));
-    Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+    Memo1.Lines.add( '' );
+    Memo1.Lines.add( 'Saving Cloned Object to jsx4-2.json' );
+    LWatch := TStopWatch.StartNew;
+  LJSize := LJObjClone.SaveToJSONFile( 'jsx4-2.json', False);
+    Memo1.Lines.add( Format('jsx4-2.json: %d Bytes; %d ms', [LJSize, LWatch.ElapsedMilliseconds]));
+
+    Memo1.Lines.add( '' );
+    Memo1.Lines.add( 'Saving Formatted Cloned Object to jsx4_formatted.json' );
+    LWatch := TStopWatch.StartNew;
+  LJSize := LJObjClone.SaveToJSONFile('jsx4_formatted.json', True, [joNullToEmpty], TEncoding.UTF8, clNone);
+    Memo1.Lines.add( Format('jsx4_formatted.json: %d Bytes; %d ms', [LJSize, LWatch.ElapsedMilliseconds]));
+
+    Memo1.Lines.add( '' );
+    Memo1.Lines.add( 'Saving Compressed Cloned Object to jsx4.Cjson' );
+    LWatch := TStopWatch.StartNew;
+  LJSize := LJObjClone.SaveToJSONFile( 'jsx4.Cjson', False, [joNullToEmpty], TEncoding.UTF8, clMax);
+    Memo1.Lines.add( Format('jsx4.Cjson: %d Bytes; %d ms', [LJSize, LWatch.ElapsedMilliseconds]));
+
+    Memo1.Lines.add( '' );
+    Memo1.Lines.add( 'Saving YAML Object to jsx4.yaml' );
+    LWatch := TStopWatch.StartNew;
+  LJSize := LJObj.SaveToYAMLFile('jsx4.yaml');
+    Memo1.Lines.add( Format('jsx4.yaml: %d Bytes; %d ms', [LJSize, LWatch.ElapsedMilliseconds]));
+
+    Memo1.Lines.add( '' );
+    Memo1.Lines.add( 'Saving Compressed YAML Object to jsx4.Cyaml' );
+    LWatch := TStopWatch.StartNew;
+  LJSize := LJObj.SaveToYAMLFile('jsx4.Cyaml',[joNullToEmpty], TEncoding.UTF8, clMax);
+    Memo1.Lines.add( Format('jsx4.Cyaml: %d Bytes; %d ms', [LJSize, LWatch.ElapsedMilliseconds]));
+
     MB := GetMemoryUsed div (1024*1024);
     Memo1.Lines.add( Format( 'Used Memory %d MB', [ MB ] ) );
 
