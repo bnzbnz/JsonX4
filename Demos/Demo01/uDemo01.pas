@@ -29,12 +29,12 @@ type
   end;
 
   TPrimitives = class(TJX4Object)
-    Str:  TValue;  // a String
-    Bool: TValue;  // a Boolean
-    Int: TValue;  // an Int64
-    Dec: TValue;  // a Decimal
-    Cur: TValue;  // a Currenty
-    NullStr: TValue; // a Null String Value
+    Str:  TValue;     // as an UTF8 String
+    Bool: TValue;     // aa a Boolean
+    Int: TValue;      // as an Int64
+    Dec: TValue;      // as a Decimal
+    Cur: TValue;      // as a Currenty
+    NullStr: TValue;  // as a Null String Value
   end;
 
 var

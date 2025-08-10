@@ -327,14 +327,15 @@ begin
   Memo1.Lines.add( '' );
   Memo1.Lines.add( 'Convert JSX4 Objects to Json String (Serialize):' );
   LWatch := TStopWatch.StartNew;
-  LGitHubExtract.ToJSON;
+  var JStr := LGitHubExtract.ToJSON;
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
 
   Memo1.Lines.add( '' );
   Memo1.Lines.add( 'Convert JSX4 Objects to YAML String' );
   LWatch := TStopWatch.StartNew;
-  LGitHubExtract.ToYAML;
+  LGitHubExtract.ToYAML(JStr);
+  //LGitHubExtract.ToYAML; // Slower : need to be serialized again
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
 

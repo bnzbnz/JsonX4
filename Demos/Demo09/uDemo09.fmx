@@ -11,6 +11,10 @@ object Form4: TForm4
   object Memo1: TMemo
     Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
     DataDetectorTypes = []
+    Lines.Strings = (
+      'Donwload parts from  :'
+      'https://jsonplaceholder.typicode.com/'
+      'to a unique Json...')
     TextSettings.WordWrap = True
     Align = Client
     Size.Width = 636.000000000000000000

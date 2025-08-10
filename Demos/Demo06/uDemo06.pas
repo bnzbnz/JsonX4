@@ -7,11 +7,14 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Memo.Types,
   FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, FMX.StdCtrls
   , RTTI
+  , uJX4Rtti
   , uJX4Object
   , uJX4Value
   , uJX4List
   , uJX4Dict
   ;
+
+  {$INCLUDE '..\..\uJsonX4\uJX4Ver.inc'}
 
 type
 
@@ -49,7 +52,15 @@ procedure TForm4.ButtonClick(Sender: TObject);
 var
   LWatch: TStopWatch;
 begin
-  LWatch := TStopWatch.StartNew;
+
+  {$IFDEF DELPHIUNDER12A}
+
+  ShowMessage('Delphi 12 Required');
+  Exit;
+
+  {$ELSE}
+
+   LWatch := TStopWatch.StartNew;
   // Random YAML found on the internet
   var GameStr :=
     '''
@@ -103,6 +114,8 @@ begin
   Game.Free;                                               // Cleanup
 
   Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+
+  {$ENDIF}
 
 end;
 

@@ -155,6 +155,7 @@ var
   JTodos: TJTodos;
   JUSers: TJUsers;
   Watch: TStopwatch;
+  TimePocess, TimeHTTP : Int64;
 
 begin
   Memo1.Lines.Clear;
@@ -202,7 +203,6 @@ begin
   end;
 
   // Users
-  Memo1.lines.add('Get Users:');
   Res := Http.Get('https://jsonplaceholder.typicode.com/users');
   JUsers := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
@@ -212,6 +212,8 @@ begin
   end;
 
   HTTP.Free;
+  TimeHTTP := Watch.ElapsedMilliseconds;
+  Watch := TStopwatch.StartNew;
 
   if assigned(JPhotos) and assigned(JAlbums) then
     for var Photo := 0 to JPhotos.ctnr.count - 1 do
@@ -241,11 +243,14 @@ begin
           JUsers.ctnr[User].Posts.add( JPosts.ctnr[Post].Clone<TJPost> );
   JPosts.Free;
 
+  TimePocess := Watch.ElapsedMilliseconds;
 
-  Memo1.Text :=  JUsers.Format();
-  Memo1.Lines.Add('>> Total Duration : ' + Watch.ElapsedMilliseconds.ToString + ' ms');
+  Memo1.Lines.Add('>> HTTP : ' + TimeHTTP.ToString + ' ms');
+  Memo1.Lines.Add('>> Processing : ' + TimePocess.ToString + ' ms');
+  Memo1.Lines.Add('>> Total Duration : ' + (TimeHTTP + TimePocess).ToString + ' ms');
 
-  JUsers.SaveToJSONFile('d:\Temp\json.json');
+  Memo1.Lines.add(JUsers.Format);
+  Memo1.Lines.Add('Lines :'+ Memo1.Lines.count.ToString);
   JUsers.Free;
 
   end;

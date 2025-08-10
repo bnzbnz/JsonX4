@@ -11,13 +11,41 @@ object Form4: TForm4
   object Memo1: TMemo
     Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
     DataDetectorTypes = []
+    Lines.Strings = (
+      '    quiz:'
+      '      sport:'
+      '        q1:'
+      '          question: Which one is correct team name in NBA?'
+      '          options:'
+      '            - New York Bulls'
+      '            - Los Angeles Kings'
+      '            - Golden State Warriros'
+      '            - Huston Rocket'
+      '          answer: Huston Rocket'
+      '      maths:'
+      '        q1:'
+      '          question: 5 + 7 = ?'
+      '          options:'
+      '            - '#39'10'#39
+      '            - '#39'11'#39
+      '            - '#39'12'#39
+      '            - '#39'13'#39
+      '          answer: '#39'12'#39
+      '        q2:'
+      '          question: 12 - 8 = ?'
+      '          options:'
+      '            - '#39'1'#39
+      '            - '#39'2'#39
+      '            - '#39'3'#39
+      '            - '#39'4'#39
+      '          answer: '#39'4'#39)
     Align = Client
     Size.Width = 636.000000000000000000
     Size.Height = 639.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
-    Viewport.Width = 636.000000000000000000
-    Viewport.Height = 639.000000000000000000
+    Viewport.Width = 632.000000000000000000
+    Viewport.Height = 635.000000000000000000
   end
   object Button: TButton
     Align = Top

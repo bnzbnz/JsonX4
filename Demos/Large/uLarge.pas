@@ -177,7 +177,7 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'Revert JX4 Objects to Json String (Serialize)):' );
     LWatch := TStopWatch.StartNew;
-  LJsonStr := LJObj.ToJson([ joNullToEmpty] );
+  LJsonStr := LJObj.ToJson([ joNullToEmpty ]);
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
     MB := GetMemoryUsed div (1024*1024);
