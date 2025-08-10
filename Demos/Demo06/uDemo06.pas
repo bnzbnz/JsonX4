@@ -49,18 +49,19 @@ uses
 {$R *.fmx}
 
 procedure TForm4.ButtonClick(Sender: TObject);
+{$IFDEF DELPHIUNDER12A}
+begin
+
+  ShowMessage('Delphi 12 Required');
+  Exit;
+end;
+{$ELSE}
+
 var
   LWatch: TStopWatch;
 begin
 
-  {$IFDEF DELPHIUNDER12A}
-
-  ShowMessage('Delphi 12 Required');
-  Exit;
-
-  {$ELSE}
-
-   LWatch := TStopWatch.StartNew;
+  LWatch := TStopWatch.StartNew;
   // Random YAML found on the internet
   var GameStr :=
     '''
@@ -115,8 +116,8 @@ begin
 
   Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 
-  {$ENDIF}
+  end;
 
-end;
+{$ENDIF}
 
 end.
