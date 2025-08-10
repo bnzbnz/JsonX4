@@ -33,7 +33,16 @@ uses
 
 {$DEFINE JX4RTTICACHE} // Highly recommended : 200% SpeedUp !
 
+{$INCLUDE uJX4Ver.inc}
+
 type
+
+  {$IFDEF DELPHIUNDER12A}
+
+  TMemberVisibilities = set of TMemberVisibility;
+
+  {$ENDIF}
+
   TxRTTI = class abstract
     class function  GetPropsList(Instance: Pointer; ObjectClass: TClass): TDictionary<string, variant>;
     class function  GetField(AObj: TObject; AField: string): TRTTIFIeld; static;
@@ -53,6 +62,7 @@ type
     class function  FieldAsTValue(AObj: TObject; AField: TRttiField; var AValue: TValue; AVisibilities: TMemberVisibilities = [mvPublic]): Boolean;
     class function  FieldIsTObject(AField: TRttiField; AVisibilities: TMemberVisibilities = [mvPublic]): Boolean;
     class function  FieldAsTObject(ASelf: TObject; AField: TRttiField; var AObject: TObject; AVisibilities: TMemberVisibilities = [mvPublic]): Boolean;
+    class procedure ClearCaches;
   end;
 
   {$IFDEF JX4RTTICACHE}
@@ -317,6 +327,31 @@ begin
     Result := Field.FieldType.AsInstance;
 end;
 {$ENDIF}
+
+class procedure TxRTTI.ClearCaches;
+begin
+  _RTTILock1.Acquire;
+  _RTTILock2.Acquire;
+  _RTTILock3.Acquire;
+  _RTTILock4.Acquire;
+  _RTTILock5.Acquire;
+  _RTTILock6.Acquire;
+  _RTTILock7.Acquire;
+  _RTTIFieldsCacheDic.Clear;
+  _RTTIPropsCacheDic.Clear;
+  _RTTIMethsCacheDic.Clear;
+  _RTTIMethObjCacheDic.Clear;
+  _RTTIInstMethsCacheDic.Clear;
+  _RTTIInstCacheDic.Clear;
+  _RTTIFieldsClassCacheDic.Clear;
+  _RTTILock7.Release;
+  _RTTILock6.Release;
+  _RTTILock5.Release;
+  _RTTILock4.Release;
+  _RTTILock3.Release;
+  _RTTILock2.Release;
+  _RTTILock1.Release;
+end;
 
 initialization
 {$IFDEF JX4RTTICACHE}
