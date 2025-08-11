@@ -281,12 +281,9 @@ end;
 constructor TJX4Dict<V>.Create;
 begin
   inherited Create([doOwnsValues]);
-  FAdded :=  TStringList.Create;
-  FAdded.Duplicates := dupIgnore;
-  FModified := TStringList.Create;
-  FModified.Duplicates := dupIgnore;
-  FDeleted := TStringList.Create;
-  FDeleted.Duplicates := dupIgnore;
+  FAdded := Nil;
+  FModified :=Nil;
+  FDeleted := Nil;
 end;
 
 destructor TJX4Dict<V>.Destroy;
@@ -459,9 +456,9 @@ var
 begin
   if (jmoStats in AOptions) then
   begin
-    FAdded.Clear;
-    FModified.Clear;
-    FDeleted.Clear;
+    if not Assigned(FAdded) then FAdded := TStringList.Create else FAdded.Clear;
+    if not Assigned(FModified) then FModified := TStringList.Create else FModified.Clear;
+    if not Assigned(FDeleted) then FDeleted := TStringList.Create else FDeleted.Clear;
   end;
   if AMergedWith.Count = 0  then Exit;
   for LEle in AMergedWith do
@@ -496,9 +493,9 @@ var
 begin
   if (jmoStats in AOptions) then
   begin
-    FAdded.Clear;
-    FModified.Clear;
-    FDeleted.Clear;
+    if not Assigned(FAdded) then FAdded := TStringList.Create else FAdded.Clear;
+    if not Assigned(FModified) then FModified := TStringList.Create else FModified.Clear;
+    if not Assigned(FDeleted) then FDeleted := TStringList.Create else FDeleted.Clear;
   end;
   if AMergedWith.Count = 0  then Exit;
   for LEle in AMergedWith do

@@ -111,8 +111,8 @@ uses
 constructor TJX4ListOfValues.Create;
 begin
   inherited Create;
-  FAdded :=  TList<TValue>.Create;
-  FDeleted := TList<TValue>.Create;
+  FAdded :=  Nil;
+  FDeleted := Nil;
 end;
 
 destructor TJX4ListOfValues.Destroy;
@@ -288,12 +288,9 @@ constructor TJX4List<T>.Create;
   LNewObj:    TObject;
 begin
   inherited Create(True);
-  FAdded :=  TStringList.Create;
-  FAdded.Duplicates := dupIgnore;
-  FModified := TStringList.Create;
-  FModified.Duplicates := dupIgnore;
-  FDeleted := TStringList.Create;
-  FDeleted.Duplicates := dupIgnore;
+  FAdded := Nil;
+  FModified := Nil;
+  FDeleted := Nil;
   LFields := TxRTTI.GetFields(Self);
   for LField in LFields do
   begin
@@ -539,8 +536,8 @@ begin
   if AMergedWith.Count = 0  then Exit;
   if (jmoStats in AOptions) then
   begin
-    FAdded.Clear;
-    FDeleted.Clear;
+    if Not Assigned(FAdded) then FAdded := TList<TValue>.Create else FAdded.Clear;
+    if Not Assigned(FDeleted) then FDeleted := TList<TValue>.Create else FDeleted.Clear;
   end;
   for var i := AMergedWith.Count  - 1 downto 0 do
   begin
