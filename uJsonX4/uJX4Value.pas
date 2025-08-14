@@ -116,7 +116,7 @@ begin
     tkvInteger: LValue := Self.AsInt64.ToString;
     tkvFloat:
       begin
-        if  Self.AsExtended.ToString.IndexOf('.') = -1 then
+        if Self.AsExtended.ToString.IndexOf('.') = -1 then
           LValue := Self.AsExtended.ToString + '.0'
         else
           LValue := Self.AsExtended.ToString;
@@ -186,7 +186,7 @@ begin
     if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
   end
   else if LJPair.JsonValue.ClassType = TJSONString then Self := LJPair.JsonValue.Value
-  else if LJPair.JsonValue.ClassType = TJSONBool then Self := StrToBool(LJPair.JsonValue.Value)
+
   else if LJPair.JsonValue.ClassType = TJSONNumber then
   begin
       if LJPair.JsonValue.ToString.IndexOf('.') = -1 then

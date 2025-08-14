@@ -424,9 +424,8 @@ begin
           and ((LField.FieldType.TypeKind in [tkClass])
           or (LField.FieldType.TypeKind in [tkRecord]))) then Continue;
 
-      LName := NameDecode(LField.Name);
       LAttr := TJX4Name(TxRTTI.GetFieldAttribute(LField, TJX4Name));
-      if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
+      if Assigned(LAttr) then LName := TJX4Name(LAttr).Name else LName := NameDecode(LField.Name);
 
       if (JoRaiseOnMissingField in AIOBlock.Options) and (Length(TxRTTI.GetFields(Self)) < AIOBlock.JObj.count) then
       begin
@@ -449,7 +448,7 @@ begin
         begin
           LFieldFound := True;
           if LJPair.JsonValue is TJSONNull then Break;
-           LJPair.Owned := False;
+          LJPair.Owned := False;
           LJPair.JsonString.Owned := False;
           LJPair.JsonValue.Owned := False;
           if (LJPair.JsonValue is TJSONObject) then

@@ -33,15 +33,16 @@ uses
 
 {$DEFINE JX4RTTICACHE} // Highly recommended : 200% SpeedUp !
 
-{$INCLUDE uJX4Ver.inc}
-
 type
 
-  {$IFDEF DELPHIUNDER12A}
-
+  {$IF CompilerVersion <= 35.0}
   TMemberVisibilities = set of TMemberVisibility;
-
   {$ENDIF}
+
+  TxRTTICriticalSection = class(TCriticalSection)
+  private
+    FDummy : array [0..95] of Byte;
+  end;
 
   TxRTTI = class abstract
     class function  GetPropsList(AInstance: Pointer; AObjectClass: TClass): TDictionary<string, TValue>;
@@ -68,13 +69,13 @@ type
   {$IFDEF JX4RTTICACHE}
 var
   _RTTIctx: TRttiContext;
-  _RTTILock1: TCriticalSection;
-  _RTTILock2: TCriticalSection;
-  _RTTILock3: TCriticalSection;
-  _RTTILock4: TCriticalSection;
-  _RTTILock5: TCriticalSection;
-  _RTTILock6: TCriticalSection;
-  _RTTILock7: TCriticalSection;
+  _RTTILock1: TxRTTICriticalSection;
+  _RTTILock2: TxRTTICriticalSection;
+  _RTTILock3: TxRTTICriticalSection;
+  _RTTILock4: TxRTTICriticalSection;
+  _RTTILock5: TxRTTICriticalSection;
+  _RTTILock6: TxRTTICriticalSection;
+  _RTTILock7: TxRTTICriticalSection;
   _RTTIFieldsCacheDic: TDictionary<TClass, TArray<TRttiField>>;
   _RTTIFieldsClassCacheDic: TDictionary<TClass, TArray<TRttiField>>;
   _RTTIPropsCacheDic: TDictionary<TClass, TArray<TRTTIProperty>>;
@@ -295,9 +296,6 @@ class function TxRTTI.GetFieldAttribute(Field: TRTTIField; AttrClass: TClass): T
 
   function GetRTTIFieldAttribute(RTTIField: TRTTIField; AttrClass: TClass): TCustomAttribute; inline;
   begin
-  {$IF CompilerVersion >= 35.0} // Alexandria 11.0
-   Result := RTTIField.GetAttribute(TCustomAttributeClass(AttrClass));
-  {$ELSE}
     Result := Nil;
     for var Attr in RTTIField.GetAttributes do
       if Attr.ClassType = AttrClass then
@@ -305,11 +303,14 @@ class function TxRTTI.GetFieldAttribute(Field: TRTTIField; AttrClass: TClass): T
           Result := Attr;
           Break;
       end;
-  {$IFEND}
   end;
 
 begin
-  Result := GetRTTIFieldAttribute(Field, AttrClass);
+  {$IF CompilerVersion >= 35.0}
+    Result := Field.GetAttribute(TCustomAttributeClass(AttrClass));
+  {$ELSE}
+    Result := GetRTTIFieldAttribute(Field, AttrClass);
+  {$IFEND}
 end;
 
 class function TxRTTI.GetFieldInstance(Field: TRTTIField) : TRttiInstanceType;
@@ -365,13 +366,13 @@ initialization
   _RTTIInstCacheDic := TDictionary<TRTTIField, TRttiInstanceType>.Create;
   _RTTIInstMethsCacheDic := TDictionary<TRttiInstanceType, TRTTIMethod>.Create;
   _RTTIMethObjCacheDic := TDictionary<NativeInt, TRTTIMethod>.Create;
-  _RTTILock1 := TCriticalSection.Create;
-  _RTTILock2 := TCriticalSection.Create;
-  _RTTILock3 := TCriticalSection.Create;
-  _RTTILock4 := TCriticalSection.Create;
-  _RTTILock5 := TCriticalSection.Create;
-  _RTTILock6 := TCriticalSection.Create;
-  _RTTILock7 := TCriticalSection.Create;
+  _RTTILock1 := TxRTTICriticalSection.Create;
+  _RTTILock2 := TxRTTICriticalSection.Create;
+  _RTTILock3 := TxRTTICriticalSection.Create;
+  _RTTILock4 := TxRTTICriticalSection.Create;
+  _RTTILock5 := TxRTTICriticalSection.Create;
+  _RTTILock6 := TxRTTICriticalSection.Create;
+  _RTTILock7 := TxRTTICriticalSection.Create;
 {$ENDIF}
 finalization
 {$IFDEF JX4RTTICACHE}
