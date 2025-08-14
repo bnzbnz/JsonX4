@@ -44,7 +44,7 @@ type
   {$ENDIF}
 
   TxRTTI = class abstract
-    class function  GetPropsList(Instance: Pointer; ObjectClass: TClass): TDictionary<string, variant>;
+    class function  GetPropsList(AInstance: Pointer; AObjectClass: TClass): TDictionary<string, TValue>;
     class function  GetField(AObj: TObject; AField: string): TRTTIFIeld; static;
     class function  GetFields(aObj: TObject): TArray<TRTTIField>; overload;
     class function  GetFields(AClass: TClass): TArray<TRttiField>; overload;
@@ -93,18 +93,19 @@ uses
   , Sysutils
   ;
 
-class function TxRTTI.GetPropsList(Instance: Pointer; ObjectClass: TClass): TDictionary<string, variant>;
+class function TxRTTI.GetPropsList(AInstance: Pointer; AObjectClass: TClass): TDictionary<string, TValue>;
 var
-  AValue: TValue;
+  LValue: TValue;
+  LField: TRTTIFIeld;
 begin
-  Result := TDictionary<string, variant>.Create;
-  for var AField in TxRtti.GetFields(ObjectClass) do
+  Result := TDictionary<string, TValue>.Create;
+  for LField in TxRtti.GetFields(AObjectClass) do
   begin
-     if (AField.FieldType.TypeKind in [tkRecord])
-      and (AField.FieldType.Handle = TypeInfo(TValue))
-      and (AField.GetValue(Instance).TryAsType<TValue>(AValue))
+     if (LField.FieldType.TypeKind in [tkRecord])
+      and (LField.FieldType.Handle = TypeInfo(TValue))
+      and (LField.GetValue(AInstance).TryAsType<TValue>(LValue))
    then
-      Result.Add(AField.Name, AValue.AsVariant);
+      Result.Add(LField.Name, LValue);
   end;
 end;
 

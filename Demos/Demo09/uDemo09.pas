@@ -155,7 +155,7 @@ var
   JTodos: TJTodos;
   JUSers: TJUsers;
   Watch: TStopwatch;
-  TimePocess, TimeHTTP : Int64;
+  TimeProcess, TimeHTTP : Int64;
 
 begin
   Memo1.Lines.Clear;
@@ -243,14 +243,14 @@ begin
           JUsers.ctnr[User].Posts.add( JPosts.ctnr[Post].Clone<TJPost> );
   JPosts.Free;
 
-  TimePocess := Watch.ElapsedMilliseconds;
+  TimeProcess := Watch.ElapsedMilliseconds;
 
   Memo1.Lines.Add('>> HTTP : ' + TimeHTTP.ToString + ' ms');
-  Memo1.Lines.Add('>> Processing : ' + TimePocess.ToString + ' ms');
-  Memo1.Lines.Add('>> Total Duration : ' + (TimeHTTP + TimePocess).ToString + ' ms');
+  Memo1.Lines.Add('>> Processing : ' + TimeProcess.ToString + ' ms');
+  Memo1.Lines.Add('>> Total Duration : ' + (TimeHTTP + TimeProcess).ToString + ' ms');
 
   Memo1.Lines.add(JUsers.Format);
-  Memo1.Lines.Add('Lines :'+ Memo1.Lines.count.ToString);
+  Memo1.Lines.Add('Lines : '+ Memo1.Lines.count.ToString);
   JUsers.Free;
 
   end;

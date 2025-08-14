@@ -177,7 +177,7 @@ begin
   if not(Assigned(LJPair) and  (not LJPair.null) and not (LJPair.JsonValue is TJSONNull) and not (LJPair.JsonValue.Value.IsEmpty)) then
   begin
     LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := Nil;
+    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
     Exit;
   end;
   if LJPair.JsonValue.Value.IsEmpty then
@@ -195,7 +195,7 @@ begin
         Self := TJSONNumber(LJPair.JsonValue).AsDouble;
   end else begin
     LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := Nil;
+    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
   end;
 end;
 
