@@ -330,6 +330,7 @@ end;
 
 class procedure TxRTTI.ClearCaches;
 begin
+{$IFDEF JX4RTTICACHE}
   _RTTILock1.Acquire;
   _RTTILock2.Acquire;
   _RTTILock3.Acquire;
@@ -351,6 +352,7 @@ begin
   _RTTILock3.Release;
   _RTTILock2.Release;
   _RTTILock1.Release;
+{$ENDIF}
 end;
 
 initialization
