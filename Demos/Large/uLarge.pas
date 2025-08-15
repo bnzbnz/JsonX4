@@ -105,6 +105,7 @@ uses
     , Windows
     , PSApi
     , ZLib
+    , uJX4RTTI
   ;
 
 {$R *.fmx}
@@ -114,13 +115,14 @@ function GetMemoryUsed: SIZE_T;
 var
   pmc: PROCESS_MEMORY_COUNTERS;
 begin
+  {$IFDEF MSWINDOWS}
   pmc.cb := SizeOf(pmc);
   if GetProcessMemoryInfo(GetCurrentProcess, @pmc, pmc.cb) then
     Result := pmc.WorkingSetSize
   else
+  {$ENDIF}
     Result := 0;
 end;
-
 
 procedure TForm4.ButtonClick( Sender : TObject );
   var
@@ -249,4 +251,6 @@ begin
   Memo1.Lines.add( Format( '==>  Total Time %d ms', [ LGWatch.ElapsedMilliseconds ] ) );
 end;
 
+initialization
+  _RTTIThreaded := False;
 end.

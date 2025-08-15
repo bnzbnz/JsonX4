@@ -14,8 +14,6 @@ uses
   , uJX4Dict
   ;
 
-  {$INCLUDE '..\..\uJsonX4\uJX4Ver.inc'}
-
 type
 
   TForm4 = class(TForm)

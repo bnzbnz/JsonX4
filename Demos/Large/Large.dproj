@@ -194,7 +194,6 @@
                 </DeployFile>
                 <DeployFile LocalName="..\..\uJsonX4\uJX4Ver.inc" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="..\Large.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="..\Large.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
