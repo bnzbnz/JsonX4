@@ -39,11 +39,6 @@ type
   TMemberVisibilities = set of TMemberVisibility;
   {$ENDIF}
 
-  TxRTTICriticalSection = class(TCriticalSection)
-  private
-    FDummy : array [0..95] of Byte;
-  end;
-
   TxRTTI = class abstract
     class function  GetPropsList(AInstance: Pointer; AObjectClass: TClass): TDictionary<string, TValue>;
     class function  GetField(AObj: TObject; AField: string): TRTTIFIeld; static;
@@ -69,13 +64,13 @@ type
   {$IFDEF JX4RTTICACHE}
 var
   _RTTIctx: TRttiContext;
-  _RTTILock1: TxRTTICriticalSection;
-  _RTTILock2: TxRTTICriticalSection;
-  _RTTILock3: TxRTTICriticalSection;
-  _RTTILock4: TxRTTICriticalSection;
-  _RTTILock5: TxRTTICriticalSection;
-  _RTTILock6: TxRTTICriticalSection;
-  _RTTILock7: TxRTTICriticalSection;
+  _RTTILock1: TCriticalSection;
+  _RTTILock2: TCriticalSection;
+  _RTTILock3: TCriticalSection;
+  _RTTILock4: TCriticalSection;
+  _RTTILock5: TCriticalSection;
+  _RTTILock6: TCriticalSection;
+  _RTTILock7: TCriticalSection;
   _RTTIFieldsCacheDic: TDictionary<TClass, TArray<TRttiField>>;
   _RTTIFieldsClassCacheDic: TDictionary<TClass, TArray<TRttiField>>;
   _RTTIPropsCacheDic: TDictionary<TClass, TArray<TRTTIProperty>>;
@@ -370,13 +365,13 @@ initialization
   _RTTIInstCacheDic := TDictionary<TRTTIField, TRttiInstanceType>.Create;
   _RTTIInstMethsCacheDic := TDictionary<TRttiInstanceType, TRTTIMethod>.Create;
   _RTTIMethObjCacheDic := TDictionary<NativeInt, TRTTIMethod>.Create;
-  _RTTILock1 := TxRTTICriticalSection.Create;
-  _RTTILock2 := TxRTTICriticalSection.Create;
-  _RTTILock3 := TxRTTICriticalSection.Create;
-  _RTTILock4 := TxRTTICriticalSection.Create;
-  _RTTILock5 := TxRTTICriticalSection.Create;
-  _RTTILock6 := TxRTTICriticalSection.Create;
-  _RTTILock7 := TxRTTICriticalSection.Create;
+  _RTTILock1 := TCriticalSection.Create;
+  _RTTILock2 := TCriticalSection.Create;
+  _RTTILock3 := TCriticalSection.Create;
+  _RTTILock4 := TCriticalSection.Create;
+  _RTTILock5 := TCriticalSection.Create;
+  _RTTILock6 := TCriticalSection.Create;
+  _RTTILock7 := TCriticalSection.Create;
 {$ENDIF}
 finalization
 {$IFDEF JX4RTTICACHE}

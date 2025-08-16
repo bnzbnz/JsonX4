@@ -127,7 +127,6 @@ type
     class function  NameEncode(const ToEncode: string): string; static;
     class procedure VarEscapeJSONStr(var AStr: string; const SlashEncode: Boolean = False); overload; static;
     class function  EscapeJSONStr(const AStr: string; const SlashEncode: Boolean = False): string; overload; static;
-    class function  JsonListToJsonString(const AList: TList<string>): string; static;
     class function  FormatJSON(const AJson: string; ABeautify: Boolean = True; AIndentation: Integer = 2): string; static;
 
     class function  ValidateJSON(const AJson: string): string; static;
@@ -302,7 +301,7 @@ function TJX4Object.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
   LField:     TRTTIField;
   LFields:    TArray<TRTTIField>;
-  LParts:     TList<string>;
+  LParts:     TStringList;
   LRes:       string;
   LIOBlock:   TJX4IOBlock;
   LObj:       TOBject;
@@ -312,9 +311,8 @@ begin
   Result := TValue.Empty;
 
   LIOBlock := TJX4IOBlock.Create;
-  LParts := TList<string>.Create;
+  LParts := TStringList.Create(#0, ',');
   try
-
     LFields := TxRTTI.GetFields(Self);
     LParts.Capacity := Length(LFields);
     for LField in LFields do
@@ -339,7 +337,7 @@ begin
       end;
     end;
 
-    LRes := JsonListToJsonString(LParts);
+    LRes := LParts.DelimitedText;
     if not AIOBlock.JsonName.IsEmpty then
     begin
       if LRes.IsEmpty then
@@ -728,23 +726,6 @@ class function TJX4Object.EscapeJSONStr(const AStr: string; const SlashEncode: B
 begin
   Result := AStr;
   VarEscapeJSONStr(Result, SlashEncode);
-end;
-
-class function TJX4Object.JsonListToJsonString(const AList: TList<string>): string;
-var
-  LSb:  TStringBuilder;
-  LIdx: integer;
-begin
-  if AList.Count = 0 then Exit('');
-  if AList.Count = 1 then Exit(AList[0]);
-  LSb := TStringBuilder.Create;
-  for LIdx:= 0 to AList.Count -1 do
-  begin
-    LSb.Append(AList[LIdx]);
-    if LIdx <> AList.Count -1 then LSb.Append(',') ;
-  end;
-  Result := LSb.ToString;
-  LSb.Free;
 end;
 
 class function TJX4Object.FormatJSON(const AJson: string; ABeautify: Boolean; AIndentation: Integer): string;

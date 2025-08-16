@@ -182,7 +182,7 @@ end;
 
 function TJX4ListOfValues.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
-  LParts:     TList<string>;
+  LParts:     TStringList;
   LRes:       string;
   LIOBlock:   TJX4IOBlock;
   LName:      string;
@@ -212,7 +212,7 @@ begin
     Exit;
   end;
 
-  LParts := TList<string>.Create;
+  LParts := TStringList.Create(#0, ',');
   LParts.Capacity := Self.Count;
   LIOBlock := TJX4IOBlock.Create;
   try
@@ -223,7 +223,7 @@ begin
       LTValue := LEle.JSONSerialize(LIOBlock);
       if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
     end;
-    LRes := TJX4Object.JsonListToJsonString(LParts);
+    LRes := LParts.DelimitedText;
     if LName.IsEmpty then
       Result := '[' + LRes + ']'
     else
@@ -412,8 +412,7 @@ end;
 
 function TJX4List<T>.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
-  LParts:     TList<string>;
-  LRes:       string;
+  LParts:     TStringList;
   LEle:       T;
   LIOBlock:   TJX4IOBlock;
   LName:      string;
@@ -441,7 +440,7 @@ begin
     Exit;
   end;
 
-  LParts := TList<string>.Create;
+  LParts := TStringList.Create(#0, ',');
   LParts.Capacity := Self.Count;
   LIOBlock := TJX4IOBlock.Create;
   for LEle in Self do
@@ -451,12 +450,11 @@ begin
     if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
   end;
   LIOBlock.Free;
-  LRes := TJX4Object.JsonListToJsonString(LParts);
 
   if LName.IsEmpty then
-    Result := '[' + LRes + ']'
+    Result := '[' +  LParts.DelimitedText + ']'
   else
-    Result := '"' + LName + '":[' + LRes + ']';
+    Result := '"' + LName + '":[' +  LParts.DelimitedText + ']';
   LParts.Free;
 end;
 

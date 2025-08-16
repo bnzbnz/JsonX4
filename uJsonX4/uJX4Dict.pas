@@ -129,8 +129,7 @@ end;
 
 function TJX4DictOfValues.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
-  LParts:     TList<string>;
-  LRes:       string;
+  LParts:     TStringList;
   Lkp:        TPair<string, TValue>;
   LTValue:    TValue;
   LIOBlock:   TJX4IOBlock;
@@ -161,7 +160,7 @@ begin
     Exit;
   end;
 
-  LParts := TList<string>.Create;
+  LParts := TStringList.Create(#0, ',');
   LParts.Capacity := Self.Count;
   LIOBlock := TJX4IOBlock.Create;
   for Lkp in Self do
@@ -171,13 +170,12 @@ begin
       if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
   end;
   LIOBlock.Free;
-  LRes := TJX4Object.JsonListToJsonString(LParts);
-  LParts.Free;
 
   if AIOBlock.JsonName.IsEmpty then
-    Result := '{' + LRes + '}'
+    Result := '{' + LParts.DelimitedText + '}'
   else
-    Result := '"' + LName + '":{'+ LRes + '}';
+    Result := '"' + LName + '":{'+ LParts.DelimitedText + '}';
+  LParts.Free;
 end;
 
 procedure TJX4DictOfValues.JSONClone(ADestDict: TJX4DictOfValues; AOptions: TJX4Options = []);
@@ -301,7 +299,7 @@ end;
 
 function TJX4Dict<V>.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
-  LParts:     TList<string>;
+  LParts:     TStringList;
   LRes:       string;
   Lkp:        TPair<string, V>;
   LObj:       TObject;
@@ -334,7 +332,7 @@ begin
     Exit;
   end;
 
-  LParts := TList<string>.Create;
+  LParts := TStringList.Create(#0, ',');
   LIOBlock := TJX4IOBlock.Create;
   try
     LParts.Capacity := Self.Count;
@@ -349,16 +347,17 @@ begin
         if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
       end;
     end;
-    LRes := TJX4Object.JsonListToJsonString(LParts);
+
+    if AIOBlock.JsonName.IsEmpty then
+      Result := '{' + LPArts.DelimitedText + '}'
+    else
+      Result := '"' + LName + '":{'+ LPArts.DelimitedText + '}';
   finally
     LIOBlock.Free;
     LParts.Free;
   end;
 
-  if AIOBlock.JsonName.IsEmpty then
-    Result := '{' + LRes + '}'
-  else
-    Result := '"' + LName + '":{'+ LRes + '}';
+
 end;
 
 procedure TJX4Dict<V>.JSONClone(ADestDict: TJX4Dict<V>; AOptions: TJX4Options);
