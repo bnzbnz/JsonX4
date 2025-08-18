@@ -300,7 +300,6 @@ end;
 function TJX4Dict<V>.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
   LParts:     TStringList;
-  LRes:       string;
   Lkp:        TPair<string, V>;
   LObj:       TObject;
   LIOBlock:   TJX4IOBlock;
