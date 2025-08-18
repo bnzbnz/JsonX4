@@ -129,7 +129,8 @@ end;
 
 function TJX4DictOfValues.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
-  LParts:     TStringList;
+  LParts:     TList<string>;
+  LRes:       string;
   Lkp:        TPair<string, TValue>;
   LTValue:    TValue;
   LIOBlock:   TJX4IOBlock;
@@ -160,7 +161,7 @@ begin
     Exit;
   end;
 
-  LParts := TStringList.Create(#0, ',');
+  LParts := TList<string>.Create;
   LParts.Capacity := Self.Count;
   LIOBlock := TJX4IOBlock.Create;
   for Lkp in Self do
@@ -170,12 +171,13 @@ begin
       if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
   end;
   LIOBlock.Free;
+  LRes := TJX4Object.JsonListToJsonString(LParts);
+  LParts.Free;
 
   if AIOBlock.JsonName.IsEmpty then
-    Result := '{' + LParts.DelimitedText + '}'
+    Result := '{' + LRes + '}'
   else
-    Result := '"' + LName + '":{'+ LParts.DelimitedText + '}';
-  LParts.Free;
+    Result := '"' + LName + '":{'+ LRes + '}';
 end;
 
 procedure TJX4DictOfValues.JSONClone(ADestDict: TJX4DictOfValues; AOptions: TJX4Options = []);
@@ -279,9 +281,12 @@ end;
 constructor TJX4Dict<V>.Create;
 begin
   inherited Create([doOwnsValues]);
-  FAdded := Nil;
-  FModified :=Nil;
-  FDeleted := Nil;
+  FAdded :=  TStringList.Create;
+  FAdded.Duplicates := dupIgnore;
+  FModified := TStringList.Create;
+  FModified.Duplicates := dupIgnore;
+  FDeleted := TStringList.Create;
+  FDeleted.Duplicates := dupIgnore;
 end;
 
 destructor TJX4Dict<V>.Destroy;
@@ -299,7 +304,8 @@ end;
 
 function TJX4Dict<V>.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
-  LParts:     TStringList;
+  LParts:     TList<string>;
+  LRes:       string;
   Lkp:        TPair<string, V>;
   LObj:       TObject;
   LIOBlock:   TJX4IOBlock;
@@ -331,7 +337,7 @@ begin
     Exit;
   end;
 
-  LParts := TStringList.Create(#0, ',');
+  LParts := TList<string>.Create;
   LIOBlock := TJX4IOBlock.Create;
   try
     LParts.Capacity := Self.Count;
@@ -346,16 +352,16 @@ begin
         if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
       end;
     end;
-
-    if AIOBlock.JsonName.IsEmpty then
-      Result := '{' + LPArts.DelimitedText + '}'
-    else
-      Result := '"' + LName + '":{'+ LPArts.DelimitedText + '}';
+    LRes := TJX4Object.JsonListToJsonString(LParts);
   finally
     LIOBlock.Free;
     LParts.Free;
   end;
 
+  if AIOBlock.JsonName.IsEmpty then
+    Result := '{' + LRes + '}'
+  else
+    Result := '"' + LName + '":{'+ LRes + '}';
 end;
 
 procedure TJX4Dict<V>.JSONClone(ADestDict: TJX4Dict<V>; AOptions: TJX4Options);
@@ -453,9 +459,9 @@ var
 begin
   if (jmoStats in AOptions) then
   begin
-    if not Assigned(FAdded) then FAdded := TStringList.Create else FAdded.Clear;
-    if not Assigned(FModified) then FModified := TStringList.Create else FModified.Clear;
-    if not Assigned(FDeleted) then FDeleted := TStringList.Create else FDeleted.Clear;
+    FAdded.Clear;
+    FModified.Clear;
+    FDeleted.Clear;
   end;
   if AMergedWith.Count = 0  then Exit;
   for LEle in AMergedWith do
@@ -490,9 +496,9 @@ var
 begin
   if (jmoStats in AOptions) then
   begin
-    if not Assigned(FAdded) then FAdded := TStringList.Create else FAdded.Clear;
-    if not Assigned(FModified) then FModified := TStringList.Create else FModified.Clear;
-    if not Assigned(FDeleted) then FDeleted := TStringList.Create else FDeleted.Clear;
+    FAdded.Clear;
+    FModified.Clear;
+    FDeleted.Clear;
   end;
   if AMergedWith.Count = 0  then Exit;
   for LEle in AMergedWith do

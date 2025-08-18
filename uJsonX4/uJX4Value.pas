@@ -116,7 +116,7 @@ begin
     tkvInteger: LValue := Self.AsInt64.ToString;
     tkvFloat:
       begin
-        if Self.AsExtended.ToString.IndexOf('.') = -1 then
+        if  Self.AsExtended.ToString.IndexOf('.') = -1 then
           LValue := Self.AsExtended.ToString + '.0'
         else
           LValue := Self.AsExtended.ToString;
@@ -177,7 +177,7 @@ begin
   if not(Assigned(LJPair) and  (not LJPair.null) and not (LJPair.JsonValue is TJSONNull) and not (LJPair.JsonValue.Value.IsEmpty)) then
   begin
     LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
+    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := Nil;
     Exit;
   end;
   if LJPair.JsonValue.Value.IsEmpty then
@@ -186,7 +186,7 @@ begin
     if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
   end
   else if LJPair.JsonValue.ClassType = TJSONString then Self := LJPair.JsonValue.Value
-
+  else if LJPair.JsonValue.ClassType = TJSONBool then Self := StrToBool(LJPair.JsonValue.Value)
   else if LJPair.JsonValue.ClassType = TJSONNumber then
   begin
       if LJPair.JsonValue.ToString.IndexOf('.') = -1 then
@@ -195,7 +195,7 @@ begin
         Self := TJSONNumber(LJPair.JsonValue).AsDouble;
   end else begin
     LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
+    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := Nil;
   end;
 end;
 

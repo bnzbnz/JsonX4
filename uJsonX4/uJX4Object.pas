@@ -33,7 +33,6 @@ uses
   , SysUtils
   , uJX4Rtti
   , zLib
-  , Math
   ;
 
 const
@@ -110,7 +109,6 @@ type
     function        ToJSON(AOptions: TJX4Options = [ joNullToEmpty ]; AAbort: PBoolean = Nil): string; overload;
     class function  FromJSON<T:class, constructor>(const AJson: string; AOptions: TJX4Options = []; AAbort: PBoolean = Nil): T; overload;
     class function  ToJSONStream(AObj: TObject; AOptions: TJX4Options = []; AAbort: PBoolean = Nil): TStream; overload;
-    class function  ToYAML(const AStr: string): string; overload;
     class function  ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     function        ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     class function  FromYAML<T:class, constructor>(const AYaml: string; AOptions: TJX4Options = []): T;
@@ -125,8 +123,9 @@ type
 
     class function  NameDecode(const ToDecode: string): string; static;
     class function  NameEncode(const ToEncode: string): string; static;
-    class procedure VarEscapeJSONStr(var AStr: string; const SlashEncode: Boolean = False); overload; static;
-    class function  EscapeJSONStr(const AStr: string; const SlashEncode: Boolean = False): string; overload; static;
+    class procedure VarEscapeJSONStr(var AStr: string; const SlashEncode: Boolean); overload; static;
+    class function  EscapeJSONStr(const AStr: string; const SlashEncode: Boolean): string; overload; static;
+    class function  JsonListToJsonString(const AList: TList<string>): string; static;
     class function  FormatJSON(const AJson: string; ABeautify: Boolean = True; AIndentation: Integer = 2): string; static;
 
     class function  ValidateJSON(const AJson: string): string; static;
@@ -231,7 +230,7 @@ begin
   inherited Create;
   for LField in TxRTTI.GetFields(Self) do
   begin
-    if (LField.Visibility in [mvPublic]) then
+    if  (LField.Visibility in [mvPublic]) then
     begin
       if LField.FieldType.TypeKind in [tkRecord] then
       begin
@@ -240,14 +239,14 @@ begin
       end else
       if (LField.FieldType.TypeKind in [tkClass]) then
       begin
-        LNewObj := Nil;
         if not Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Unmanaged)) then
         begin
           LNewObj := TxRTTI.CreateObject(LField.FieldType.AsInstance);
           if not Assigned(LNewObj) then Continue;
           TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
-        end;
-        LField.SetValue(Self, LNewObj);
+          LField.SetValue(Self, LNewObj);
+        end else
+          LField.SetValue(Self, Nil);
       end;
     end;
   end;
@@ -301,7 +300,7 @@ function TJX4Object.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
   LField:     TRTTIField;
   LFields:    TArray<TRTTIField>;
-  LParts:     TStringList;
+  LParts:     TList<string>;
   LRes:       string;
   LIOBlock:   TJX4IOBlock;
   LObj:       TOBject;
@@ -311,8 +310,9 @@ begin
   Result := TValue.Empty;
 
   LIOBlock := TJX4IOBlock.Create;
-  LParts := TStringList.Create(#0, ',');
+  LParts := TList<string>.Create;
   try
+
     LFields := TxRTTI.GetFields(Self);
     LParts.Capacity := Length(LFields);
     for LField in LFields do
@@ -337,7 +337,7 @@ begin
       end;
     end;
 
-    LRes := LParts.DelimitedText;
+    LRes := JsonListToJsonString(LParts);
     if not AIOBlock.JsonName.IsEmpty then
     begin
       if LRes.IsEmpty then
@@ -422,8 +422,9 @@ begin
           and ((LField.FieldType.TypeKind in [tkClass])
           or (LField.FieldType.TypeKind in [tkRecord]))) then Continue;
 
+      LName := NameDecode(LField.Name);
       LAttr := TJX4Name(TxRTTI.GetFieldAttribute(LField, TJX4Name));
-      if Assigned(LAttr) then LName := TJX4Name(LAttr).Name else LName := NameDecode(LField.Name);
+      if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
 
       if (JoRaiseOnMissingField in AIOBlock.Options) and (Length(TxRTTI.GetFields(Self)) < AIOBlock.JObj.count) then
       begin
@@ -446,7 +447,7 @@ begin
         begin
           LFieldFound := True;
           if LJPair.JsonValue is TJSONNull then Break;
-          LJPair.Owned := False;
+           LJPair.Owned := False;
           LJPair.JsonString.Owned := False;
           LJPair.JsonValue.Owned := False;
           if (LJPair.JsonValue is TJSONObject) then
@@ -728,6 +729,23 @@ begin
   VarEscapeJSONStr(Result, SlashEncode);
 end;
 
+class function TJX4Object.JsonListToJsonString(const AList: TList<string>): string;
+var
+  LSb:  TStringBuilder;
+  LIdx: integer;
+begin
+  if AList.Count = 0 then Exit('');
+  if AList.Count = 1 then Exit(AList[0]);
+  LSb := TStringBuilder.Create;
+  for LIdx:= 0 to AList.Count -1 do
+  begin
+    LSb.Append(AList[LIdx]);
+    if LIdx <> AList.Count -1 then LSb.Append(',') ;
+  end;
+  Result := LSb.ToString;
+  LSb.Free;
+end;
+
 class function TJX4Object.FormatJSON(const AJson: string; ABeautify: Boolean; AIndentation: Integer): string;
 var
   TmpJson: TJsonObject;
@@ -984,11 +1002,6 @@ begin
     &Out.Free;
     &In.Free;
   end;
-end;
-
-class function TJX4Object.ToYAML(const AStr: string): string;
-begin
-  Result := TYAMLUtils.JsonToYaml(AStr);
 end;
 
 class function TJX4Object.ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string;

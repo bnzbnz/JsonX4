@@ -111,8 +111,8 @@ uses
 constructor TJX4ListOfValues.Create;
 begin
   inherited Create;
-  FAdded :=  Nil;
-  FDeleted := Nil;
+  FAdded :=  TList<TValue>.Create;
+  FDeleted := TList<TValue>.Create;
 end;
 
 destructor TJX4ListOfValues.Destroy;
@@ -182,7 +182,7 @@ end;
 
 function TJX4ListOfValues.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
-  LParts:     TStringList;
+  LParts:     TList<string>;
   LRes:       string;
   LIOBlock:   TJX4IOBlock;
   LName:      string;
@@ -212,7 +212,7 @@ begin
     Exit;
   end;
 
-  LParts := TStringList.Create(#0, ',');
+  LParts := TList<string>.Create;
   LParts.Capacity := Self.Count;
   LIOBlock := TJX4IOBlock.Create;
   try
@@ -223,7 +223,7 @@ begin
       LTValue := LEle.JSONSerialize(LIOBlock);
       if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
     end;
-    LRes := LParts.DelimitedText;
+    LRes := TJX4Object.JsonListToJsonString(LParts);
     if LName.IsEmpty then
       Result := '[' + LRes + ']'
     else
@@ -288,9 +288,12 @@ constructor TJX4List<T>.Create;
   LNewObj:    TObject;
 begin
   inherited Create(True);
-  FAdded := Nil;
-  FModified := Nil;
-  FDeleted := Nil;
+  FAdded :=  TStringList.Create;
+  FAdded.Duplicates := dupIgnore;
+  FModified := TStringList.Create;
+  FModified.Duplicates := dupIgnore;
+  FDeleted := TStringList.Create;
+  FDeleted.Duplicates := dupIgnore;
   LFields := TxRTTI.GetFields(Self);
   for LField in LFields do
   begin
@@ -412,7 +415,8 @@ end;
 
 function TJX4List<T>.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
-  LParts:     TStringList;
+  LParts:     TList<string>;
+  LRes:       string;
   LEle:       T;
   LIOBlock:   TJX4IOBlock;
   LName:      string;
@@ -440,7 +444,7 @@ begin
     Exit;
   end;
 
-  LParts := TStringList.Create(#0, ',');
+  LParts := TList<string>.Create;
   LParts.Capacity := Self.Count;
   LIOBlock := TJX4IOBlock.Create;
   for LEle in Self do
@@ -450,11 +454,12 @@ begin
     if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
   end;
   LIOBlock.Free;
+  LRes := TJX4Object.JsonListToJsonString(LParts);
 
   if LName.IsEmpty then
-    Result := '[' +  LParts.DelimitedText + ']'
+    Result := '[' + LRes + ']'
   else
-    Result := '"' + LName + '":[' +  LParts.DelimitedText + ']';
+    Result := '"' + LName + '":[' + LRes + ']';
   LParts.Free;
 end;
 
@@ -534,8 +539,8 @@ begin
   if AMergedWith.Count = 0  then Exit;
   if (jmoStats in AOptions) then
   begin
-    if Not Assigned(FAdded) then FAdded := TList<TValue>.Create else FAdded.Clear;
-    if Not Assigned(FDeleted) then FDeleted := TList<TValue>.Create else FDeleted.Clear;
+    FAdded.Clear;
+    FDeleted.Clear;
   end;
   for var i := AMergedWith.Count  - 1 downto 0 do
   begin
