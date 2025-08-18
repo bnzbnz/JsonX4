@@ -251,6 +251,4 @@ begin
   Memo1.Lines.add( Format( '==>  Total Time %d ms', [ LGWatch.ElapsedMilliseconds ] ) );
 end;
 
-initialization
-  _RTTIThreaded := False;
 end.

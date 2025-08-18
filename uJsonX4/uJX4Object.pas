@@ -110,6 +110,7 @@ type
     class function  FromJSON<T:class, constructor>(const AJson: string; AOptions: TJX4Options = []; AAbort: PBoolean = Nil): T; overload;
     class function  ToJSONStream(AObj: TObject; AOptions: TJX4Options = []; AAbort: PBoolean = Nil): TStream; overload;
     class function  ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
+    class function  ToYAML(AStr: string; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     function        ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     class function  FromYAML<T:class, constructor>(const AYaml: string; AOptions: TJX4Options = []): T;
 
@@ -1007,6 +1008,11 @@ end;
 class function TJX4Object.ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string;
 begin
   Result := TYAMLUtils.JsonToYaml(TJX4Object.ToJSON(AObj));
+end;
+
+class function TJX4Object.ToYAML(AStr: string; AOptions: TJX4Options = [ joNullToEmpty ]): string;
+begin
+  Result := TYAMLUtils.JsonToYaml(AStr);
 end;
 
 function TJX4Object.ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string;
