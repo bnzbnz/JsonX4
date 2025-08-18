@@ -356,7 +356,6 @@ begin
     LParts.Free;
   end;
 
-
 end;
 
 procedure TJX4Dict<V>.JSONClone(ADestDict: TJX4Dict<V>; AOptions: TJX4Options);

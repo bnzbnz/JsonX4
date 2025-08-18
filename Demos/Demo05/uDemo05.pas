@@ -23,16 +23,31 @@ type
     { Public declarations }
   end;
 
+  // You may nedd additional porperty control attributes :
+
   TDemo = class(TJX4Object)
     [TJX4Required]
     Str:     TValue;                     // A value is required when serializing (Exception)
-    [TJX4Name('#href')]                  // a name of the matching json name
-    HrefVar: TValue;                     // a name of the json value mapped to "Bool"
+
     [TJX4Default('22')]                  // a defualt value to be used at deserialization, if the field is null
     Num1:    TValue;
-    __23href2: TValue;                   // name encoding :  __23href = #hef    ('_'+'_'+Hex('#')+'href')
-    [TJX4Default('true')]                //                                       ^-- Header
+
+    // Name encoding : because sometimes a Json Name may not eb caompatable with Delphi naming conventions
+    // In this case there is three way to "enocde" the json or Delphi name:
+    // Using & for Delphi property name
+    &type: TValue;            //  for Json Name "type"
+
+    // Name Arribute:
+    [TJX4Name('#href')]       // The json name mathcing the property HrefVar : {"#href":"Test Value"}
+    HrefVar: TValue;
+
+    // Inline encoding:
+    __23href2: TValue;      // name encoding :  __23href = #hef    ('_'+'_'+Hex('#')+'href')
+                            //                                       ^-- Header
+
+    [TJX4Default('true')]   // Complexe Attributes Settings
     [TJX4Name('NewMix')]
+    [TJX4Required]
     Mix: TValue;
   end;
 
@@ -60,11 +75,11 @@ begin
     Demo.Str := 'Need a Value';
     Demo.HrefVar := 'http://';
 
-    Memo1.Lines.Add('JX3Default Attribute : Num1 default to 22 :');
+    Memo1.Lines.Add('JX4Default Attribute : Num1 default to 22 :');
     Memo1.Lines.Add(Demo.ToJSON([joNulltoEmpty]));
 
     Memo1.Lines.Add('');
-    Memo1.Lines.Add('JX3Name Attribute, Name conversion :');
+    Memo1.Lines.Add('JX4Name Attribute, Name conversion :');
     JsonStr := '{"Str":"Need a Value","#href":"http","Num1":22}';
     JDemo := TJX4Object.FromJSON<TDemo>(JsonStr);
     Memo1.Lines.Add('Deserialization: #href value is : ' + JDemo.HrefVar.AsString);
@@ -87,10 +102,10 @@ begin
     //  joStats               : Calc. stats (see Lage demo)
 
     Memo1.Lines.Add('');
-    Memo1.Lines.Add('JX3Required exception');
+    Memo1.Lines.Add('JX4Required exception');
     Demo3.Str := Nil;
     //Demo.Str is null but required >> Exception;
-    JsonStr := Demo3.ToJSON([joRaiseException]);      // This flag will re-raise internal exceptions
+    JsonStr := Demo3.ToJSON([joRaiseException]);      // This flag will re-raise any internal exceptions
 
   finally
     Demo3.Free;
@@ -99,5 +114,7 @@ begin
   end;
 
 end;
+
+initialization
 
 end.

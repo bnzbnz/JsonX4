@@ -70,13 +70,13 @@ begin
 
   // Raw Json
   Json := Primitives.ToJson([]);
-  Memo1.lines.add('Raw String Object:');
+  Memo1.lines.add('Serialized Object:');
   Memo1.lines.add(Json);
 
   // Optimized Json
   Memo1.lines.add('');
   Json := Primitives.ToJson([joNullToEmpty]);
-  Memo1.lines.add('Optimized String Object (null removed):');
+  Memo1.lines.add('Serialized and Optimized Object (null removed):');
   Memo1.lines.add(Json);
 
   // Converting back to a Primitives Object;
@@ -85,12 +85,12 @@ begin
   // Serializing the New Object
   Memo1.lines.add('');
   Json := Primitives.ToJson;
-  Memo1.lines.add('New Cloned Object:');
+  Memo1.lines.add('Cloned Object:');
   Memo1.lines.add(Json);
 
   // Checking Values
   Memo1.lines.add('');
-  Memo1.lines.add('Checking the New Object Values:');
+  Memo1.lines.add('Checking Cloned Object Values:');
   Memo1.lines.add('Str: ' + NewPrimitives.Str.AsString);
   Memo1.lines.add('Int64: ' + NewPrimitives.Int.AsOrdinal.ToString);
   Memo1.lines.add('Decimal: ' + NewPrimitives.Dec.AsExtended .ToString);
@@ -98,7 +98,7 @@ begin
 
   // Formatted Json
   Memo1.lines.add('');
-  Memo1.lines.add('Formatted:');
+  Memo1.lines.add('Formatted Serialized Object:');
   Memo1.lines.add(NewPrimitives.Format);
 
   NewPrimitives.Free;
