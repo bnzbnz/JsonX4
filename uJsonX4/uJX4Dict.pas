@@ -37,6 +37,10 @@ uses
 type
 
   TJX4DictOfValues = class(System.Generics.Collections.TObjectDictionary<string, TValue>)
+  private
+    FAdded:    TStringList;
+    FModified: TStringList;
+    FDeleted:  TStringList;
   public
     constructor     Create;
     destructor      Destroy; override;
@@ -54,6 +58,9 @@ type
 
     function       Clone(AOptions: TJX4Options): TJX4DictOfValues; overload;
 
+    property       EleAdded:    TStringList read FAdded;
+    property       EleModified: TStringList read FModified;
+    property       EleDeleted:  TStringList read FDeleted;
   end;
 
   TJX4ValDic  = class(TJX4DictOfValues);
@@ -120,10 +127,17 @@ end;
 constructor TJX4DictOfValues.Create;
 begin
   inherited Create;
+  FAdded :=  Nil;
+  FModified :=  Nil;
+  FDeleted := Nil;
 end;
 
 destructor TJX4DictOfValues.Destroy;
 begin
+  FAdded :=  Nil;
+  FreeAndNil(FAdded);
+  FreeAndNil(FModified);
+  FreeAndNil(FDeleted);
   inherited Destroy;
 end;
 
@@ -230,8 +244,49 @@ begin
 end;
 
 procedure TJX4DictOfValues.JSONMerge(AMergedWith: TJX4DictOfValues; AOptions: TJX4Options);
+var
+  LEle: TPair<string, TValue>;
+  LValue: TValue;
+  LExists: Boolean;
 begin
-  //
+ if (jmoStats in AOptions) then
+  begin
+    if not Assigned(FAdded) then
+    begin
+      FAdded :=  TStringList.Create;
+      FAdded.Duplicates := dupIgnore;
+    end else FAdded.Clear;
+    if not Assigned(FModified) then
+    begin
+      FModified :=  TStringList.Create;
+      FModified.Duplicates := dupIgnore;
+    end else FModified.Clear;
+    if not Assigned(FDeleted) then
+    begin
+      FDeleted :=  TStringList.Create;
+      FDeleted.Duplicates := dupIgnore;
+    end else FDeleted.Clear;
+  end;
+  if AMergedWith.Count = 0  then Exit;
+  for LEle in AMergedWith do
+  begin
+    LExists := Self.TryGetValue(LEle.Key, LValue);
+    if not LExists and (jmoAdd in AOptions) then
+    begin
+       Self.Add(LEle.Key, LValue);
+       if (jmoStats in AOptions) then FAdded.Add(LEle.Key);
+    end
+    else if LExists and (jmoDelete in AOptions) then
+    begin
+       Self.Remove(LEle.Key);
+       if (jmoStats in AOptions) then FDeleted.Add(LEle.Key);
+    end
+    else if LExists and (jmoUpdate in AOptions) then
+    begin
+      Self.AddOrSetValue(LEle.Key, LValue);
+      if (jmoStats in AOptions) then FModified.Add(LEle.Key);
+    end;
+  end;
 end;
 
 class function TJX4DictOfValues.New: TJX4DictOfValues;
@@ -281,12 +336,9 @@ end;
 constructor TJX4Dict<V>.Create;
 begin
   inherited Create([doOwnsValues]);
-  FAdded :=  TStringList.Create;
-  FAdded.Duplicates := dupIgnore;
-  FModified := TStringList.Create;
-  FModified.Duplicates := dupIgnore;
-  FDeleted := TStringList.Create;
-  FDeleted.Duplicates := dupIgnore;
+  FAdded :=  Nil;
+  FModified :=  Nil;
+  FDeleted := Nil;
 end;
 
 destructor TJX4Dict<V>.Destroy;
@@ -459,9 +511,21 @@ var
 begin
   if (jmoStats in AOptions) then
   begin
-    FAdded.Clear;
-    FModified.Clear;
-    FDeleted.Clear;
+    if not Assigned(FAdded) then
+    begin
+      FAdded :=  TStringList.Create;
+      FAdded.Duplicates := dupIgnore;
+    end else FAdded.Clear;
+    if not Assigned(FModified) then
+    begin
+      FModified :=  TStringList.Create;
+      FModified.Duplicates := dupIgnore;
+    end else FModified.Clear;
+    if not Assigned(FDeleted) then
+    begin
+      FDeleted :=  TStringList.Create;
+      FDeleted.Duplicates := dupIgnore;
+    end else FDeleted.Clear;
   end;
   if AMergedWith.Count = 0  then Exit;
   for LEle in AMergedWith do
