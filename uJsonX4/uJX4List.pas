@@ -195,6 +195,7 @@ begin
   LName := AIOBlock.JsonName;
   if Assigned(AIOBlock) and Assigned(AIOBlock.Field) then
   begin
+    if Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
     LNameAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));
     if Assigned(LNameAttr) then LName := TJX4Name(LNameAttr).Name;
   end;
@@ -421,9 +422,11 @@ var
   LTValue:    TValue;
 begin
   Result := TValue.Empty;
+
   LName := AIOBlock.JsonName;
   if Assigned(AIOBlock) and Assigned(AIOBlock.Field) then
   begin
+    if Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
     LNameAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));
     if Assigned(LNameAttr) then LName := TJX4Name(LNameAttr).Name;
   end;

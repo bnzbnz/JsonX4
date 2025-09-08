@@ -76,7 +76,7 @@ type
 
   TJX4Required = class(TCustomAttribute);
 
-  TJX4Excluded = class(TCustomAttribute);
+  TJX4Transient = class(TCustomAttribute);
 
   TJX4Unmanaged = class(TCustomAttribute);
   
@@ -319,6 +319,7 @@ begin
     for LField in LFields do
     begin
       if Assigned(AIOBlock.PAbort) and AIOBlock.PAbort^ then Exit;
+      if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Transient)) then Continue;
       if TxRTTI.FieldAsTObject(Self, LField, LObj, [mvPublic]) then
       begin
         if not Assigned(LObj) then Continue; // Unmanaged

@@ -152,8 +152,10 @@ var
   LNameAttr:  TCustomAttribute;
 begin
   Result := TValue.Empty;
+
   if Assigned(AIOBlock.Field) then
   begin
+    if Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
     LName := AIOBlock.Field.Name;
     LNameAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));
     if Assigned(LNameAttr) then LName := TJX4Name(LNameAttr).Name;
@@ -366,8 +368,10 @@ var
   LTValue:    TValue;
 begin
   Result := TValue.Empty;
+
   if Assigned(AIOBlock.Field) then
   begin
+    if Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
     LName := AIOBlock.Field.Name;
     LNameAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));
     if Assigned(LNameAttr) then LName := TJX4Name(LNameAttr).Name;
