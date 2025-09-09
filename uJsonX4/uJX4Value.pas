@@ -56,9 +56,13 @@ type
     function  JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
 
     function  TypeKind:                           TJX4TValueKind;
+    function  IsString:                           Boolean;
     function  ToString(Decimal: Integer = 2):     string;
+    function  IsInteger:                          Boolean;
     function  ToInteger:                          int64;
+    function  IsFloat:                            Boolean;
     function  ToFloat:                            Extended;
+    function  IsBoolean:                          Boolean;
     function  ToBoolean:                          Boolean;
 
     //Conversion Tools
@@ -223,6 +227,11 @@ begin
   end;
 end;
 
+function TJX4TValueHelper.IsString: Boolean;
+begin
+  Result := TypeKind = tkvString;
+end;
+
 function TJX4TValueHelper.ToString(Decimal: Integer): string;
 begin
   case self.TypeKind of
@@ -233,6 +242,11 @@ begin
   else
     Result := '';
   end;
+end;
+
+function TJX4TValueHelper.IsInteger: Boolean;
+begin
+  Result := TypeKind = tkvInteger;
 end;
 
 function TJX4TValueHelper.ToInteger: Int64;
@@ -247,6 +261,11 @@ begin
   end;
 end;
 
+function TJX4TValueHelper.IsFloat: Boolean;
+begin
+  Result := TypeKind = tkvFloat;
+end;
+
 function TJX4TValueHelper.ToFloat: Extended;
 begin
   case self.TypeKind of
@@ -257,6 +276,11 @@ begin
   else
     Result := 0;
   end;
+end;
+
+function TJX4TValueHelper.IsBoolean: Boolean;
+begin
+  Result := TypeKind = tkvBool;
 end;
 
 function TJX4TValueHelper.ToBoolean: Boolean;
