@@ -103,6 +103,7 @@ type
     procedure       JSONDeserialize(AIOBlock: TJX4IOBlock);
     procedure       JSONClone(ADestObj: TObject; AOptions: TJX4Options);
     procedure       JSONMerge(AMergedWith: TObject; AOptions: TJX4Options);
+    procedure       JSONClear;
 
     class function  New<T:class, constructor>: T;
     class function  ToJSON(AObj: TObject; AOptions: TJX4Options = [ joNullToEmpty ]; AAbort: PBoolean = Nil): string; overload;
@@ -723,6 +724,29 @@ begin
   end;
   AStr := LSb.ToString;
   LSb.Free;
+end;
+
+procedure TJX4Object.JSONClear;
+var
+  LField:   TRTTIField;
+  LFields:  TArray<TRttiField>;
+  LObj:     TOBject;
+  LValue:   TValue;
+begin
+  LFields := TxRTTI.GetFields(Self);
+  for LField in LFields do
+  begin
+    if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Unmanaged)) then Continue;
+    if TxRTTI.FieldAsTValue(Self, LField, LValue, [mvPublic]) then
+      LField.SetValue(Self, Nil)
+    else
+    if TxRTTI.FieldAsTObject(Self, LField, LObj, [mvPublic]) then
+    begin
+      if not Assigned(LObj) then Continue;
+      TxRTTI.CallMethodFunc('JSONClear', LObj, []);
+      Continue;
+    end;
+  end;
 end;
 
 class function TJX4Object.EscapeJSONStr(const AStr: string; const SlashEncode: Boolean): string;

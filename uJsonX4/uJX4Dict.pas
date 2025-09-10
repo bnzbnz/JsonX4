@@ -49,6 +49,7 @@ type
     procedure JSONDeserialize(AIOBlock: TJX4IOBlock);
     procedure JSONClone(ADestDict: TJX4DictOfValues; AOptions: TJX4Options = []);
     procedure JSONMerge(AMergedWith: TJX4DictOfValues; AOptions: TJX4Options = []);
+    procedure JSONClear;
 
     function  SaveToJSONFile(const AFilename: string; AOptions: TJX4Options = [joNullToEmpty]; AEncoding: TEncoding = Nil; AZipIt: TCompressionLevel = clNone;  AUseBOM: Boolean = False): Int64;
 
@@ -77,10 +78,11 @@ type
     constructor Create;
     destructor  Destroy; override;
 
-    function    JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
-    procedure   JSONDeserialize(AIOBlock: TJX4IOBlock);
-    procedure   JSONClone(ADestDict:  TJX4Dict<V>; AOptions: TJX4Options = []);
-    procedure   JSONMerge(AMergedWith: TJX4Dict<V>; AOptions: TJX4Options = []);
+    function  JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
+    procedure JSONDeserialize(AIOBlock: TJX4IOBlock);
+    procedure JSONClone(ADestDict:  TJX4Dict<V>; AOptions: TJX4Options = []);
+    procedure JSONMerge(AMergedWith: TJX4Dict<V>; AOptions: TJX4Options = []);
+    procedure JSONClear;
 
     class function New: TJX4Dict<V>;
     class function NewAdd(AKey: string; AValue: V): TJX4Dict<V>;
@@ -291,6 +293,11 @@ begin
   end;
 end;
 
+procedure TJX4DictOfValues.JSONClear;
+begin
+  Self.Clear;
+end;
+
 class function TJX4DictOfValues.New: TJX4DictOfValues;
 begin
   Result := TJX4DictOfValues.Create;
@@ -484,6 +491,15 @@ end;
 procedure TJX4Dict<V>.JSONMerge(AMergedWith: TJX4Dict<V>; AOptions: TJX4Options);
 begin
   //
+end;
+
+procedure TJX4Dict<V>.JSONClear;
+var
+  LObj: TPair<string, V>;
+begin
+  for LObj in Self do
+    TJX4Object(LObj.Value).JSONClear;
+  Self.CLear;
 end;
 
 class function TJX4Dict<V>.New: TJX4Dict<V>;

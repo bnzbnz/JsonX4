@@ -46,6 +46,7 @@ type
     procedure   JSONDeserialize(AIOBlock: TJX4IOBlock);
     procedure   JSONClone(ADestList: TJX4ListOfValues; AOptions: TJX4Options = []);
     procedure   JSONMerge(AMergedWith: TJX4ListOfValues; AOptions: TJX4Options = []);
+    procedure   JSONClear;
 
     class function  New: TJX4ListOfValues;
     class function  NewAdd(AValue: TValue): TJX4ListOfValues;
@@ -75,10 +76,11 @@ type
     constructor Create;
     destructor  Destroy; override;
 
-    function    JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
-    procedure   JSONDeserialize(AIOBlock: TJX4IOBlock);
-    procedure   JSONClone(ADestList: TJX4List<T>; AOptions: TJX4Options = []);
-    procedure   JSONMerge(AMergedWith: TJX4List<T>; AOptions: TJX4Options);
+    function   JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
+    procedure  JSONDeserialize(AIOBlock: TJX4IOBlock);
+    procedure  JSONClone(ADestList: TJX4List<T>; AOptions: TJX4Options = []);
+    procedure  JSONMerge(AMergedWith: TJX4List<T>; AOptions: TJX4Options);
+    procedure  JSONClear;
 
     class function  New: TJX4List<T>;
     class function  NewAdd(AValue: T): TJX4List<T>;
@@ -278,6 +280,11 @@ begin
       if joRaiseException in AOptions then Raise;
     end;
   end;
+end;
+
+procedure TJX4ListOfValues.JSONClear;
+begin
+  Self.Clear;
 end;
 
 { TJX4List<T> }
@@ -566,6 +573,11 @@ function TJX4List<T>.SaveToJSONFile(const AFilename: string; AOptions: TJX4Optio
 begin
   if not Assigned(AEncoding) then AEncoding := TEncoding.UTF8;
   Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AZipIt, AUseBOM);
+end;
+
+procedure TJX4List<T>.JSONClear;
+begin
+  Self.Clear;
 end;
 
 

@@ -54,6 +54,7 @@ type
     procedure JSONDeserialize(AIOBlock: TJX4IOBlock);
     function  JSONClone(AOptions: TJX4Options = []): TValue;
     function  JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
+    procedure JSONClear;
 
     function  TypeKind:                           TJX4TValueKind;
     function  IsString:                           Boolean;
@@ -202,6 +203,11 @@ begin
   if jmoUpdate in AOptions then
      if (not AMergedWith.IsEmpty) then
        Self := AMergedWith;
+end;
+
+procedure TJX4TValueHelper.JSONClear;
+begin
+  Self := Nil;
 end;
 
 function TJX4TValueHelper.JSONClone(AOptions: TJX4Options): TValue;
