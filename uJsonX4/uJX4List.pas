@@ -99,6 +99,8 @@ type
 
    TJX4Lst<V:class, constructor> = class(TJX4List<V>);
 
+   MyTThread = class(TThread); // TThread Protected Access
+
 implementation
 uses
     Generics.Defaults
@@ -166,13 +168,13 @@ begin
     if LELe is TJSONObject then
     begin
       LJObj :=  LEle as TJSONObject;
-      LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options, AIOBlock.PAbort);
+      LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
       LTValue.JSONDeserialize(LIOBlock);
       Add(LTValue);
     end else begin
       LEle.Owned := False;
       LJObj :=  TJSONObject.Create(TJSONPair.Create('', LEle));
-      LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options, AIOBlock.PAbort);
+      LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
       LTValue.JSONDeserialize(LIOBlock);
       Add(LTValue);
       LJObj.Free;;
@@ -221,8 +223,8 @@ begin
   try
     for LEle in Self do
     begin
-      if Assigned(AIOBlock.PAbort) and AIOBlock.PAbort^ then Exit;
-      LIOBlock.Init('', Nil, Nil, AIOBlock.Options, AIOBlock.PAbort);
+      if MyTThread(TThread.Current).Terminated then Exit;
+      LIOBlock.Init('', Nil, Nil, AIOBlock.Options);
       LTValue := LEle.JSONSerialize(LIOBlock);
       if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
     end;
@@ -375,14 +377,14 @@ begin
   try
     for LEle in TJSONArray(AIOBlock.JObj.Pairs[0].JsonValue) do
     begin
-      if Assigned(AIOBlock.PAbort) and AIOBlock.PAbort^ then Exit;
+      if MyTThread(TThread.Current).Terminated then Exit;
       if LELe is TJSONObject then
       begin
         LNewObj := T.Create;
         TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
         Add(LNewObj);
         LJObj :=  LEle as TJSONObject;
-        LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options, AIOBlock.PAbort);
+        LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
         TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ] );
       end else begin
         LNewObj := T.Create;
@@ -390,7 +392,7 @@ begin
         Add(LNewObj);
         LEle.Owned := False;
         LJObj :=  TJSONObject.Create(TJSONPair.Create('', LEle));
-        LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options, AIOBlock.PAbort);
+        LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
         TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ] );
         LJObj.Free;;
         LEle.Owned := True;
@@ -456,7 +458,7 @@ begin
   LIOBlock := TJX4IOBlock.Create;
   for LEle in Self do
   begin
-    LIOBlock.Init('', Nil, Nil, AIOBlock.Options, AIOBlock.PAbort);
+    LIOBlock.Init('', Nil, Nil, AIOBlock.Options);
     LTValue := TxRTTI.CallMethodFunc('JSONSerialize', LEle, [ LIOBlock ]);
     if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
   end;

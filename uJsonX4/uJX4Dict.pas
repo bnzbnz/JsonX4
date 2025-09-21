@@ -102,6 +102,7 @@ type
   TJX4Dictionary<V:class, constructor> = class(TJX4Dict<V>);
   TJX4Dic<V:class, constructor> = class(TJX4Dict<V>);
 
+  MyTThread = class(TThread); // TThread Protected Access
 
 implementation
 uses
@@ -184,7 +185,7 @@ begin
   LIOBlock := TJX4IOBlock.Create;
   for Lkp in Self do
   begin
-      LIOBlock.Init(LKp.Key, Nil, Nil, AIOBlock.Options, AIOBlock.PAbort);
+      LIOBlock.Init(LKp.Key, Nil, Nil, AIOBlock.Options);
       LTValue := Lkp.Value.JSONSerialize(LIOBlock);
       if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
   end;
@@ -237,7 +238,7 @@ begin
     end else
       LJObj := TJSONObject.Create(LPair);
 
-    LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options, AIOBlock.PAbort);
+    LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
     LNewObj.JSONDeserialize(LIOBlock);
 
     if LJObjDestroy then FreeAndNil(LJObj);
@@ -406,11 +407,11 @@ begin
     LParts.Capacity := Self.Count;
     for Lkp in Self do
     begin
-      if Assigned(AIOBlock.PAbort) and AIOBlock.PAbort^ then Exit;
+      if MyTThread(TThread.Current).Terminated then Exit;
       LObj := TValue.From<V>(Lkp.Value).AsObject;
       if Assigned(LObj) then
       begin
-        LIOBlock.Init(LKp.Key, Nil, Nil, AIOBlock.Options, AIOBlock.PAbort);
+        LIOBlock.Init(LKp.Key, Nil, Nil, AIOBlock.Options);
         LTValue := TxRTTI.CallMethodFunc('JSONSerialize', LObj, [ LIOBlock ]);
         if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
       end;
@@ -458,7 +459,7 @@ begin
   try
     for LPair in AIOBlock.JObj do
     begin
-      if Assigned(AIOBlock.PAbort) and AIOBlock.PAbort^ then Exit;
+      if MyTThread(TThread.Current).Terminated then Exit;
       LNewObj := V.Create;
       Add(LPair.JsonString.value, LNewObj);
 
@@ -476,7 +477,7 @@ begin
       end else
         LJObj := TJSONObject.Create(LPair);
 
-      LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options, AIOBlock.PAbort);
+      LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
       TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ]);
 
       if LJObjDestroy then FreeAndNil(LJObj);

@@ -27,6 +27,7 @@ interface
 uses
     uJX4Object
   , RTTI
+  , Classes
   ;
 
 type
@@ -94,6 +95,8 @@ type
 
   end;
 
+  MyTThread = class(TThread);  //  TThread Protected Access
+
 implementation
 uses
     System.Generics.Collections
@@ -110,8 +113,9 @@ var
   LAttr:  TCustomAttribute;
 begin
   Result := Nil;
-  if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
+  if MyTThread(TThread.Current).Terminated then Exit;
 
+  if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
   case Self.TypeKind of
     tkvString:  LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString, joSlashEncode in AIOBlock.Options) + '"';
     tkvBool:    LValue := cBoolToStr[Self.AsBoolean];
@@ -170,6 +174,7 @@ var
   LAttr:          TCustomAttribute;
 begin
   Self := Nil;
+  if MyTThread(TThread.Current).Terminated then Exit;
 
   if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
   LJPair := AIOBlock.JObj.Pairs[0];
