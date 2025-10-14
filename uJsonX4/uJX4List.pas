@@ -74,6 +74,7 @@ type
     FDeleted:  TStringList;
   public
     constructor Create;
+    constructor CreateNotOwn; overload;
     destructor  Destroy; override;
 
     function   JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
@@ -98,6 +99,12 @@ type
   end;
 
    TJX4Lst<V:class, constructor> = class(TJX4List<V>);
+
+   TJX4ListNotOwn<V:class, constructor> = class(TJX4List<V>)
+   public
+    constructor Create; overload;
+    destructor  Destroy; override;
+   end;
 
    MyTThread = class(TThread); // TThread Protected Access
 
@@ -357,7 +364,7 @@ begin
     TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
     TxRTTI.CallMethodProc('JSONClone', LList, [LNewObj, TValue.From<TJX4Options>(AOptions)]);
     ADestList.Add(LNewObj);
-  end;
+   end;
 end;
 
 procedure TJX4List<T>.JSONDeserialize(AIOBlock: TJX4IOBlock);
@@ -582,5 +589,21 @@ begin
   Self.Clear;
 end;
 
+constructor TJX4List<T>.CreateNotOwn;
+begin
+  inherited Create(False);
+end;
+
+{ TJX4ListNull<V> }
+
+constructor TJX4ListNotOwn<V>.Create;
+begin
+  inherited CreateNotOwn;
+end;
+
+destructor TJX4ListNotOwn<V>.Destroy;
+begin
+  inherited;
+end;
 
 end.

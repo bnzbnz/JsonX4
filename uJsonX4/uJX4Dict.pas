@@ -76,6 +76,7 @@ type
   public
 
     constructor Create;
+    constructor CreateNotOwn;
     destructor  Destroy; override;
 
     function  JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
@@ -101,6 +102,12 @@ type
 
   TJX4Dictionary<V:class, constructor> = class(TJX4Dict<V>);
   TJX4Dic<V:class, constructor> = class(TJX4Dict<V>);
+
+  TJX4DictNotOwn<V:class, constructor> = class(TJX4Dict<V>)
+  public
+    constructor Create; overload;
+    destructor  Destroy; override;
+  end;
 
   MyTThread = class(TThread); // TThread Protected Access
 
@@ -346,6 +353,14 @@ end;
 constructor TJX4Dict<V>.Create;
 begin
   inherited Create([doOwnsValues]);
+  FAdded := Nil;
+  FModified :=  Nil;
+  FDeleted := Nil;
+end;
+
+constructor TJX4Dict<V>.CreateNotOwn;
+begin
+  inherited Create([]);
   FAdded :=  Nil;
   FModified :=  Nil;
   FDeleted := Nil;
@@ -623,6 +638,19 @@ end;
 function TJX4Dict<V>.SaveToJSONFile(const AFilename: string; AOptions: TJX4Options = [joNullToEmpty]; AEncoding: TEncoding = NIl; AZipIt: TCompressionLEvel = clNone; AUseBOM: Boolean = False): Int64;
 begin
   Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AZipIt, AUseBOM);
+end;
+
+constructor TJX4DictNotOwn<V>.Create;
+begin
+  inherited CreateNotOwn;
+  FAdded :=  Nil;
+  FModified :=  Nil;
+  FDeleted := Nil;
+end;
+
+destructor TJX4DictNotOwn<V>.Destroy;
+begin
+  inherited Destroy;
 end;
 
 end.

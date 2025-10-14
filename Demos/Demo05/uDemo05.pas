@@ -47,7 +47,7 @@ type
 
     [TJX4Default('true')]   // Complexe Attributes Settings
     [TJX4Name('NewMix')]
-    [TJX4Required]
+    //[TJX4Required]
     Mix: TValue;
   end;
 
@@ -81,7 +81,7 @@ begin
     Memo1.Lines.Add('');
     Memo1.Lines.Add('JX4Name Attribute, Name conversion :');
     JsonStr := '{"Str":"Need a Value","#href":"http","Num1":22}';
-    JDemo := TJX4Object.FromJSON<TDemo>(JsonStr);
+    JDemo := TJX4Object.FromJSON<TDemo>(JsonStr, [joRaiseException]);
     Memo1.Lines.Add('Deserialization: #href value is : ' + JDemo.HrefVar.AsString);
     JDemo.HrefVar :='ftp';
     Memo1.Lines.Add('Serialization: ' + JDemo.ToJSON([joNulltoEmpty]));
@@ -99,7 +99,7 @@ begin
     //  joNullToEmpty         : Remove null fields
     //  joRaiseException      : Re-raise ecxceptions
     //  joRaiseOnMissingField : Raise an exception when json field is missing in the delphi object; (Debug)
-    //  joStats               : Calc. stats (see Lage demo)
+    //  joStats               : Calc. stats (see Large demo)
 
     Memo1.Lines.Add('');
     Memo1.Lines.Add('JX4Required exception');

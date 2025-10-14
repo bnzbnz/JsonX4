@@ -15,7 +15,6 @@ object Form4: TForm4
     Size.PlatformDefault = False
     TabOrder = 2
     Text = 'Start'
-    TextSettings.Trimming = None
     OnClick = ButtonClick
   end
   object Memo1: TMemo
@@ -24,7 +23,7 @@ object Form4: TForm4
     Lines.Strings = (
       
         'The file to be processed contains 1 million json elements (strin' +
-        'g, integer, array, etc ...)'
+        'g, integer, arrays, etc ...)'
       
         'Il will be copied, serialized, deserialized, cloned ,merged, sav' +
         'ed 5 times with different formats'

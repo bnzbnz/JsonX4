@@ -33,6 +33,7 @@ uses
   , SysUtils
   , uJX4Rtti
   , zLib
+  , windows
   ;
 
 const
@@ -79,6 +80,8 @@ type
   TJX4Transient = class(TCustomAttribute);
 
   TJX4Unmanaged = class(TCustomAttribute);
+
+  TJX4NotOwned = class(TCustomAttribute);
 
   TJX4IOBlock = class
     // In
@@ -230,6 +233,7 @@ begin
   inherited Create;
   for LField in TxRTTI.GetFields(Self) do
   begin
+    if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Transient)) then Continue;
     if  (LField.Visibility in [mvPublic]) then
     begin
       if LField.FieldType.TypeKind in [tkRecord] then
@@ -261,6 +265,7 @@ begin
   LFields := TxRTTI.GetFields(Self);
   for LField in LFields do
   begin
+    if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Transient)) then Continue;
     if  (LField.FieldType.TypeKind in [tkClass]) and (LField.Visibility in [mvPublic]) then
     begin
       LObj := LField.GetValue(Self).AsObject;
@@ -374,6 +379,7 @@ begin
   LSrc := TxRTTI.GetFields(Self);
   for LDestField in TxRTTI.GetFields(ADestObj) do
     begin
+    if Assigned(TxRTTI.GetFieldAttribute(LDestField, TJX4Transient)) then Continue;
     for LSrcField in LSrc do
     begin
       if LSrcField.Name = LDestField.Name then
@@ -411,40 +417,22 @@ var
   LObj:         TObject;
   LFieldFound:  Boolean;
   LAttr:        TCustomAttribute;
-  LJPairList:   TStringList;
   LTValue:      TValue;
 begin
-  LJPairList := Nil;
   LIOBlock := TJX4IOBlock.Create;
   try
-    if MyTThread(TThread.Current).Terminated then Exit;
     for LField in TxRTTI.GetFields(Self) do
     begin
-      if MyTThread(TThread.Current).Terminated then
-      begin
-      var a:=0;
-      Exit;
-      end;
-      if  not ((LField.Visibility in [mvPublic])
+      if MyTThread(TThread.Current).Terminated then Exit;
+       if  not ((LField.Visibility in [mvPublic])
           and ((LField.FieldType.TypeKind in [tkClass])
           or (LField.FieldType.TypeKind in [tkRecord]))) then Continue;
+
+      if Assigned(TJX4Transient(TxRTTI.GetFieldAttribute(LField, TJX4Transient))) then Continue;
 
       LName := NameDecode(LField.Name);
       LAttr := TJX4Name(TxRTTI.GetFieldAttribute(LField, TJX4Name));
       if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
-
-      if (JoRaiseOnMissingField in AIOBlock.Options) and (Length(TxRTTI.GetFields(Self)) < AIOBlock.JObj.count) then
-      begin
-        LFieldFound := AIOBlock.JObj.Count > 0;
-        for LJPair in  AIOBlock.JObj do
-         if LName = LJPair.JsonString.Value then
-         begin
-           LFieldFound := True;
-           Break;
-         end;
-        if not LFieldFound then
-          raise Exception.Create(SysUtils.Format('Missing Property %s in class %s, from JSON fields: %s%s', [LName, Self.ClassName, sLineBreak, LJPairList.Text]));
-      end;
 
       LFieldFound := False;
       for LJPair in  AIOBlock.JObj do
@@ -454,7 +442,7 @@ begin
         begin
           LFieldFound := True;
           if LJPair.JsonValue is TJSONNull then Break;
-           LJPair.Owned := False;
+          LJPair.Owned := False;
           LJPair.JsonString.Owned := False;
           LJPair.JsonValue.Owned := False;
           if (LJPair.JsonValue is TJSONObject) then
@@ -466,7 +454,11 @@ begin
           if TxRtti.FieldAsTValue(Self, LField, LTValue) then
           begin
             LTValue.JSONDeserialize(LIOBlock);
-            if LTValue.IsEmpty then LTValue := Nil;
+            if LTValue.IsEmpty then
+            begin
+              LAttr := TJX4Default(TxRTTI.GetFieldAttribute(LField, TJX4Default));
+              if Assigned(LAttr) then LTValue := TJX4Default(LAttr).Value else LTValue := Nil;
+            end;
             LField.SetValue(Self, LTValue);
           end else begin
             LObj := LField.GetValue(Self).AsObject;
@@ -489,35 +481,21 @@ begin
           LJPair.JsonString.Owned := True;
           LJPair.JsonValue.Owned := True;
           LJPair.Owned := True;
-
           Break;
         end;
-
-        if not LFieldFound then
-        begin
-
-          LAttr := TJX4Default(TxRTTI.GetFieldAttribute(LField, TJX4Default));
-          if Assigned(LAttr) then
-          begin
-            if TxRtti.FieldIsTValue(LField, [mvPublic]) then
-              LField.SetValue(Self, TJX4Default(LAttr).Value)
-            else begin
-              LObj := LField.GetValue(Self).AsObject;
-              TxRTTI.CallMethodProc('JSONSetValue', LObj, [LName, TJX4Default(LAttr).Value, LIOBlock]);
-            end;
-          end;
-          Continue;
-        end;
-
-          if Assigned(TJX4Required(TxRTTI.GetFieldAttribute(LField, TJX4Required))) then
-            raise Exception.Create(SysUtils.Format('Class: %s : "%s" is required but not defined', [Self.ClassName, LName]));
-
-        end;
-        Continue;
       end;
 
+      //Field Not Found
+      if not (LFieldFound) then
+      begin
+        if (JoRaiseOnMissingField in AIOBlock.Options) then
+          raise Exception.Create(SysUtils.Format('Missing Property %s in class %s', [LName, Self.ClassName]));
+        if Assigned(TJX4Required(TxRTTI.GetFieldAttribute(LField, TJX4Required))) then
+          raise Exception.Create(SysUtils.Format('Undefined Property %s in class %s', [LName, Self.ClassName]));
+      end
+
+    end;
   finally
-    LJPairList.Free;
     LIOBlock.Free;
   end;
 end;
