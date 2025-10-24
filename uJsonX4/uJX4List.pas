@@ -74,7 +74,6 @@ type
     FDeleted:  TStringList;
   public
     constructor Create;
-    constructor CreateNotOwn; overload;
     destructor  Destroy; override;
 
     function   JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
@@ -100,10 +99,9 @@ type
 
    TJX4Lst<V:class, constructor> = class(TJX4List<V>);
 
-   TJX4ListNotOwn<V:class, constructor> = class(TJX4List<V>)
+   TJX4ListNotOwned<V:class, constructor> = class(TJX4List<V>)
    public
     constructor Create; overload;
-    destructor  Destroy; override;
    end;
 
    MyTThread = class(TThread); // TThread Protected Access
@@ -156,6 +154,7 @@ begin
     ADestList.Add(LList);
 end;
 
+
 procedure TJX4ListOfValues.JSONDeserialize(AIOBlock: TJX4IOBlock);
 var
   LEle:       TJSONValue;
@@ -170,15 +169,11 @@ begin
   if not (AIOBlock.JObj.Pairs[0].JsonValue is TJSONArray) then begin Clear; Exit end;
 
   LIOBlock := TJX4IOBlock.Create;
-  for LEle in TJSONArray(AIOBlock.JObj.Pairs[0].JsonValue) do
-  begin
-    if LELe is TJSONObject then
+  try
+    for LEle in TJSONArray(AIOBlock.JObj.Pairs[0].JsonValue) do
     begin
-      LJObj :=  LEle as TJSONObject;
-      LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
-      LTValue.JSONDeserialize(LIOBlock);
-      Add(LTValue);
-    end else begin
+      if not (LELe is TJSONValue) then
+        Raise Exception.Create('TJX4ListOfValues element must be a value');
       LEle.Owned := False;
       LJObj :=  TJSONObject.Create(TJSONPair.Create('', LEle));
       LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
@@ -187,9 +182,11 @@ begin
       LJObj.Free;;
       LEle.Owned := True;
     end;
+  finally
+    LIOBlock.Free;
   end;
-  LIOBlock.Free;
 end;
+
 
 function TJX4ListOfValues.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
@@ -388,21 +385,34 @@ begin
       if LELe is TJSONObject then
       begin
         LNewObj := T.Create;
-        TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
+        try
+          TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
+          LJObj :=  LEle as TJSONObject;
+          LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
+          TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ] );
+        except
+          FreeAndNil(LNewObj);
+          Raise;
+        end;
         Add(LNewObj);
-        LJObj :=  LEle as TJSONObject;
-        LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
-        TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ] );
       end else begin
         LNewObj := T.Create;
         TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
-        Add(LNewObj);
         LEle.Owned := False;
         LJObj :=  TJSONObject.Create(TJSONPair.Create('', LEle));
         LIOBlock.Init(AIOBlock.JsonName, LJObj, AIOBlock.Field, AIOBlock.Options);
-        TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ] );
-        LJObj.Free;;
-        LEle.Owned := True;
+        try
+          try
+            TxRTTI.CallMethodProc( 'JSONDeserialize', LNewObj, [ LIOBlock ] );
+          except
+            FreeAndNil(LNewObj);
+            Raise;
+          end;
+          Add(LNewObj);
+        finally
+          LEle.Owned := True;
+          FreeAndNil(LJObj);
+        end;
       end;
     end;
   finally
@@ -589,21 +599,12 @@ begin
   Self.Clear;
 end;
 
-constructor TJX4List<T>.CreateNotOwn;
-begin
-  inherited Create(False);
-end;
-
 { TJX4ListNull<V> }
 
-constructor TJX4ListNotOwn<V>.Create;
+constructor TJX4ListNotOwned<V>.Create;
 begin
-  inherited CreateNotOwn;
-end;
-
-destructor TJX4ListNotOwn<V>.Destroy;
-begin
-  inherited;
+  inherited Create;
+  Self.OwnsObjects := False;
 end;
 
 end.

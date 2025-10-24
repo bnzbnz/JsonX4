@@ -2,7 +2,7 @@ object Form4: TForm4
   Left = 0
   Top = 0
   Caption = 'Demo01: Primitives'
-  ClientHeight = 363
+  ClientHeight = 364
   ClientWidth = 636
   FormFactor.Width = 320
   FormFactor.Height = 480
@@ -33,11 +33,11 @@ object Form4: TForm4
     TextSettings.WordWrap = True
     Align = Client
     Size.Width = 636.000000000000000000
-    Size.Height = 314.000000000000000000
+    Size.Height = 315.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
     Viewport.Width = 632.000000000000000000
-    Viewport.Height = 310.000000000000000000
+    Viewport.Height = 311.000000000000000000
   end
   object Button: TButton
     Align = Top
@@ -46,7 +46,6 @@ object Form4: TForm4
     Size.PlatformDefault = False
     TabOrder = 1
     Text = 'Start'
-    TextSettings.Trimming = None
     OnClick = ButtonClick
   end
 end

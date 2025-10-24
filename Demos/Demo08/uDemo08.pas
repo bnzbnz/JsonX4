@@ -232,7 +232,7 @@ type
     number: TValue;
     title: TValue;
     user: TUser;
-    labels: TJX4ValList;
+    labels: TJX4ListOfValues;
     state: TValue;
     locked: TValue;
     assignee: TValue;

@@ -26,7 +26,7 @@ type
 
   TBatter = class(TJX4Object)
     id: TValue;
-    [TJX4Name('type')]
+    [TJX4Name('type'), TJX4Required]
     atype: TValue;
   end;
 
@@ -39,7 +39,7 @@ type
   TDonut = class(TJX4Object)
     id: TValue;
     [TJX4Name('type')]
-    atype: TValue;
+    &type: TValue;
     name: TValue;
     ppu: TValue;
     batters: TBatters;
@@ -63,21 +63,28 @@ implementation
 procedure TForm4.ButtonClick(Sender: TObject);
 var
   LWatch: TStopWatch;
+  Ex7: TEx7;
+  Ex7Clone: TEx7;
 begin
 
   LWatch := TStopWatch.StartNew;
+  EX7 := Nil;
+  Ex7Clone := Nil;
+  try
 
   var Json := '{"container":' + Memo1.Lines.Text + '}';     // << because the provided json is an array, we enclose it with a TJXObject container
-  var Ex7 := TJX4Obj.FromJSON<TEx7>(Json);
+  Ex7 := TJX4Obj.FromJSON<TEx7>(Json, [joRaiseOnMissingField, joRaiseException]);
 
-  var Ex7Clone := Ex7.Clone<TEx7>;                        // for the fun we clone Ex7... :)
-  Ex7.Free;
+  if assigned(Ex7) then Ex7Clone := Ex7.Clone<TEx7>;                        // for the fun we clone Ex7... :)
 
-  Memo1.Text := Ex7Clone.Format;
-
-  Ex7Clone.Free;
+  finally
+    if assigned(Ex7) then  Memo1.Text := Ex7Clone.Format;
+    Ex7Clone.Free;
+    Ex7.Free;
+  end;
 
   Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+
 end;
 
 end.

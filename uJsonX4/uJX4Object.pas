@@ -288,7 +288,10 @@ end;
 
 function TJX4Object.Clone<T>(AOptions: TJX4Options): T;
 begin
+  Result := Nil;
   try
+    if not Assigned(Self) then
+      raise Exception.Create('Self is Nil (TJX4Object.Clone)');
     Result := T.Create;
     TxRTTI.CallMethodProc('JSONCreate', Result, [True]);
     TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
@@ -421,13 +424,34 @@ var
 begin
   LIOBlock := TJX4IOBlock.Create;
   try
+
+    if (JoRaiseOnMissingField in AIOBlock.Options) then
+    begin
+      for LJPair in  AIOBlock.JObj do
+      begin
+        LFieldFound := False;
+        for LField in TxRTTI.GetFields(Self) do
+        begin
+          if Assigned(TJX4Transient(TxRTTI.GetFieldAttribute(LField, TJX4Transient))) then Continue;
+          LName := NameDecode(LField.Name);
+          LAttr := TJX4Name(TxRTTI.GetFieldAttribute(LField, TJX4Name));
+          if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
+          if LName = LJPair.JsonString.Value then
+          begin
+            LFieldFound := True;
+            Break;
+          end;
+         end;
+         if not LFieldFound then
+           raise Exception.Create(SysUtils.Format('Missing Property "%s" in Class "%s"', [LJPair.JsonString.Value, Self.ClassName]));
+      end;
+    end;
+
     for LField in TxRTTI.GetFields(Self) do
     begin
       if MyTThread(TThread.Current).Terminated then Exit;
-       if  not ((LField.Visibility in [mvPublic])
-          and ((LField.FieldType.TypeKind in [tkClass])
-          or (LField.FieldType.TypeKind in [tkRecord]))) then Continue;
 
+      if not (TXRtti.FieldIsTValue(LField, [mvPublic]) or (TXRtti.FieldIsTObject(LField, [mvPublic]))) then Continue;
       if Assigned(TJX4Transient(TxRTTI.GetFieldAttribute(LField, TJX4Transient))) then Continue;
 
       LName := NameDecode(LField.Name);
@@ -450,50 +474,52 @@ begin
           else
             LJObj := TJSONObject.Create(LJPair);
 
-          LIOBlock.Init(LField.Name, LJObj, LField, AIOBlock.Options);
-          if TxRtti.FieldAsTValue(Self, LField, LTValue) then
-          begin
-            LTValue.JSONDeserialize(LIOBlock);
-            if LTValue.IsEmpty then
+          try
+             LIOBlock.Init(LField.Name, LJObj, LField, AIOBlock.Options);
+            if TxRtti.FieldAsTValue(Self, LField, LTValue) then
             begin
-              LAttr := TJX4Default(TxRTTI.GetFieldAttribute(LField, TJX4Default));
-              if Assigned(LAttr) then LTValue := TJX4Default(LAttr).Value else LTValue := Nil;
-            end;
-            LField.SetValue(Self, LTValue);
-          end else begin
-            LObj := LField.GetValue(Self).AsObject;
-            if not Assigned(LObj) then
-            begin
-              LObj := TxRTTI.CreateObject(LField.FieldType.AsInstance);
-              TxRTTI.CallMethodProc('JSONCreate', LObj, [True]);
+              LTValue.JSONDeserialize(LIOBlock);
+              if LTValue.IsEmpty then
+              begin
+                LAttr := TJX4Default(TxRTTI.GetFieldAttribute(LField, TJX4Default));
+                if Assigned(LAttr) then LTValue := TJX4Default(LAttr).Value else LTValue := Nil;
+              end;
+              LField.SetValue(Self, LTValue);
+            end else begin
+
+              LObj := LField.GetValue(Self).AsObject;
+              if not Assigned(LObj) then
+              begin
+                LObj := TxRTTI.CreateObject(LField.FieldType.AsInstance);
+                TxRTTI.CallMethodProc('JSONCreate', LObj, [True]);
+              end;
+              try
+                TxRTTI.CallMethodProc('JSONDeserialize', LObj, [LIOBlock]);
+              except
+                FreeAndNil(LObj);
+                LField.SetValue(Self, Nil);
+                Raise;
+              end;
               LField.SetValue(Self, LObj);
             end;
-            TxRTTI.CallMethodProc('JSONDeserialize', LObj, [LIOBlock]);
+          finally
+            if not (LJPair.JsonValue is TJSONObject) then
+            begin
+              LJObj.Pairs[0].JsonString.Owned := False;
+              LJObj.Pairs[0].JsonValue.Owned := False;
+              LJObj.RemovePair(LJObj.Pairs[0].JsonString.Value);
+              LJObj.Free;
+            end;
+            LJPair.JsonString.Owned := True;
+            LJPair.JsonValue.Owned := True;
+            LJPair.Owned := True;
           end;
-
-          if not (LJPair.JsonValue is TJSONObject) then
-          begin
-            LJObj.Pairs[0].JsonString.Owned := False;
-            LJObj.Pairs[0].JsonValue.Owned := False;
-            LJObj.RemovePair(LJObj.Pairs[0].JsonString.Value);
-            LJObj.Free;
-          end;
-          LJPair.JsonString.Owned := True;
-          LJPair.JsonValue.Owned := True;
-          LJPair.Owned := True;
           Break;
+
         end;
       end;
-
-      //Field Not Found
-      if not (LFieldFound) then
-      begin
-        if (JoRaiseOnMissingField in AIOBlock.Options) then
-          raise Exception.Create(SysUtils.Format('Missing Property %s in class %s', [LName, Self.ClassName]));
-        if Assigned(TJX4Required(TxRTTI.GetFieldAttribute(LField, TJX4Required))) then
-          raise Exception.Create(SysUtils.Format('Undefined Property %s in class %s', [LName, Self.ClassName]));
-      end
-
+      if (not LFieldFound) and Assigned(TJX4Required(TxRTTI.GetFieldAttribute(LField, TJX4Required))) then
+        raise Exception.Create(SysUtils.Format('Undefined Property "%s" in Class "%s"', [LName, Self.ClassName]));
     end;
   finally
     LIOBlock.Free;
@@ -545,8 +571,6 @@ begin
       Result := T.Create;
       LIOBlock := TJX4IOBlock.Create('', LJObj, Nil, AOptions);
       TxRTTI.CallMethodProc('JSONDeserialize', Result, [LIOBlock]);
-      if MyTThread(TThread.Current).Terminated then
-        FreeAndNil(Result);
     except
       on Ex: Exception do
       begin
