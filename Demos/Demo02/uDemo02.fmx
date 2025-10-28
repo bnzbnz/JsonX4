@@ -27,7 +27,6 @@ object Form4: TForm4
     Size.PlatformDefault = False
     TabOrder = 1
     Text = 'Start'
-    TextSettings.Trimming = None
     OnClick = ButtonClick
   end
 end

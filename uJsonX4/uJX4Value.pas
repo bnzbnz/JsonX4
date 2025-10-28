@@ -113,7 +113,8 @@ var
   LAttr:  TCustomAttribute;
 begin
   Result := Nil;
-  if MyTThread(TThread.Current).Terminated then Exit;
+  if MyTThread(TThread.Current).Terminated then
+    raise TJSX4ExceptionAborted.Create('Operation Aborted');
 
   if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
   case Self.TypeKind of
@@ -174,7 +175,8 @@ var
   LAttr:          TCustomAttribute;
 begin
   Self := Nil;
-  if MyTThread(TThread.Current).Terminated then Exit;
+  if MyTThread(TThread.Current).Terminated then
+    raise TJSX4ExceptionAborted.Create('Operation Aborted');
 
   if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
   LJPair := AIOBlock.JObj.Pairs[0];
@@ -205,6 +207,8 @@ end;
 
 function TJX4TValueHelper.JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
 begin
+  if MyTThread(TThread.Current).Terminated then
+    raise TJSX4ExceptionAborted.Create('Operation Aborted');
   if jmoUpdate in AOptions then
      if (not AMergedWith.IsEmpty) then
        Self := AMergedWith;

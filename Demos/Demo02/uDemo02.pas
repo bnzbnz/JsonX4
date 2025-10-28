@@ -77,7 +77,7 @@ begin
   Demo.SubClass.PClass.Str:= 'ABC';
 
   // Raw Json
-  Json := Demo.ToJson([joRaiseException]);
+  Json := Demo.ToJson([joRaiseOnException]);
   Memo1.lines.add('Raw Original Object:');
   Memo1.lines.add(Json);
 
@@ -88,7 +88,7 @@ begin
   Memo1.lines.add(Json);
 
   // Converting back to a Primitives Object;
-  NewDemo := TJX4Object.FromJSON<TInnerObjectDemo>(Json, [joRaiseException]);
+  NewDemo := TJX4Object.FromJSON<TInnerObjectDemo>(Json, [joRaiseOnException]);
 
   // Serializing the New Object
   Memo1.lines.add('');

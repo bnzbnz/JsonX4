@@ -320,7 +320,7 @@ begin
   Memo1.Lines.add( '' );
   Memo1.Lines.add( 'Convert Json String to JSX4 Objects (Deserialize):' );
   LWatch := TStopWatch.StartNew;
-  LGitHubExtract := TJX4Object.FromJSON<TGitHubExtract>(LJsonStr, [ joStats, joRaiseException] );
+  LGitHubExtract := TJX4Object.FromJSON<TGitHubExtract>(LJsonStr, [ joStats, joRaiseOnException] );
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
 

@@ -1985,7 +1985,6 @@ begin
   end;
 end;
 
-
 // Process JSON array to YAML
 class procedure TYamlUtils.InternalJsonArrToYaml( AJSON: TJSONArray; AOutStrings: TStrings; AIndentation: TYamlIdentation; var AIndent: Integer; AFromArray: boolean = False; AYesNoBool: boolean = False );
 var

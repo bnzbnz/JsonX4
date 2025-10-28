@@ -72,13 +72,13 @@ begin
   Ex7Clone := Nil;
   try
 
-  var Json := '{"container":' + Memo1.Lines.Text + '}';     // << because the provided json is an array, we enclose it with a TJXObject container
-  Ex7 := TJX4Obj.FromJSON<TEx7>(Json, [joRaiseOnMissingField, joRaiseException]);
+    var Json := '{"container":' + Memo1.Lines.Text + '}';     // << because the provided json is an array, we enclose it with a TJXObject container
+    Ex7 := TJX4Obj.FromJSON<TEx7>(Json, [joRaiseOnMissingField, joRaiseOnException]);
 
-  if assigned(Ex7) then Ex7Clone := Ex7.Clone<TEx7>;                        // for the fun we clone Ex7... :)
+    if assigned(Ex7) then Ex7Clone := Ex7.Clone<TEx7>;                        // for the fun we clone Ex7... :)
 
   finally
-    if assigned(Ex7) then  Memo1.Text := Ex7Clone.Format;
+    if assigned(Ex7Clone) then  Memo1.Text := Ex7Clone.Format;
     Ex7Clone.Free;
     Ex7.Free;
   end;

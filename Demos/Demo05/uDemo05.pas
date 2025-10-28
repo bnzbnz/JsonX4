@@ -81,7 +81,7 @@ begin
     Memo1.Lines.Add('');
     Memo1.Lines.Add('JX4Name Attribute, Name conversion :');
     JsonStr := '{"Str":"Need a Value","#href":"http","Num1":22}';
-    JDemo := TJX4Object.FromJSON<TDemo>(JsonStr, [joRaiseException]);
+    JDemo := TJX4Object.FromJSON<TDemo>(JsonStr, [joRaiseOnException]);
     Memo1.Lines.Add('Deserialization: #href value is : ' + JDemo.HrefVar.AsString);
     JDemo.HrefVar :='ftp';
     Memo1.Lines.Add('Serialization: ' + JDemo.ToJSON([joNulltoEmpty]));
@@ -105,7 +105,7 @@ begin
     Memo1.Lines.Add('JX4Required exception');
     Demo3.Str := Nil;
     //Demo.Str is null but required >> Exception;
-    JsonStr := Demo3.ToJSON([joRaiseException]);      // This flag will re-raise any internal exceptions
+    JsonStr := Demo3.ToJSON([joRaiseOnException]);      // This flag will re-raise any internal exceptions
 
   finally
     Demo3.Free;

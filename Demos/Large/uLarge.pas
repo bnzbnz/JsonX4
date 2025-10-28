@@ -150,7 +150,7 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'Convert Json String to JSX4 Objects (Deserialize):' );
     LWatch := TStopWatch.StartNew;
-  LJObj := TJX4Object.FromJSON<TfetchItemAspectsContentType>(LJsonStr, [ joRaiseException] );
+  LJObj := TJX4Object.FromJSON<TfetchItemAspectsContentType>(LJsonStr, [ joRaiseOnException] );
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
     MB := GetMemoryUsed div (1024*1024);
@@ -200,7 +200,7 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'Saving Serialized Clone String to jsx4.json' );
     LWatch := TStopWatch.StartNew;
-  TJX4Object.SaveToFile('jsx4.json', LJsonStr, TEncoding.UTF8, clNone);
+  LJSize := TJX4Object.SaveToFile('jsx4.json', LJsonStr, TEncoding.UTF8, clNone);
     Memo1.Lines.add( Format('jsx4.json: %n KB, %d ms', [(LJSize / 1024) , LWatch.ElapsedMilliseconds ]));
 
     Memo1.Lines.add( '' );

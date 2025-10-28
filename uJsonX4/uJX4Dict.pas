@@ -76,7 +76,6 @@ type
   public
 
     constructor Create;
-    constructor CreateNotOwn;
     destructor  Destroy; override;
 
     function  JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
@@ -103,11 +102,6 @@ type
   TJX4Dictionary<V:class, constructor> = class(TJX4Dict<V>);
   TJX4Dic<V:class, constructor> = class(TJX4Dict<V>);
 
-  TJX4DictNotOwned<V:class, constructor> = class(TJX4Dict<V>)
-  public
-    constructor Create; overload;
-  end;
-
   MyTThread = class(TThread); // TThread Protected Access
 
 implementation
@@ -125,10 +119,16 @@ begin
     Result := TJX4DictOfValues.Create;
     TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
   except
+    on TJSX4ExceptionAborted do
+    begin
+      FreeAndNil(Result);
+      if joRaiseOnAbort in AOptions then raise;
+      Exit;
+    end;
     on Ex: Exception do
     begin
       FreeAndNil(Result);
-      if joRaiseException in AOptions then Raise;
+      if joRaiseOnException in AOptions then raise;
     end;
   end;
 end;
@@ -221,10 +221,13 @@ begin
   if not Assigned(AIOBlock.JObj) then begin Clear; Exit end;;
   if AIOBlock.JObj.Count = 0 then begin Clear; Exit end;
   if not Assigned(AIOBlock.JObj.Pairs[0].JsonValue) then begin Clear; Exit end;
-
   try
     for LPair in AIOBlock.JObj do
-       Add(LPair.JsonString.value, LPair.JsonValue.Value);
+    begin
+      if MyTThread(TThread.Current).Terminated then
+        raise TJSX4ExceptionAborted.Create('Operation Aborted');
+      Add(LPair.JsonString.value, LPair.JsonValue.Value);
+    end;
   except
     raise Exception.Create('TJX4DictOfValues element must be a TValue, not an object');
   end;
@@ -317,10 +320,16 @@ begin
     TxRTTI.CallMethodProc('JSONCreate', Result, [True]);;
     TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
   except
+    on TJSX4ExceptionAborted do
+    begin
+      FreeAndNil(Result);
+      if joRaiseOnAbort in AOptions then raise;
+      Exit;
+    end;
     on Ex: Exception do
     begin
       FreeAndNil(Result);
-      if joRaiseException in AOptions then raise;
+      if joRaiseOnException in AOptions then raise;
     end;
   end;
 end;
@@ -329,14 +338,6 @@ constructor TJX4Dict<V>.Create;
 begin
   inherited Create([doOwnsValues]);
   FAdded := Nil;
-  FModified :=  Nil;
-  FDeleted := Nil;
-end;
-
-constructor TJX4Dict<V>.CreateNotOwn;
-begin
-  inherited Create([]);
-  FAdded :=  Nil;
   FModified :=  Nil;
   FDeleted := Nil;
 end;
@@ -622,14 +623,5 @@ function TJX4Dict<V>.SaveToJSONFile(const AFilename: string; AOptions: TJX4Optio
 begin
   Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AZipIt, AUseBOM);
 end;
-
-constructor TJX4DictNotOwned<V>.Create;
-begin
-  inherited CreateNotOwn;
-  FAdded :=  Nil;
-  FModified :=  Nil;
-  FDeleted := Nil;
-end;
-
 
 end.
