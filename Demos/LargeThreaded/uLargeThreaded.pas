@@ -118,7 +118,10 @@ begin
         FreeAndNIl(LJObjClone);
         FreeAndNIl(LJObj);
       end;
-      except end;
+      except
+        on Ex: TJX4ExceptionAborted do
+        ShowMessage('Abort');
+      end;
     end
   );
   Task.Start;

@@ -137,7 +137,7 @@ begin
     Result := TJX4ListOfValues.Create;
     TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
  except
-    on TJSX4ExceptionAborted do
+    on TJX4ExceptionAborted do
     begin
       FreeAndNIl(Result);
       if joRaiseOnAbort in AOptions then raise;
@@ -158,7 +158,7 @@ begin
   ADestList.Clear;
   for LList in Self do
   begin 
-    if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
     ADestList.Add(LList);
   end;
 end;
@@ -180,7 +180,7 @@ begin
   try
     for LEle in TJSONArray(AIOBlock.JObj.Pairs[0].JsonValue) do
     begin
-      if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+      if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
       if not (LELe is TJSONValue) then raise Exception.Create('TJX4ListOfValues element must be a TValue (JX4ListOfValues.JSONDeserialize)');
 
       LEle.Owned := False;
@@ -240,7 +240,7 @@ begin
   try
     for LEle in Self do
     begin
-      if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+      if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
       LIOBlock.Init('', Nil, Nil, AIOBlock.Options);
       LTValue := LEle.JSONSerialize(LIOBlock);
       if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
@@ -288,11 +288,11 @@ end;
 function TJX4ListOfValues.SaveToJSONFile(const AFilename: string; AOptions: TJX4Options = [joNullToEmpty]; AEncoding: TEncoding = Nil; AZipIT: TCompressionLevel = clNone; AUseBOM: Boolean = False): Int64;
 begin
   try
-    if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
     if not Assigned(AEncoding) then AEncoding := TEncoding.UTF8;
     Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AZipIT, AUseBOM);
   except
-    on TJSX4ExceptionAborted do
+    on TJX4ExceptionAborted do
     begin
       Result := -1;
       if joRaiseOnAbort in AOptions then raise;
@@ -309,10 +309,10 @@ end;
 procedure TJX4ListOfValues.Merge(AMergedWith: TJX4ListOfValues; AOptions: TJX4Options);
 begin
   try
-    if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
     TxRTTI.CallMethodProc('JSONMerge', Self, [ AMergedWith, TValue.From<TJX4Options>(AOptions) ]);
   except
-    on TJSX4ExceptionAborted do
+    on TJX4ExceptionAborted do
     begin
       if joRaiseOnAbort in AOptions then raise;
       Exit;
@@ -393,7 +393,7 @@ begin
   if Count = 0 then Exit;
   for LList in Self do
   begin
-    if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
     LNewObj := T.Create;
     try
       TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
@@ -423,7 +423,7 @@ begin
   try
     for LEle in TJSONArray(AIOBlock.JObj.Pairs[0].JsonValue) do
     begin
-      if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+      if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
       if LELe is TJSONObject then
       begin
         LNewObj := T.Create;
@@ -471,7 +471,7 @@ begin
   begin
     for AList in AMergedWith do
     begin
-      if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+      if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
       LObj := T.Create;
       try
         TxRTTI.CallMethodProc('JSONCreate', LObj, [True]);
@@ -497,7 +497,7 @@ var
 begin
   Result := TValue.Empty;
 
-  if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+  if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
 
   LName := AIOBlock.JsonName;
   if Assigned(AIOBlock) and Assigned(AIOBlock.Field) then
@@ -550,7 +550,7 @@ begin
     TxRTTI.CallMethodProc('JSONCreate', Result, [True]);
     TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
     except
-      on TJSX4ExceptionAborted do
+      on TJX4ExceptionAborted do
       begin
         FreeAndNil(Result);
         if joRaiseOnAbort in AOptions then raise;
@@ -600,7 +600,7 @@ begin
   Result := -1;
   for var i := 0 to Self.count - 1  do
   begin
-    if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
     case Self.Items[i].TypeKind of
       tkvString:
         if CompareText(From.AsString, Self.Items[i].AsString) = 0 then
@@ -645,7 +645,7 @@ begin
   end;
   for var i := AMergedWith.Count  - 1 downto 0 do
   begin
-    if MyTThread(TThread.Current).Terminated then raise TJSX4ExceptionAborted.Create('Operation Aborted');
+    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
     var LIdx := Self.IndexOfTValue(AMergedWith.Items[i]);
     if (jmoAdd in AOptions)  and (LIdx = -1)  then
     begin
@@ -666,7 +666,7 @@ begin
     if not Assigned(AEncoding) then AEncoding := TEncoding.UTF8;
     Result := TJX4Object.SaveToFile(AFilename, TJX4Object.ToJSON(Self, AOptions), AEncoding, AZipIt, AUseBOM);
   except
-    on TJSX4ExceptionAborted do
+    on TJX4ExceptionAborted do
     begin
       Result := -1;
       if joRaiseOnAbort in AOptions then raise;
