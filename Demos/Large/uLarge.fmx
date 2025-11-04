@@ -3,14 +3,14 @@ object Form4: TForm4
   Top = 0
   Caption = 'Large JSON'
   ClientHeight = 624
-  ClientWidth = 640
+  ClientWidth = 520
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
   object Button: TButton
     Align = Top
-    Size.Width = 640.000000000000000000
+    Size.Width = 520.000000000000000000
     Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
@@ -29,11 +29,11 @@ object Form4: TForm4
         'ed 5 times with different formats'
       'Depending of your system, It may take a while !!')
     Align = Client
-    Size.Width = 640.000000000000000000
+    Size.Width = 520.000000000000000000
     Size.Height = 583.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
-    Viewport.Width = 636.000000000000000000
+    Viewport.Width = 516.000000000000000000
     Viewport.Height = 579.000000000000000000
   end
 end

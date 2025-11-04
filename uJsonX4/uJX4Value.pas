@@ -113,7 +113,7 @@ var
   LAttr:  TCustomAttribute;
 begin
   Result := Nil;
-  if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+  //TJX4Object.RaiseIfCanceled(AIOBlock.Options);
   if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
   case Self.TypeKind of
     tkvString:  LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString, joSlashEncode in AIOBlock.Options) + '"';
@@ -173,7 +173,7 @@ var
   LAttr:          TCustomAttribute;
 begin
   Self := Nil;
-  if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+  //TJX4Object.RaiseIfCanceled(AIOBlock.Options);
   if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
   LJPair := AIOBlock.JObj.Pairs[0];
   if not(Assigned(LJPair) and  (not LJPair.null) and not (LJPair.JsonValue is TJSONNull) and not (LJPair.JsonValue.Value.IsEmpty)) then
@@ -203,8 +203,6 @@ end;
 
 function TJX4TValueHelper.JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
 begin
-  if MyTThread(TThread.Current).Terminated then
-    raise TJX4ExceptionAborted.Create('Operation Aborted');
   if jmoUpdate in AOptions then
      if (not AMergedWith.IsEmpty) then
        Self := AMergedWith;

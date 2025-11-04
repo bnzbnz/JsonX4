@@ -103,12 +103,13 @@ type
   public
     constructor     Create;
     destructor      Destroy; override;
+    class procedure RaiseIfCanceled(AOptions: TJX4Options);
 
     function        JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
     procedure       JSONDeserialize(AIOBlock: TJX4IOBlock);
     procedure       JSONClone(ADestObj: TObject; AOptions: TJX4Options);
     procedure       JSONMerge(AMergedWith: TObject; AOptions: TJX4Options);
-    procedure       JSONClear;
+    procedure       JSONClear(AOptions: TJX4Options);
 
     class function  New<T:class, constructor>: T;
     class function  ToJSON(AObj: TObject; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
@@ -123,7 +124,7 @@ type
     function        Clone<T:class, constructor>(AOptions: TJX4Options= []): T; overload;
     procedure       Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
     function        Format(AIndentation: Integer = 2): string;
-    procedure       Clear;
+    procedure       Clear(AOptions: TJX4Options);
 
     // Utils
     class function  Version: string;
@@ -180,6 +181,7 @@ uses
   , StrUtils
   , uJX4Value
   , uJX4YAML
+  , Threading
   ;
 
 constructor TJX4Name.Create(const AName: string);
@@ -293,8 +295,8 @@ function TJX4Object.Clone<T>(AOptions: TJX4Options): T;
 begin
   Result := Nil;
   try
-    if not Assigned(Self) then
-      raise Exception.Create('Self is Nil (TJX4Object.Clone)');
+    RaiseIfCanceled(AOptions);
+    if not Assigned(Self) then exit;
     Result := T.Create;
     TxRTTI.CallMethodProc('JSONCreate', Result, [True]);
     TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
@@ -325,6 +327,7 @@ var
   LTValueRec: TValue;
 begin
   Result := TValue.Empty;
+  RaiseIfCanceled(AIOBlock.Options);
 
   LIOBlock := TJX4IOBlock.Create;
   LParts := TList<string>.Create;
@@ -334,7 +337,7 @@ begin
     LParts.Capacity := Length(LFields);
     for LField in LFields do
     begin
-      if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+      RaiseIfCanceled(AIOBlock.Options);
       if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Transient)) then Continue;
       if TxRTTI.FieldAsTObject(Self, LField, LObj, [mvPublic]) then
       begin
@@ -393,7 +396,7 @@ begin
     if Assigned(TxRTTI.GetFieldAttribute(LDestField, TJX4Transient)) then Continue;
     for LSrcField in LSrc do
     begin
-      if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+      RaiseIfCanceled(AOptions);
       if LSrcField.Name = LDestField.Name then
       begin
         if MyTThread(TThread.Current).Terminated then Exit;
@@ -431,13 +434,14 @@ var
   LAttr:        TCustomAttribute;
   LTValue:      TValue;
 begin
+  RaiseIfCanceled(AIOBlock.Options);
   LIOBlock := TJX4IOBlock.Create;
   try
     if (JoRaiseOnMissingField in AIOBlock.Options) then
     begin
       for LJPair in  AIOBlock.JObj do
       begin
-        if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+        RaiseIfCanceled(AIOBlock.Options);
         LFieldFound := False;
         for LField in TxRTTI.GetFields(Self) do
         begin
@@ -457,7 +461,7 @@ begin
 
     for LField in TxRTTI.GetFields(Self) do
     begin
-      if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+      RaiseIfCanceled(AIOBlock.Options);
       if not (TXRtti.FieldIsTValue(LField, [mvPublic]) or (TXRtti.FieldIsTObject(LField, [mvPublic]))) then Continue;
       if Assigned(TJX4Transient(TxRTTI.GetFieldAttribute(LField, TJX4Transient))) then Continue;
 
@@ -468,6 +472,7 @@ begin
       LFieldFound := False;
       for LJPair in  AIOBlock.JObj do
       begin
+        RaiseIfCanceled(AIOBlock.Options);;
         if LName = LJPair.JsonString.Value then
         begin
           LFieldFound := True;
@@ -537,6 +542,7 @@ var
   LResult: TValue;
 begin
   LIOBlock := Nil;
+    RaiseIfCanceled(AOptions);
   try
   try
     LIOBlock := TJX4IOBlock.Create('', nil, nil, AOptions);
@@ -573,6 +579,7 @@ begin
   Result := Nil;
   LIOBlock := Nil;
   LJObj := Nil;
+  RaiseIfCanceled(AOptions);
   try
     if AJson.Trim.IsEmpty then Exit;
     try
@@ -711,6 +718,22 @@ begin
   Result := T.Create;
 end;
 
+class procedure TJX4Object.RaiseIfCanceled(AOptions: TJX4Options);
+begin
+  if not( joRaiseOnAbort in AOptions ) then Exit;
+  try
+
+    if Assigned(TThread.CurrentThread) and (MyTThread(TThread.CurrentThread).Terminated) then
+      raise TJX4ExceptionAborted.Create('Operation Aborted');
+
+    if (TTask.CurrentTask <> nil) and (TTaskStatus.Canceled = TTask.CurrentTask.Status) then
+      raise TJX4ExceptionAborted.Create('Operation Aborted');
+
+  except
+    raise TJX4ExceptionAborted.Create('Operation Aborted');
+  end;
+end;
+
 class procedure TJX4Object.VarEscapeJSONStr(var AStr: string; const SlashEncode: Boolean);
 const
   HexChars: array[0..15] of Char = '0123456789abcdef';
@@ -768,7 +791,7 @@ begin
   LSb.Free;
 end;
 
-procedure TJX4Object.JSONClear;
+procedure TJX4Object.JSONClear(AOptions: TJX4Options);
 var
   LField:   TRTTIField;
   LFields:  TArray<TRttiField>;
@@ -778,7 +801,7 @@ begin
   LFields := TxRTTI.GetFields(Self);
   for LField in LFields do
   begin
-    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+    RaiseIfCanceled(AOptions);
     if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Transient)) then Continue;
     if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Unmanaged)) then Continue;
     if TxRTTI.FieldAsTValue(Self, LField, LValue, [mvPublic]) then
@@ -787,15 +810,15 @@ begin
     if TxRTTI.FieldAsTObject(Self, LField, LObj, [mvPublic]) then
     begin
       if not Assigned(LObj) then Continue;
-      TxRTTI.CallMethodFunc('JSONClear', LObj, []);
+       TxRTTI.CallMethodProc('JSONClear', LObj, [TValue.From<TJX4Options>(AOptions)]);
       Continue;
     end;
   end;
 end;
 
-procedure TJX4Object.Clear;
+procedure TJX4Object.Clear(AOptions: TJX4Options);
 begin
-  JSONClear;
+  JSONClear(AOptions);
 end;
 
 class function TJX4Object.EscapeJSONStr(const AStr: string; const SlashEncode: Boolean): string;
@@ -861,6 +884,7 @@ end;
 procedure TJX4Object.Merge(AMergedWith: TObject; AOptions: TJX4Options);
 begin
   try
+    RaiseIfCanceled(AOptions);
     TxRTTI.CallMethodProc('JSONMerge', Self, [ AMergedWith, TValue.From<TJX4Options>(AOptions) ]);
     except
     on TJX4ExceptionAborted do
@@ -888,7 +912,7 @@ begin
   begin
     for LMrgField in TxRTTI.GetFields(AMergedWith) do
     begin
-      if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+      RaiseIfCanceled(AOptions);
       if Assigned(TxRTTI.GetFieldAttribute(LMrgField, TJX4Transient)) then Continue;
       if (LSrcField.Name = LMrgField.Name) then
       begin
@@ -1101,7 +1125,7 @@ end;
 class function TJX4Object.ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string;
 begin
   try
-    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+    RaiseIfCanceled(AOptions);
     Result := TYAMLUtils.JsonToYaml(TJX4Object.ToJSON(AObj));
   except
   on TJX4ExceptionAborted do
@@ -1121,7 +1145,7 @@ end;
 class function TJX4Object.ToYAML(AStr: string; AOptions: TJX4Options = [ joNullToEmpty ]): string;
 begin
   try
-    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+    RaiseIfCanceled(AOptions);
     Result := TYAMLUtils.JsonToYaml(AStr);
   except
   on TJX4ExceptionAborted do
@@ -1141,7 +1165,7 @@ end;
 function TJX4Object.ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string;
 begin
   try
-    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+    RaiseIfCanceled(AOptions);
     Result := ToYAML(Self, AOptions);
   except
     on TJX4ExceptionAborted do
@@ -1167,7 +1191,7 @@ function TJX4Object.SaveToJSONFile(
 ): Int64;
 begin
   Result := 0;
-  if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+  RaiseIfCanceled(AOptions);
   if ABeautify then
     Result := TJX4Object.SaveToFile(AFilename,  TJX4Object.FormatJSON( TJX4Object.ToJSON(Self, AOptions) ) , AEncoding, AZip, False)
   else
@@ -1182,7 +1206,7 @@ function TJX4Object.SaveToYAMLFile(
 ): Int64;
 begin
   try
-    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+    RaiseIfCanceled(AOptions);
     Result := TJX4Object.SaveToFile(AFilename, Self.ToYAML, AEncoding, AZip, False);
   except
     on TJX4ExceptionAborted do
@@ -1205,7 +1229,7 @@ var
 begin
   Result := Nil;
   try
-    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+    RaiseIfCanceled(AOptions);
     LoadFromFile(AFilename, LJStr, AEncoding);
     Result := TJX4Object.FromJSON<T>(TYAMLUtils.YAMLToJSON(LJStr,0));
   except
@@ -1226,7 +1250,7 @@ end;
 class function TJX4Object.JSONtoYAML(const AJson: string; AOptions: TJX4Options): string;
 begin
   try
-    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+    RaiseIfCanceled(AOptions);
     Result := TYAMLUtils.JsonToYaml(AJson);
  except
     on TJX4ExceptionAborted do
@@ -1246,7 +1270,7 @@ end;
 class function TJX4Object.YAMLtoJSON(const AYaml: string; AOptions: TJX4Options): string;
 begin
   try
-    if MyTThread(TThread.Current).Terminated then raise TJX4ExceptionAborted.Create('Operation Aborted');
+    RaiseIfCanceled(AOptions);
     Result := TYAMLUtils.YamlToJson(AYaml);
  except
     on TJX4ExceptionAborted do

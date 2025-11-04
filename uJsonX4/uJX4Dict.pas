@@ -82,7 +82,7 @@ type
     procedure JSONDeserialize(AIOBlock: TJX4IOBlock);
     procedure JSONClone(ADestDict:  TJX4Dict<V>; AOptions: TJX4Options = []);
     procedure JSONMerge(AMergedWith: TJX4Dict<V>; AOptions: TJX4Options = []);
-    procedure JSONClear;
+    procedure JSONClear(AOptions: TJX4Options = []);
 
     class function New: TJX4Dict<V>;
     class function NewAdd(AKey: string; AValue: V): TJX4Dict<V>;
@@ -119,7 +119,7 @@ begin
     Result := TJX4DictOfValues.Create;
     TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
   except
-    on TJSX4ExceptionAborted do
+    on TJX4ExceptionAborted do
     begin
       FreeAndNil(Result);
       if joRaiseOnAbort in AOptions then raise;
@@ -224,8 +224,7 @@ begin
   try
     for LPair in AIOBlock.JObj do
     begin
-      if MyTThread(TThread.Current).Terminated then
-        raise TJSX4ExceptionAborted.Create('Operation Aborted');
+      TJX4Object.RaiseIfCanceled(AIOBlock.Options);
       Add(LPair.JsonString.value, LPair.JsonValue.Value);
     end;
   except
@@ -320,7 +319,7 @@ begin
     TxRTTI.CallMethodProc('JSONCreate', Result, [True]);;
     TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
   except
-    on TJSX4ExceptionAborted do
+    on TJX4ExceptionAborted do
     begin
       FreeAndNil(Result);
       if joRaiseOnAbort in AOptions then raise;
@@ -493,12 +492,12 @@ begin
   //
 end;
 
-procedure TJX4Dict<V>.JSONClear;
+procedure TJX4Dict<V>.JSONClear(AOptions: TJX4Options = []);
 var
   LObj: TPair<string, V>;
 begin
   for LObj in Self do
-    TJX4Object(LObj.Value).JSONClear;
+    TJX4Object(LObj.Value).JSONClear(AOptions);
   Self.CLear;
 end;
 

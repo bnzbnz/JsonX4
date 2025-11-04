@@ -1,36 +1,62 @@
 object Form4: TForm4
   Left = 0
   Top = 0
-  Caption = 'Large JSON'
-  ClientHeight = 624
-  ClientWidth = 640
+  Caption = 'Large JSON Threaded'
+  ClientHeight = 424
+  ClientWidth = 558
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   DesignerMasterStyle = 0
-  object Button: TButton
+  object TaskBtn: TButton
     Align = Top
-    Size.Width = 640.000000000000000000
+    Size.Width = 558.000000000000000000
     Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
-    Text = 'Start'
-    OnClick = ButtonClick
+    Text = 'Create a New Task'
+    OnClick = TaskBtnClick
   end
   object Memo1: TMemo
     Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
     DataDetectorTypes = []
     Lines.Strings = (
       
-        'Process Peoples.json asynchronously, use joRaiseOnAbort exceptio' +
-        'n to abort and clean running Tasks...'
+        'Process heavy "aspects100.json" asynchronously (Tasks and/or Thr' +
+        'eads)'
+      'use joRaiseOnAbort exception to abort and clean up...'
+      ''
+      ''
+      ''
       '')
     Align = Client
-    Size.Width = 640.000000000000000000
-    Size.Height = 583.000000000000000000
+    Size.Width = 558.000000000000000000
+    Size.Height = 303.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
-    Viewport.Width = 636.000000000000000000
-    Viewport.Height = 579.000000000000000000
+    Viewport.Width = 554.000000000000000000
+    Viewport.Height = 299.000000000000000000
+  end
+  object ThreadBtn: TButton
+    Align = Top
+    Position.Y = 41.000000000000000000
+    Size.Width = 558.000000000000000000
+    Size.Height = 41.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 4
+    Text = 'Create a New Thread'
+    OnClick = ThreadBtnClick
+  end
+  object CancelBtn: TButton
+    Align = Top
+    Position.Y = 82.000000000000000000
+    Size.Width = 558.000000000000000000
+    Size.Height = 39.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 5
+    Text = 'Cancel All'
+    OnClick = CancelBtnClick
   end
 end
