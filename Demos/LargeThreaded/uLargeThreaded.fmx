@@ -32,11 +32,11 @@ object Form4: TForm4
       ''
       '')
     Align = Client
-    Size.Width = 558.000000000000000000
+    Size.Width = 512.000000000000000000
     Size.Height = 303.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
-    Viewport.Width = 554.000000000000000000
+    Viewport.Width = 508.000000000000000000
     Viewport.Height = 299.000000000000000000
   end
   object ThreadBtn: TButton
@@ -58,5 +58,16 @@ object Form4: TForm4
     TabOrder = 5
     Text = 'Cancel All'
     OnClick = CancelBtnClick
+  end
+  object Button1: TButton
+    Align = Right
+    Position.X = 512.000000000000000000
+    Position.Y = 121.000000000000000000
+    Size.Width = 46.000000000000000000
+    Size.Height = 303.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 7
+    Text = 'Clear'
+    OnClick = Button1Click
   end
 end

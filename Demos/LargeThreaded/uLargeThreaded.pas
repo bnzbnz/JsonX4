@@ -45,11 +45,13 @@ type
     Memo1 : TMemo;
     ThreadBtn: TButton;
     CancelBtn: TButton;
+    Button1: TButton;
     procedure TaskBtnClick( Sender : TObject );
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ThreadBtnClick(Sender: TObject);
     procedure CancelBtnClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
     private
       { Private declarations }
     public
@@ -197,6 +199,11 @@ try
   Terminate;
 end;
 
+procedure TForm4.Button1Click(Sender: TObject);
+begin
+  Memo1.Lines.Clear;
+end;
+
 procedure TForm4.CancelBtnClick(Sender: TObject);
 begin
   if TaskList.Count > 0 then
@@ -212,7 +219,6 @@ begin
     Thread.Free;
   end;
   ThreadList.Clear;
-  Self.Memo1.Lines.Clear;
 end;
 
 procedure TForm4.FormCreate(Sender: TObject);
