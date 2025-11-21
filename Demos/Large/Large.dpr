@@ -1,6 +1,5 @@
 program Large;
 
-{mode delphi}
 uses
   FMX.Forms,
   uLarge in 'uLarge.pas' {Form4},

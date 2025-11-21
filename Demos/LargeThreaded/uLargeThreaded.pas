@@ -22,18 +22,21 @@ uses
   , FMX.StdCtrls
   , System.Generics.Defaults
   , System.Generics.Collections
+  , uJX4RTTI
   , RTTI
   , uJX4Object
   , uJX4Value
   , uJX4List
   , uJX4Dict
   , Threading
+  , SyncObjs
   ;
 
 type
 
   TJsonThread = class(TThread)
   protected
+    Lock : TCriticalSection;
     procedure Execute; override;
   end;
 
@@ -55,59 +58,6 @@ type
       ThreadList: TList<TJsonThread>;
   end;
 
-  TvalueConst = class( TJX4Object )
-    applicableForLocalizedAspectName : TValue;
-    applicableForLocalizedAspectValues : TJX4ListOfValues;
-  end;
-
-  TvalueConstraint = class( TJX4Object )
-    localizedValue : TValue;
-    valueConstraints : TJX4List< TvalueConst >;
-    applicableForLocalizedAspectName : TValue;
-    applicableForLocalizedAspectValues : TJX4ListOfValues;
-  end;
-
-  TaspectValues = class( TJX4Object )
-    localizedValue : TValue;
-    valueConstraints : TJX4List< TvalueConstraint >;
-  end;
-
-  TaspectConstraint = class( TJX4Object )
-    aspectDataType : TValue;
-    itemToAspectCardinality : TValue;
-    aspectMode : TValue;
-    aspectRequired : TValue;
-    aspectUsage : TValue;
-    aspectEnabledForVariations : TValue;
-    aspectApplicableTo : TJX4ListOfValues;
-    aspectMaxLength : TValue;
-    expectedRequiredByDate : TValue;
-    aspectFormat : TValue;
-  end;
-
-  TcategoryAspectName = class( TJX4Object )
-    categoryId : TValue;
-    categoryName : TValue;
-  end;
-
-  TcategoryAspect = class( TJX4Object )
-    localizedAspectName : TValue;
-    aspectConstraint : TaspectConstraint;
-    aspectValues : TJX4List< TaspectValues >;
-  end;
-
-  TcategoryAspects = class( TJX4Object )
-    category : TcategoryAspectName;
-    aspects : TJX4List< TcategoryAspect >;
-  end;
-
-  TfetchItemAspectsContentType = class( TJX4Object )
-  public
-    categoryTreeId : TValue;
-    categoryTreeVersion : TValue;
-    categoryAspects : TJX4List< TcategoryAspects >;
-  end;
-
   TPeople = class(TJX4Object)
     name: TValue;
     language: TValue;
@@ -127,56 +77,61 @@ implementation
 
 uses
     System.Diagnostics
+  , System.JSON
   ;
 
 {$R *.fmx}
 
-
 procedure TForm4.ThreadBtnClick(Sender: TObject);
 begin
-  var TJThread := TJsonThread.Create(True);
-  ThreadList.Add(TJThread);
-  TJThread.Start;
+  for var j := 1 to 4 do
+  begin
+    var TJThread := TJsonThread.Create(True);
+    ThreadList.Add(TJThread);
+    TJThread.Start;
+  end;
 end;
 
 procedure TForm4.TaskBtnClick( Sender : TObject );
 var
   Task: ITask;
 begin
-
   Task := TTask.Create(
     procedure
     var
       LJSize: Int64;
       LJsonStr : string;
-      LJObj, LJObjClone, LJObjMerge: TfetchItemAspectsContentType;
-      LWatch: TStopWatch;
+      LJObj, LJObjClone, LJObjMerge: TPeopleContainter;
+      LWatch, LWatchAll: TStopWatch;
       procedure Log(Text: string);
       begin
         Form4.Memo1.Lines.Add(Text); // ???
       end;
     begin
     try
+      LJObj:= Nil;
+      LJObjClone := Nil;
+      LJObjMerge := Nil;
       try
         Log('Starting a New Task : ' + Task.Id.ToString );
-          LJObj:= Nil;
-          LJObjClone := Nil;
-          LJObjMerge := Nil;
         LWatch := TStopWatch.StartNew;
-          LJSize := TJX4Object.LoadFromFile('aspects100.json', LJsonStr);
-          LJObj := TJX4Object.FromJSON<TfetchItemAspectsContentType>(LJsonStr, [ joRaiseOnAbort ] );
+        LWatchAll := TStopWatch.StartNew;
+          LJSize := TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
+          LJObj := TJX4Object.FromJSON<TPeopleContainter>('{"ctnr":' + LJsonStr + '}', [ joRaiseOnAbort ] );
         Log( Task.Id.ToString + ' FromJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
         LWatch := TStopWatch.StartNew;
-          LJObjClone := LJObj.Clone<TfetchItemAspectsContentType>( [ joRaiseOnAbort ] );
+          LJObjClone := LJObj.Clone<TPeopleContainter>( [ joRaiseOnAbort ] );
         Log( Task.Id.ToString + ' Clone:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
         LWatch := TStopWatch.StartNew;
-          LJObjMerge := TfetchItemAspectsContentType.Create;
+          LJObjMerge := TPeopleContainter.Create;
           LJObjMerge.Merge(LJObjClone, [ jmoAdd, joRaiseOnAbort ]);
         Log( Task.Id.ToString + ' Merge:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
         LWatch := TStopWatch.StartNew;
             LJsonStr := LJObj.ToJson([ joNullToEmpty, joRaiseOnAbort ]);
         Log( Task.Id.ToString + ' ToJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
-        Log('Done Task : ' + Task.Id.ToString);
+        LWatchAll.Stop;
+        Log( Task.Id.ToString + ' Done Task ' + ' in ' + LWatchAll.ElapsedMilliseconds.ToString + ' ms');
+        Log('Peoples : (' + Task.Id.ToString + ') : ' + LJObjClone.ctnr.Count.ToString);
       finally
         FreeAndNIl(LJObjMerge);
         FreeAndNIl(LJObjClone);
@@ -194,38 +149,44 @@ end;
 
 { TJsonThread }
 
+
 procedure TJsonThread.Execute;
 var
   LJSize: Int64;
   LJsonStr : string;
-  LJObj, LJObjClone, LJObjMerge: TfetchItemAspectsContentType;
-  LWatch: TStopWatch;
+  LJObj, LJObjClone, LJObjMerge: TPeopleContainter;
+  LWatch, LWatchAll: TStopWatch;
   procedure Log(Text: string);
   begin
     TThread.CurrentThread.Synchronize(TThread.Current, procedure begin Form4.Memo1.Lines.Add(Text); end);
   end;
 begin
-  try
+try
+    LJObj:= Nil;
+    LJObjClone := Nil;
+    LJObjMerge := Nil;
     try
       Log('Starting a New Thread : ' + ThreadId.ToString);
-        LJObj:= Nil;
-        LJObjClone := Nil;
-        LJObjMerge := Nil;
+        LJSize := TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
+      LWatchAll := TStopWatch.StartNew;
       LWatch := TStopWatch.StartNew;
-        LJSize := TJX4Object.LoadFromFile('aspects100.json', LJsonStr);
-        LJObj := TJX4Object.FromJSON<TfetchItemAspectsContentType>(LJsonStr, [ joRaiseOnAbort ] );
+        LJObj := TJX4Object.FromJSON<TPeopleContainter>('{"ctnr":' + LJsonStr + '}', [ joRaiseOnAbort ] );
       Log( ThreadId.ToString + ' FromJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
       LWatch := TStopWatch.StartNew;
-        LJObjClone := LJObj.Clone<TfetchItemAspectsContentType>( [ joRaiseOnAbort ] );
-      Log( ThreadId.ToString + ' Clone:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+        LJObjClone := LJObj.Clone<TPeopleContainter>( [ joRaiseOnAbort ] );
+        Log( ThreadId.ToString + ' Clone:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
       LWatch := TStopWatch.StartNew;
-        LJObjMerge := TfetchItemAspectsContentType.Create;
+        LJObjMerge := TPeopleContainter.Create;
         LJObjMerge.Merge(LJObjClone, [ jmoAdd, joRaiseOnAbort ]);
       Log( ThreadId.ToString + ' Merge:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
       LWatch := TStopWatch.StartNew;
         LJsonStr := LJObj.ToJson([ joNullToEmpty, joRaiseOnAbort ]);
       Log( ThreadId.ToString + ' ToJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
-      Log(ThreadId.ToString + ' Thread Done ');
+      Log(ThreadId.ToString + ' Thread Done : ' + LJObjMerge.ctnr.Count.toString);
+
+      Log( ThreadId.ToString + ' Done Task ' + ' in ' + LWatchAll.ElapsedMilliseconds.ToString + ' ms');
+      Log('Peoples : (' + ThreadId.ToString + ') : ' + LJObjClone.ctnr.Count.ToString );
+
     finally
       FreeAndNIl(LJObjMerge);
       FreeAndNIl(LJObjClone);
@@ -253,6 +214,7 @@ begin
     Thread.Free;
   end;
   ThreadList.Clear;
+  Self.Memo1.Lines.Clear;
 end;
 
 procedure TForm4.FormCreate(Sender: TObject);
@@ -268,4 +230,6 @@ begin
   ThreadList.Free;
 end;
 
+initialization
+  xRTTIThreaded := True;
 end.

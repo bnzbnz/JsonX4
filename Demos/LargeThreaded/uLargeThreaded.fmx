@@ -24,8 +24,8 @@ object Form4: TForm4
     DataDetectorTypes = []
     Lines.Strings = (
       
-        'Process heavy "aspects100.json" asynchronously (Tasks and/or Thr' +
-        'eads)'
+        'Process heavy "Peoples.json" asynchronously (Tasks and/or Thread' +
+        's)'
       'use joRaiseOnAbort exception to abort and clean up...'
       ''
       ''
@@ -46,7 +46,7 @@ object Form4: TForm4
     Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 4
-    Text = 'Create a New Thread'
+    Text = 'Create 4 New Thread'
     OnClick = ThreadBtnClick
   end
   object CancelBtn: TButton

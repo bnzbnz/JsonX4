@@ -33,7 +33,6 @@ uses
   , SysUtils
   , uJX4Rtti
   , zLib
-  , windows
   ;
 
 const
@@ -101,6 +100,7 @@ type
   protected
     class function  GetStreamEncoding(AStream: TStream): TEncoding;
   public
+
     constructor     Create;
     destructor      Destroy; override;
     class procedure RaiseIfCanceled(AOptions: TJX4Options);
@@ -575,6 +575,7 @@ class function TJX4Object.FromJSON<T>(const AJson: string; AOptions: TJX4Options
 var
   LIOBlock: TJX4IOBlock;
   LJObj:    TJSONObject;
+  Tick: Cardinal;
 begin
   Result := Nil;
   LIOBlock := Nil;
@@ -583,7 +584,7 @@ begin
   try
     if AJson.Trim.IsEmpty then Exit;
     try
-      LJObj := TJSONObject.ParseJSONValue(AJson, True, joRaiseOnException in AOptions) as TJSONObject;
+      LJObj := TJSONValue.ParseJSONValue(AJson, True, joRaiseOnException in AOptions) as TJSONObject;
       if not Assigned(LJObj) then Exit;
       Result := T.Create;
       LIOBlock := TJX4IOBlock.Create('', LJObj, Nil, AOptions);
@@ -1286,6 +1287,8 @@ begin
     end;
   end;
 end;
+
+initialization
 
 end.
 

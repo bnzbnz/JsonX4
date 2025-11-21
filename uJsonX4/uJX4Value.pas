@@ -113,7 +113,7 @@ var
   LAttr:  TCustomAttribute;
 begin
   Result := Nil;
-  //TJX4Object.RaiseIfCanceled(AIOBlock.Options);
+  TJX4Object.RaiseIfCanceled(AIOBlock.Options);
   if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
   case Self.TypeKind of
     tkvString:  LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString, joSlashEncode in AIOBlock.Options) + '"';
@@ -173,7 +173,7 @@ var
   LAttr:          TCustomAttribute;
 begin
   Self := Nil;
-  //TJX4Object.RaiseIfCanceled(AIOBlock.Options);
+  TJX4Object.RaiseIfCanceled(AIOBlock.Options);
   if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
   LJPair := AIOBlock.JObj.Pairs[0];
   if not(Assigned(LJPair) and  (not LJPair.null) and not (LJPair.JsonValue is TJSONNull) and not (LJPair.JsonValue.Value.IsEmpty)) then

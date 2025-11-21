@@ -7,5 +7,6 @@ map2pdb.exe -bind:Demo05.exe Demo05.map
 map2pdb.exe -bind:Demo06.exe Demo06.map
 map2pdb.exe -bind:Demo07.exe Demo07.map
 map2pdb.exe -bind:Demo08.exe Demo08.map
+map2pdb.exe -bind:LargeThreaded.exe LargeThreaded.map
 pause
  

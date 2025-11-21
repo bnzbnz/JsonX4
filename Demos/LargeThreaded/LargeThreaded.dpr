@@ -2,6 +2,7 @@ program LargeThreaded;
 
 {mode delphi}
 uses
+  ScaleMM2,  // Prevent Heap Contention
   FMX.Forms,
   uLargeThreaded in 'uLargeThreaded.pas',
   uJX4Dict in '..\..\uJsonX4\uJX4Dict.pas',
