@@ -99,7 +99,6 @@ begin
   Task := TTask.Create(
     procedure
     var
-      LJSize: Int64;
       LJsonStr : string;
       LJObj, LJObjClone, LJObjMerge: TPeopleContainter;
       LWatch, LWatchAll: TStopWatch;
@@ -116,7 +115,7 @@ begin
         Log('Starting a New Task : ' + Task.Id.ToString );
         LWatch := TStopWatch.StartNew;
         LWatchAll := TStopWatch.StartNew;
-          LJSize := TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
+          TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
           LJObj := TJX4Object.FromJSON<TPeopleContainter>('{"ctnr":' + LJsonStr + '}', [ joRaiseOnAbort ] );
         Log( Task.Id.ToString + ' FromJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
         LWatch := TStopWatch.StartNew;
@@ -152,7 +151,6 @@ end;
 
 procedure TJsonThread.Execute;
 var
-  LJSize: Int64;
   LJsonStr : string;
   LJObj, LJObjClone, LJObjMerge: TPeopleContainter;
   LWatch, LWatchAll: TStopWatch;
@@ -167,7 +165,7 @@ try
     LJObjMerge := Nil;
     try
       Log('Starting a New Thread : ' + ThreadId.ToString);
-        LJSize := TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
+        TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
       LWatchAll := TStopWatch.StartNew;
       LWatch := TStopWatch.StartNew;
         LJObj := TJX4Object.FromJSON<TPeopleContainter>('{"ctnr":' + LJsonStr + '}', [ joRaiseOnAbort ] );
