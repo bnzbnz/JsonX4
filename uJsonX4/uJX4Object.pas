@@ -145,7 +145,7 @@ type
     class function  SaveToFile(const AFilename: string; const AStr: string; AEncoding: TEncoding; AZipIt: TCompressionLevel = clNone; UseBOM: Boolean = False): Int64; overload;
 
     // JSON
-    class function  LoadFromJSONFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding = Nil): T; overload;
+    class function  LoadFromJSONFile<T:class, constructor>(const AFilename: string; AOptions: TJX4Options = []; AEncoding: TEncoding = Nil): T; overload;
     function        SaveToJSONFile(  const AFilename: string;
                       ABeautify: Boolean = False;
                       AOptions: TJX4Options = [ joNullToEmpty ];
@@ -1069,13 +1069,13 @@ begin
   end;
 end;
 
-class function TJX4Object.LoadFromJSONFile<T>(const AFilename: string; AEncoding: TEncoding): T;
+class function TJX4Object.LoadFromJSONFile<T>(const AFilename: string; AOptions: TJX4Options; AEncoding: TEncoding): T;
 var
   LJstr: string;
 begin
   Result := Nil;
   LoadFromFile(AFilename, LJStr, AEncoding);
-  if LJStr.IsEmpty then Result := Nil else Result := TJX4Object.FromJSON<T>(LJStr);
+  if LJStr.IsEmpty then Result := Nil else Result := TJX4Object.FromJSON<T>(LJStr, AOptions);
 end;
 
 class function TJX4Object.SaveToFile(const AFilename: string; const AStr: string; AEncoding: TEncoding; AZipIt: TCompressionLevel; UseBOM: Boolean): Int64;
