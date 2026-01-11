@@ -1,7 +1,7 @@
 object Form4: TForm4
   Left = 0
   Top = 0
-  Caption = 'Demo06:  Double dictionaries'
+  Caption = 'Demo06:  YAML to JSON'
   ClientHeight = 688
   ClientWidth = 636
   FormFactor.Width = 320
@@ -53,8 +53,7 @@ object Form4: TForm4
     Size.Height = 49.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
-    Text = 'Start'
-    TextSettings.Trimming = None
+    Text = 'Convert'
     OnClick = ButtonClick
   end
 end

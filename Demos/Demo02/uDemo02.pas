@@ -33,10 +33,12 @@ type
     Null: TValue;
     // ...
   end;
+
   TSubClassDemo = class(TJX4Object)
     X: TValue;
     PClass: TPrimitives
   end;
+
   TInnerObjectDemo = class(TJX4Object)
     S: TValue;
     SubClass: TSubClassDemo; // a class
@@ -82,7 +84,7 @@ begin
   Memo1.lines.add(Json);
 
   // Optimized Json
-
+  Memo1.lines.add('');
   Json := Demo.ToJson([joNullToEmpty]);
   Memo1.lines.add('Optimized Original Object:');
   Memo1.lines.add(Json);

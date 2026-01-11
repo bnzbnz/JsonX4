@@ -56,7 +56,7 @@ begin
 
   LWatch := TStopWatch.StartNew;
 
-  caption := 'Version : ' + TJX4Object.Version;
+  caption := 'JsonX4 Version : ' + TJX4Object.Version;
 
   Memo1.Lines.Clear;
 
@@ -64,8 +64,8 @@ begin
   Primitives.Str := 'testing 😜';
   Primitives.Bool := True;
   Primitives.Int := -999;
-  Primitives.Dec := 2.2;
-  Primitives.Cur := 22.0; // Make sure this is a decimal value not an Integer
+  Primitives.Dec := 2.2; // Make sure this is a decimal value not an Integer
+  Primitives.Cur := 22.0;
   Primitives.NullStr := Nil;
 
   // Raw Json

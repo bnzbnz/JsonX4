@@ -70,16 +70,16 @@ begin
   Demo := TObjectDemo.Create;
   Demo.Str := '~~😃~~'; // UTF8 Support
 
-  // TJX3List<TJX3Str> : Array<string>
-  Memo1.lines.add('TJX4List<TJX3Str> : Array<string> :');
+  // TJX4List<TJX4Str> : Array<string>
+  Memo1.lines.add('TJX4List<TJX4Str> : Array<string> :');
   Demo.Keys.Add('Q W E R T Y');
   Demo.Keys.Add('A Z E R T Y');
   Json := TJX4Object.ToJson(Demo, [joNullToEmpty]);
   Memo1.lines.add(Json);
 
-  // + TJX3Dic<TJX3Num> : Dictionary<string, number> (JSON only allows strings as keys)
+  // + TJX4Dic<TJX4Num> : Dictionary<string, number> (JSON only allows strings as keys)
   Memo1.lines.add('');
-  Memo1.lines.add('TJX4Dic<TJX3Num> : Dictionary<string, number> :');
+  Memo1.lines.add('TJX4Dic<TJX4Num> : Dictionary<string, number> :');
   Demo.Nums.Add('Int', 1111);
   Demo.Nums.Add('Int64', 2222);
   Demo.Nums.Add('Double', 33.33);
@@ -87,9 +87,9 @@ begin
   Json := TJX4Object.ToJson(Demo, [joNullToEmpty]);
   Memo1.lines.add(Json);
 
-  // TJX3List<TPrimitives> : Array<TPrimitives)
+  // TJX4List<TPrimitives> : Array<TPrimitives>
   Memo1.lines.add('');
-  Memo1.lines.add('TJX3List<TPrimitives>  : Array<TPrimitives) :');
+  Memo1.lines.add('TJX4List<TPrimitives>  : Array<TPrimitives> :');
   Demo.Primitives.Add(TPrimitive.Create);
   Demo.Primitives.Last.Bool := True;
   Demo.Primitives.Last.I := 111;
@@ -99,7 +99,7 @@ begin
   Json := TJX4Object.ToJson(Demo, [joNullToEmpty]);
   Memo1.lines.add(Json);
 
-  // TJX3List<TJX3List<TJX3Str>> : Array<Array<string>>>
+  // TJX4List<TJX4List<TJX4Str>> : Array<Array<string>>>
   Memo1.lines.add('');
   Memo1.lines.add('TJX4List<TJX4List<TJX4Str>> : Array<Array<string>>> :');
   S := TJX4ValList.Create;
@@ -111,11 +111,8 @@ begin
   Demo.SLists.Add(S);
   Json := TJX4Object.ToJson(Demo, [joNullToEmpty]);
   Memo1.lines.add(Json);
-  Memo1.lines.add('');
-  Json := TJX4Object.ToJson(Demo, [joNullToEmpty]);;
-  Memo1.lines.add(Json);
 
-  // TJX3List<TJX3Dic<TJX3List<TPrimitives>>> : Array<Dictionary<string, Array<TPrimitives>>> :)
+  // TJX4List<TJX4Dic<TJX4List<TPrimitives>>> : Array<Dictionary<string, Array<TPrimitives>>> :)
   Memo1.lines.add('');
   Memo1.lines.add('TJX4List<TJX4Dic<TJX4List<TPrimitives>>>  : Array<Dictionary<string, Array<TPrimitives>>>');
   var p1 := TJX4List<TPrimitive>.NewAdd(TPrimitive.Create);              // Create a 2 elements Primitives array
@@ -134,7 +131,7 @@ begin
 
   Memo1.lines.add('');                                                    // Format
   Memo1.lines.add('Formatted:');
-  Memo1.lines.add(TJX4Object.FormatJSON(Json, False, 4));
+  Memo1.lines.add(Demo.Format(4));
 
   Demo.Free;
 

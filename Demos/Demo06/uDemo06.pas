@@ -49,8 +49,7 @@ uses
 procedure TForm4.ButtonClick(Sender: TObject);
 {$IFDEF DELPHIUNDER12A}
 begin
-
-  ShowMessage('Delphi 12 Required');
+  ShowMessage('Delphi 12+ Required');
   Exit;
 end;
 {$ELSE}
@@ -58,6 +57,7 @@ end;
 var
   LWatch: TStopWatch;
 begin
+  Button.Enabled := False;
 
   LWatch := TStopWatch.StartNew;
   // Random YAML found on the internet
