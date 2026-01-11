@@ -182,10 +182,7 @@ try
       LWatch := TStopWatch.StartNew;
         LJsonStr := LJObj.ToJson([ joNullToEmpty, joRaiseOnAbort ]);
       Log( ThreadId.ToString + ' ToJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
-      Log(ThreadId.ToString + ' Thread Done : ' + LJObjMerge.ctnr.Count.toString);
-
-      Log( ThreadId.ToString + ' Done Task ' + ' in ' + LWatchAll.ElapsedMilliseconds.ToString + ' ms');
-      Log('Peoples : (' + ThreadId.ToString + ') : ' + LJObjClone.ctnr.Count.ToString );
+      Log( Format('%d Thread Done in %d ms, (ppl %d)', [ ThreadId, LWatchAll.ElapsedMilliseconds, LJObjClone.ctnr.Count ]) );
 
     finally
       FreeAndNIl(LJObjMerge);
