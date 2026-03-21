@@ -10,5 +10,6 @@ map2pdb.exe -bind:Demo08.exe Demo08.map
 map2pdb.exe -bind:Demo09.exe Demo09.map
 map2pdb.exe -bind:Large.exe Large.map
 map2pdb.exe -bind:LargeThreaded.exe LargeThreaded.map
+map2pdb.exe -bind:NeonVsJsonX4.exe NeonVsJsonX4.map
 pause
  
