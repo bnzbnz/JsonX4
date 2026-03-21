@@ -36,7 +36,7 @@ uses
   ;
 
 const
-  CJX4Version = $0104; // 01.04
+  CJX4Version = $0104; // 01.05
   CBoolToStr: array[Boolean] of string = ('false','true');
 
 type
@@ -129,6 +129,8 @@ type
     // Utils
     class function  Version: string;
     class function  VersionValue: integer;
+    class function  Author: string;
+    class function  Contact: string;
 
     class function  NameDecode(const ToDecode: string): string; static;
     class function  NameEncode(const ToEncode: string): string; static;
@@ -674,6 +676,16 @@ end;
 class function TJX4Object.VersionValue: integer;
 begin
   Result := (((CJX4Version and $FF00) shr 8) * 100) + (CJX4Version and $00FF);
+end;
+
+class function TJX4Object.Author: string;
+begin
+  Result := 'L.Meyer (bnzbnz @ GitHub)';
+end;
+
+class function TJX4Object.Contact: string;
+begin
+  Result := 'JsonX4@lmeyer.fr';
 end;
 
 class function TJX4Object.NameDecode(const ToDecode: string): string;

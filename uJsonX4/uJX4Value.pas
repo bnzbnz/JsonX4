@@ -71,7 +71,7 @@ type
 
     //Conversion Tools
 
-    function  ToBKiBMiB:                          string;
+    function  ToKiBMiBGiBTiB:                     string;
     function  ToMB:                               real;
     function  ToMiB:                              real;
     function  ToGB:                               real;
@@ -311,7 +311,7 @@ begin
   if Self.AsInt64 > 0  then Result := Self.ToString;
 end;
 
-function TJX4TValueHelper.ToBKiBMiB: string;
+function TJX4TValueHelper.ToKiBMiBGiBTiB: string;
 var
   x: Extended;
 begin
