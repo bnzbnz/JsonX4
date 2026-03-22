@@ -111,6 +111,7 @@ var
   LName:  string;
   LValue: string;
   LAttr:  TCustomAttribute;
+  Fmt: TFormatSettings;
 begin
   Result := Nil;
   TJX4Object.RaiseIfCanceled(AIOBlock.Options);
@@ -119,13 +120,7 @@ begin
     tkvString:  LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString, joSlashEncode in AIOBlock.Options) + '"';
     tkvBool:    LValue := cBoolToStr[Self.AsBoolean];
     tkvInteger: LValue := Self.AsInt64.ToString;
-    tkvFloat:
-      begin
-        if  Self.AsExtended.ToString.IndexOf('.') = -1 then
-          LValue := Self.AsExtended.ToString + '.0'
-        else
-          LValue := Self.AsExtended.ToString;
-      end;
+    tkvFloat:   LValue := FormatFloat('.0', Self.AsExtended,FormatSettings.Create('en-US'));
   else
     if joNullToEmpty in AIOBlock.Options then Exit;
     Self := Nil;

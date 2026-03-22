@@ -36,6 +36,9 @@
         <Projects Include="LargeThreaded\LargeThreaded.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="NeonVsJsonX4\NeonVsJsonX4.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -143,14 +146,23 @@
     <Target Name="LargeThreaded:Make">
         <MSBuild Projects="LargeThreaded\LargeThreaded.dproj" Targets="Make"/>
     </Target>
+    <Target Name="NeonVsJsonX4">
+        <MSBuild Projects="NeonVsJsonX4\NeonVsJsonX4.dproj"/>
+    </Target>
+    <Target Name="NeonVsJsonX4:Clean">
+        <MSBuild Projects="NeonVsJsonX4\NeonVsJsonX4.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="NeonVsJsonX4:Make">
+        <MSBuild Projects="NeonVsJsonX4\NeonVsJsonX4.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Demo01;Demo02;Demo03;Demo04;Demo05;Demo06;Demo07;Demo08;Demo09;Large;LargeThreaded"/>
+        <CallTarget Targets="Demo01;Demo02;Demo03;Demo04;Demo05;Demo06;Demo07;Demo08;Demo09;Large;LargeThreaded;NeonVsJsonX4"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Demo01:Clean;Demo02:Clean;Demo03:Clean;Demo04:Clean;Demo05:Clean;Demo06:Clean;Demo07:Clean;Demo08:Clean;Demo09:Clean;Large:Clean;LargeThreaded:Clean"/>
+        <CallTarget Targets="Demo01:Clean;Demo02:Clean;Demo03:Clean;Demo04:Clean;Demo05:Clean;Demo06:Clean;Demo07:Clean;Demo08:Clean;Demo09:Clean;Large:Clean;LargeThreaded:Clean;NeonVsJsonX4:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Demo01:Make;Demo02:Make;Demo03:Make;Demo04:Make;Demo05:Make;Demo06:Make;Demo07:Make;Demo08:Make;Demo09:Make;Large:Make;LargeThreaded:Make"/>
+        <CallTarget Targets="Demo01:Make;Demo02:Make;Demo03:Make;Demo04:Make;Demo05:Make;Demo06:Make;Demo07:Make;Demo08:Make;Demo09:Make;Large:Make;LargeThreaded:Make;NeonVsJsonX4:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
