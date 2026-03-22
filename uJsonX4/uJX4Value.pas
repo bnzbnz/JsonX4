@@ -81,7 +81,7 @@ type
 
     function  ToPercent(Decimal: Integer = 2; Symbol: Boolean = True):string;
     function  ToLimit:                            string;
-    function  FromSecFromNow:                     string;
+    function  FromSecToNow:                       string;
     function  FromSecToDuration:                  string;
 
     property  ISO8601:      TDateTime read GetISO8601 write SetISO8601;
@@ -119,7 +119,7 @@ begin
     tkvString:  LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString, joSlashEncode in AIOBlock.Options) + '"';
     tkvBool:    LValue := cBoolToStr[Self.AsBoolean];
     tkvInteger: LValue := Self.AsInt64.ToString;
-    tkvFloat:   LValue := FormatFloat('.0', Self.AsExtended, FormatSettings.Create('en-US'));
+    tkvFloat:   LValue := FormatFloat('.0', Self.AsExtended, TFormatSettings.Invariant);
   else
     if joNullToEmpty in AIOBlock.Options then Exit;
     Self := Nil;
@@ -185,7 +185,7 @@ begin
   else if LJPair.JsonValue.ClassType = TJSONBool then Self := StrToBool(LJPair.JsonValue.Value)
   else if LJPair.JsonValue.ClassType = TJSONNumber then
   begin
-      if LJPair.JsonValue.ToString.IndexOf('.') = -1 then
+      if LJPair.JsonValue.ToString.IndexOf(TFormatSettings.Invariant.DecimalSeparator) = -1 then
         Self := TJSONNumber(LJPair.JsonValue).AsInt64
       else
         Self := TJSONNumber(LJPair.JsonValue).AsDouble;
@@ -407,7 +407,7 @@ begin
   if Symbol then Result := Result + ' %';
 end;
 
-function TJX4TValueHelper.FromSecFromNow: string;
+function TJX4TValueHelper.FromSecToNow: string;
 var
   x: Int64;
 begin

@@ -36,7 +36,7 @@ uses
   ;
 
 const
-  CJX4Version = $0104; // 01.05
+  CJX4Version = $0105; // 01.05
   CBoolToStr: array[Boolean] of string = ('false','true');
 
 type
