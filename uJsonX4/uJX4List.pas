@@ -92,9 +92,9 @@ type
 
     function        SaveToJSONFile(const AFilename: string; AOptions: TJX4Options = [joNullToEmpty]; AEncoding: TEncoding = Nil; AZipIT: TCompressionLevel = clNone; AUseBOM: Boolean = False): Int64;
 
-    property       EleAdded:    TStringList read FAdded;
-    property       EleModified: TStringList read FModified;
-    property       EleDeleted:  TStringList read FDeleted;
+    property        EleAdded:    TStringList read FAdded;
+    property        EleModified: TStringList read FModified;
+    property        EleDeleted:  TStringList read FDeleted;
   end;
 
    TJX4Lst<V:class, constructor> = class(TJX4List<V>);
@@ -512,13 +512,14 @@ begin
 
   if Count = 0 then
   begin
-    if Assigned(AIOBlock.Field) and  Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
+    if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
       raise Exception.Create(Format('"%s" (TJX4List) : a value is required', [LName]));
-    if joNullToEmpty in AIOBlock.Options then Exit;
     if LName.IsEmpty then
       Result := '[]'
-    else
+    else begin
+      if joNullToEmpty in AIOBlock.Options then Exit;
       Result := '"' + LName + '":null';
+    end;
     Exit;
   end;
 

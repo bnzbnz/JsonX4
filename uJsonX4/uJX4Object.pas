@@ -544,7 +544,7 @@ var
   LResult: TValue;
 begin
   LIOBlock := Nil;
-    RaiseIfCanceled(AOptions);
+  RaiseIfCanceled(AOptions);
   try
   try
     LIOBlock := TJX4IOBlock.Create('', nil, nil, AOptions);
