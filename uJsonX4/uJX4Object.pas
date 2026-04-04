@@ -36,7 +36,7 @@ uses
   ;
 
 const
-  CJX4Version = $0105; // 01.05
+  CJX4Version = $0405; // 04.05
   CBoolToStr: array[Boolean] of string = ('false','true');
 
 type
@@ -84,14 +84,18 @@ type
   TJX4NotOwned = class(TCustomAttribute);
 
   TJX4IOBlock = class
+    FVal:       TJSONValue;
     // In
     JObj:       TJSONObject;
+    JArr:       TJSONArray;
     JsonName:   string;
     Field:      TRttiField;
     Options:    TJX4Options;
+    procedure   SetVal(AJVal: TJSONValue);
+    property    JVal: TJSONValue read FVal write SetVal;
     // Out
-    constructor Create(AJsonName: string = ''; AJObj: TJSONObject = Nil; AField: TRttiField = Nil; AOptions: TJX4Options = []);
-    procedure   Init(AJsonName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
+    constructor Create(AJsonName: string = ''; AJVal: TJSONValue = Nil; AField: TRttiField = Nil; AOptions: TJX4Options = []);
+    procedure   Init(AJsonName: string; AJVal: TJSONValue; AField: TRttiField; AOptions: TJX4Options);
   end;
 
   TJX4ExceptionAborted = class(Exception);
@@ -116,8 +120,7 @@ type
     function        ToJSON(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     class function  FromJSON<T:class, constructor>(const AJson: string; AOptions: TJX4Options = []): T; overload;
     class function  ToJSONStream(AObj: TObject; AOptions: TJX4Options = []): TStream; overload;
-    class function  ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
-    class function  ToYAML(AStr: string; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
+    class function  ToYAML(const AStr: string; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     function        ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
     class function  FromYAML<T:class, constructor>(const AYaml: string; AOptions: TJX4Options = []): T;
 
@@ -167,8 +170,8 @@ type
 
     // Tools
 
-    class function  YAMLtoJSON(const AYaml: string; AOptions: TJX4Options = [ joNullToEmpty ]): string;
-    class function  JSONtoYAML(const AJson: string; AOptions: TJX4Options = [ joNullToEmpty ]): string;
+    class function  YAMLStrtoJSONStr(const AYaml: string; AOptions: TJX4Options = [ joNullToEmpty ]): string;
+    class function  JSONStrtoYAMLStr(const AJson: string; AOptions: TJX4Options = [ joNullToEmpty ]): string;
 
   end;
 
@@ -183,6 +186,7 @@ uses
   , StrUtils
   , uJX4Value
   , uJX4YAML
+  , uJX4List
   , Threading
   ;
 
@@ -216,17 +220,38 @@ begin
   Value := Nil;
 end;
 
-constructor TJX4IOBlock.Create(AJsonName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
+constructor TJX4IOBlock.Create(AJsonName: string; AJVal: TJSONValue; AField: TRttiField; AOptions: TJX4Options);
 begin
-  Init(AJsonName, AJObj, AField, AOptions);
+  Init(AJsonName, AJVal, AField, AOptions);
 end;
 
-procedure TJX4IOBlock.Init(AJsonName: string; AJObj: TJSONObject; AField: TRttiField; AOptions: TJX4Options);
+procedure TJX4IOBlock.Init(AJsonName: string; AJVal: TJSONValue; AField: TRttiField; AOptions: TJX4Options);
 begin
-  JObj :=       AJObj;
+  JVal :=       AJVal;
   JsonName :=   AJsonName;
   Field :=      AField;
   Options :=    AOptions;
+end;
+
+procedure TJX4IOBlock.SetVal(AJVal: TJSONValue);
+begin
+  FVal := AJVal;
+  if AJVal is TJSONObject then
+  begin
+    JObj := AJVal as TJSONObject;
+    JArr := nil;
+  end
+    else
+    if AJVal is TJSONArray then
+    begin
+      JObj := nil;
+      JArr := AJVal as TJSONArray;
+    end
+      else
+    begin
+      JObj := nil;
+      JArr := nil;
+    end;
 end;
 
 { TJX4Object }
@@ -435,31 +460,45 @@ var
   LFieldFound:  Boolean;
   LAttr:        TCustomAttribute;
   LTValue:      TValue;
+
+  LEle: TJSONValue;
+  LList: TJX4List<TJX4Object>;
 begin
+
+  ///
+    if (AIOBlock.JVal is TJSONArray) then
+    begin
+    LIOBlock := TJX4IOBlock.Create;
+    LList := TJX4List<TJX4Object>.Create;
+    LIOBlock.Init('', nil, nil, AIOBlock.Options);
+    LList.JSONDeserialize(LIOBlock);
+    end;
+
+  ///
   RaiseIfCanceled(AIOBlock.Options);
   LIOBlock := TJX4IOBlock.Create;
   try
-    if (JoRaiseOnMissingField in AIOBlock.Options) then
+    if (JoRaiseOnMissingField in AIOBlock.Options) and Assigned(AIOBlock.JVal) and (AIOBlock.JVal is TJSONObject) then
     begin
-      for LJPair in  AIOBlock.JObj do
+    for LJPair in (AIOBlock.JVal as TJSONObject) do
+    begin
+      RaiseIfCanceled(AIOBlock.Options);
+      LFieldFound := False;
+      for LField in TxRTTI.GetFields(Self) do
       begin
-        RaiseIfCanceled(AIOBlock.Options);
-        LFieldFound := False;
-        for LField in TxRTTI.GetFields(Self) do
+        if Assigned(TJX4Transient(TxRTTI.GetFieldAttribute(LField, TJX4Transient))) then Continue;
+        LName := NameDecode(LField.Name);
+        LAttr := TJX4Name(TxRTTI.GetFieldAttribute(LField, TJX4Name));
+        if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
+        if LName = LJPair.JsonString.Value then
         begin
-          if Assigned(TJX4Transient(TxRTTI.GetFieldAttribute(LField, TJX4Transient))) then Continue;
-          LName := NameDecode(LField.Name);
-          LAttr := TJX4Name(TxRTTI.GetFieldAttribute(LField, TJX4Name));
-          if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
-          if LName = LJPair.JsonString.Value then
-          begin
-            LFieldFound := True;
-            Break;
-          end;
-         end;
-         if not LFieldFound then raise Exception.Create(SysUtils.Format('Missing Property "%s" in Class "%s"', [LJPair.JsonString.Value, Self.ClassName]));
-      end;
+          LFieldFound := True;
+          Break;
+        end;
+       end;
+       if not LFieldFound then raise Exception.Create(SysUtils.Format('Missing Property "%s" in Class "%s"', [LJPair.JsonString.Value, Self.ClassName]));
     end;
+  end;
 
     for LField in TxRTTI.GetFields(Self) do
     begin
@@ -576,20 +615,20 @@ end;
 class function TJX4Object.FromJSON<T>(const AJson: string; AOptions: TJX4Options): T;
 var
   LIOBlock: TJX4IOBlock;
-  LJObj:    TJSONObject;
+  LJVal:    TJSONValue;
   Tick: Cardinal;
 begin
   Result := Nil;
   LIOBlock := Nil;
-  LJObj := Nil;
+  LJVal := Nil;
   RaiseIfCanceled(AOptions);
   try
     if AJson.Trim.IsEmpty then Exit;
     try
-      LJObj := TJSONValue.ParseJSONValue(AJson, True, joRaiseOnException in AOptions) as TJSONObject;
-      if not Assigned(LJObj) then Exit;
+      LJVal := TJSONValue.ParseJSONValue(AJson, True, joRaiseOnException in AOptions);
+      if not Assigned(LJVal) then Exit;
       Result := T.Create;
-      LIOBlock := TJX4IOBlock.Create('', LJObj, Nil, AOptions);
+      LIOBlock := TJX4IOBlock.Create('', LJVal, Nil, AOptions);
       TxRTTI.CallMethodProc('JSONDeserialize', Result, [LIOBlock]);
     except
       on TJX4ExceptionAborted do
@@ -605,7 +644,7 @@ begin
       end;
     end;
    finally
-    LJObj.Free;
+    LJVal.Free;
     LIOBlock.Free;
   end;
 end;
@@ -733,6 +772,7 @@ end;
 
 class procedure TJX4Object.RaiseIfCanceled(AOptions: TJX4Options);
 begin
+
   if not( joRaiseOnAbort in AOptions ) then Exit;
   try
 
@@ -841,36 +881,29 @@ begin
 end;
 
 class function TJX4Object.JsonListToJsonString(const AList: TList<string>): string;
-var
-  LSb:  TStringBuilder;
-  LIdx: integer;
 begin
-  if AList.Count = 0 then Exit('');
-  if AList.Count = 1 then Exit(AList[0]);
-  LSb := TStringBuilder.Create;
-  try
-    for LIdx:= 0 to AList.Count -1 do
-    begin
-      LSb.Append(AList[LIdx]);
-      if LIdx <> AList.Count -1 then LSb.Append(',') ;
-    end;
-    Result := LSb.ToString;;
-  finally
-    LSb.Free;
+  case AList.Count of
+    0: Exit('');
+    1: Exit(AList[0]);
+    2: Exit(AList[0] + ',' + AList[1]);
+    3: Exit(AList[0] + ',' + AList[1] + ',' + AList[2]);
+    4: Exit(AList[0] + ',' + AList[1] + ',' + AList[2]+ ',' + AList[3]);
+  else
+    Result := Result.Join(',', AList.ToArray, 0, AList.Count);
   end;
 end;
 
 class function TJX4Object.FormatJSON(const AJson: string; ABeautify: Boolean; AIndentation: Integer): string;
 var
-  TmpJson: TJsonObject;
+  TmpVal: TJSONAncestor;
 begin
   if ABeautify then
   begin
-    TmpJson := TJSONObject.ParseJSONValue(AJson) as TJSONObject;
-    Result := TJSONAncestor(TmpJson).Format(AIndentation);
-    FreeAndNil(TmpJson);
+    TmpVal := (TJSONValue.ParseJSONValue(AJson) as TJSONAncestor);
+    Result := TmpVal.Format(AIndentation);
+    FreeAndNil(TmpVal);
   end else
-   Result := TYamlUtils.JsonMinify(AJson);
+    Result := TYamlUtils.JsonMinify(AJson);
 end;
 
 function TJX4Object.Format(AIndentation: Integer): string;
@@ -1135,27 +1168,7 @@ begin
   end;
 end;
 
-class function TJX4Object.ToYAML(AObj: TJX4Object; AOptions: TJX4Options = [ joNullToEmpty ]): string;
-begin
-  try
-    RaiseIfCanceled(AOptions);
-    Result := TYAMLUtils.JsonToYaml(TJX4Object.ToJSON(AObj));
-  except
-  on TJX4ExceptionAborted do
-    begin
-        Result := '';
-      if joRaiseOnAbort in AOptions then raise;
-      Exit;
-    end;
-    on Ex: Exception do
-    begin
-      Result := '';
-      if joRaiseOnException in AOptions then raise;
-    end;
-  end;
-end;
-
-class function TJX4Object.ToYAML(AStr: string; AOptions: TJX4Options = [ joNullToEmpty ]): string;
+class function TJX4Object.ToYAML(const AStr: string; AOptions: TJX4Options = [ joNullToEmpty ]): string;
 begin
   try
     RaiseIfCanceled(AOptions);
@@ -1177,22 +1190,7 @@ end;
 
 function TJX4Object.ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string;
 begin
-  try
-    RaiseIfCanceled(AOptions);
-    Result := ToYAML(Self, AOptions);
-  except
-    on TJX4ExceptionAborted do
-      begin
-        Result := '';
-        if joRaiseOnAbort in AOptions then raise;
-        Exit;
-      end;
-      on Ex: Exception do
-      begin
-        Result := '';
-        if joRaiseOnException in AOptions then raise;
-      end;
-  end;
+  Result := ToYAML(TJX4Object.ToJSON(Self, AOptions));
 end;
 
 function TJX4Object.SaveToJSONFile(
@@ -1260,7 +1258,7 @@ begin
   end;
 end;
 
-class function TJX4Object.JSONtoYAML(const AJson: string; AOptions: TJX4Options): string;
+class function TJX4Object.JSONStrtoYAMLStr(const AJson: string; AOptions: TJX4Options): string;
 begin
   try
     RaiseIfCanceled(AOptions);
@@ -1280,7 +1278,7 @@ begin
   end;
 end;
 
-class function TJX4Object.YAMLtoJSON(const AYaml: string; AOptions: TJX4Options): string;
+class function TJX4Object.YAMLStrtoJSONStr(const AYaml: string; AOptions: TJX4Options): string;
 begin
   try
     RaiseIfCanceled(AOptions);

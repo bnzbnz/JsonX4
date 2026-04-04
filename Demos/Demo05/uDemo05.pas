@@ -80,14 +80,14 @@ begin
 
     Memo1.Lines.Add('');
     Memo1.Lines.Add('JX4Name Attribute, Name conversion :');
-    JsonStr := '{"Str":"Need a Value","#href":"http","Num1":22}';
+    JsonStr := '{"Str":"Needs a Value","#href":"http","Num1":22}';
     JDemo := TJX4Object.FromJSON<TDemo>(JsonStr, [joRaiseOnException]);
     Memo1.Lines.Add('Deserialization: #href value is : ' + JDemo.HrefVar.AsString);
     JDemo.HrefVar :='ftp';
     Memo1.Lines.Add('Serialization: ' + JDemo.ToJSON([joNulltoEmpty]));
 
     Memo1.Lines.Add('');
-    Demo.__23href2 := 'auto enc/decoding';       // Name encoding: start by '_' and special characters: '_'+Hex Value : # => _23
+    Demo.__23href2 := 'auto enc/decoding';       // Name encoding: start with '_' and special characters: '_'+Hex Value : # => _23
     Memo1.Lines.Add('Name encoding : ' +  JDemo.ToJSON([joNulltoEmpty]));
 
     //Cloning :

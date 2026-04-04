@@ -131,6 +131,7 @@ procedure TForm4.ButtonClick( Sender : TObject );
     LWatch : TStopWatch;
     LGWatch : TStopWatch;
     LJSize: Int64;
+
 begin
 
     Memo1.Lines.Clear;
@@ -187,8 +188,8 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'YAMLize' );
     LWatch := TStopWatch.StartNew;
-  LYAMLstr := LJObj.ToYAML;
-    Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+    LYAMLstr := LJObj.ToYAML(LJsonStr);
+    Memo1.Lines.add(Format('X ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     MB := GetMemoryUsed div (1024*1024);
     Memo1.Lines.add( Format( 'Used Memory %d MB', [ MB ] ) );
 

@@ -36,7 +36,6 @@ type
 
   TJsonThread = class(TThread)
   protected
-    Lock : TCriticalSection;
     procedure Execute; override;
   end;
 
@@ -66,10 +65,6 @@ type
     id: TValue;
     bio: TValue;
     version: TValue;
-  end;
-
-  TPeopleContainter  = class(TJX4Object)
-    ctnr: TJX4List<TPeople>;
   end;
 
 var
@@ -102,7 +97,7 @@ begin
     procedure
     var
       LJsonStr : string;
-      LJObj, LJObjClone, LJObjMerge: TPeopleContainter;
+      LJObj, LJObjClone, LJObjMerge: TJX4List<TPeople>;
       LWatch, LWatchAll: TStopWatch;
       procedure Log(Text: string);
       begin
@@ -115,24 +110,29 @@ begin
       LJObjMerge := Nil;
       try
         Log('Starting a New Task : ' + Task.Id.ToString );
-        LWatch := TStopWatch.StartNew;
+        TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
         LWatchAll := TStopWatch.StartNew;
-          TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
-          LJObj := TJX4Object.FromJSON<TPeopleContainter>('{"ctnr":' + LJsonStr + '}', [ joRaiseOnAbort ] );
+
+        LWatch := TStopWatch.StartNew;
+          LJObj := TJX4Object.FromJSON< TJX4List<TPeople> >(LJsonStr, [ joRaiseOnAbort ] );
         Log( Task.Id.ToString + ' FromJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+
         LWatch := TStopWatch.StartNew;
-          LJObjClone := LJObj.Clone<TPeopleContainter>( [ joRaiseOnAbort ] );
+          LJObjClone := LJObj.Clone< TJX4List<TPeople> >( [ joRaiseOnAbort ] );
         Log( Task.Id.ToString + ' Clone:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+
         LWatch := TStopWatch.StartNew;
-          LJObjMerge := TPeopleContainter.Create;
-          LJObjMerge.Merge(LJObjClone, [ jmoAdd, joRaiseOnAbort ]);
+          LJObjMerge := TJX4List<TPeople>.Create;
+          LJObjMerge.Merge(LJObjClone, [ jmoUpdate, joRaiseOnAbort ]);
         Log( Task.Id.ToString + ' Merge:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+
         LWatch := TStopWatch.StartNew;
-            LJsonStr := LJObj.ToJson([ joNullToEmpty, joRaiseOnAbort ]);
+          LJsonStr := LJObjMerge.ToJSON([ joNullToEmpty, joRaiseOnAbort ]);
         Log( Task.Id.ToString + ' ToJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
-        LWatchAll.Stop;
+
         Log( Task.Id.ToString + ' Done Task ' + ' in ' + LWatchAll.ElapsedMilliseconds.ToString + ' ms');
-        Log('Peoples : (' + Task.Id.ToString + ') : ' + LJObjClone.ctnr.Count.ToString);
+        Log('Peoples : (' + Task.Id.ToString + ') : ' + LJObjClone.Count.ToString);
+
       finally
         FreeAndNIl(LJObjMerge);
         FreeAndNIl(LJObjClone);
@@ -150,11 +150,10 @@ end;
 
 { TJsonThread }
 
-
 procedure TJsonThread.Execute;
 var
   LJsonStr : string;
-  LJObj, LJObjClone, LJObjMerge: TPeopleContainter;
+  LJObj, LJObjClone, LJObjMerge: TJX4List<TPeople>;
   LWatch, LWatchAll: TStopWatch;
   procedure Log(Text: string);
   begin
@@ -167,22 +166,22 @@ try
     LJObjMerge := Nil;
     try
       Log('Starting a New Thread : ' + ThreadId.ToString);
-        TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
+        TJX4Object.LoadFromFile('Peoples.json', LJsonStr, TEncoding.UTF8);
       LWatchAll := TStopWatch.StartNew;
       LWatch := TStopWatch.StartNew;
-        LJObj := TJX4Object.FromJSON<TPeopleContainter>('{"ctnr":' + LJsonStr + '}', [ joRaiseOnAbort ] );
+        LJObj := TJX4Object.FromJSON< TJX4List<TPeople> >(LJsonStr, [ joRaiseOnAbort ] );
       Log( ThreadId.ToString + ' FromJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
       LWatch := TStopWatch.StartNew;
-        LJObjClone := LJObj.Clone<TPeopleContainter>( [ joRaiseOnAbort ] );
+        LJObjClone := LJObj.Clone< TJX4List<TPeople> >( [ joRaiseOnAbort ] );
         Log( ThreadId.ToString + ' Clone:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
       LWatch := TStopWatch.StartNew;
-        LJObjMerge := TPeopleContainter.Create;
-        LJObjMerge.Merge(LJObjClone, [ jmoAdd, joRaiseOnAbort ]);
+        LJObjMerge := TJX4List<TPeople>.Create;
+        LJObjMerge.Merge(LJObjClone, [ jmoUpdate, joRaiseOnAbort ]);
       Log( ThreadId.ToString + ' Merge:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
       LWatch := TStopWatch.StartNew;
         LJsonStr := LJObj.ToJson([ joNullToEmpty, joRaiseOnAbort ]);
       Log( ThreadId.ToString + ' ToJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
-      Log( Format('%d Thread Done in %d ms, (ppl %d)', [ ThreadId, LWatchAll.ElapsedMilliseconds, LJObjClone.ctnr.Count ]) );
+      Log( Format('%d Thread Done in %d ms, (ppl %d)', [ ThreadId, LWatchAll.ElapsedMilliseconds, LJObjClone. Count ]) );
 
     finally
       FreeAndNIl(LJObjMerge);

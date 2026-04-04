@@ -22,12 +22,12 @@ object Form4: TForm4
     DataDetectorTypes = []
     Lines.Strings = (
       
-        'The file to be processed contains 1 million json elements (strin' +
-        'g, integer, arrays, etc ...)'
+        'The file to be processed contains 915878 json elements (string, ' +
+        'integer, arrays, etc ...)'
       
         'Il will be copied, serialized, deserialized, cloned ,merged, sav' +
         'ed 5 times with different formats'
-      'Depending of your system, It may take a while !!')
+      'Depending of your system, It may take a while !! (10s on mine)')
     Align = Client
     Size.Width = 520.000000000000000000
     Size.Height = 583.000000000000000000

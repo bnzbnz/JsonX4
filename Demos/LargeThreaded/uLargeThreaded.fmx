@@ -36,8 +36,8 @@ object Form4: TForm4
     Size.Height = 303.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
-    Viewport.Width = 508.000000000000000000
-    Viewport.Height = 299.000000000000000000
+    Viewport.Width = 512.000000000000000000
+    Viewport.Height = 303.000000000000000000
   end
   object ThreadBtn: TButton
     Align = Top

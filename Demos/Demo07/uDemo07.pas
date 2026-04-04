@@ -32,22 +32,14 @@ type
 
   TTopping = TBatter;
 
-  TBatters = class(TJX4Object)
-    batter: TJX4List<TBatter>;
-  end;
-
   TDonut = class(TJX4Object)
     id: TValue;
     [TJX4Name('type')]
     &type: TValue;
     name: TValue;
     ppu: TValue;
-    batters: TBatters;
+    batters: TJX4List<TBatter>;
     topping: TJX4List<TTopping>;
-  end;
-
-  TEx7 = class(TJX4Object)
-    container: TJX4List<TDonut>;  // >> Array enclosure
   end;
 
 var
@@ -63,18 +55,20 @@ implementation
 procedure TForm4.ButtonClick(Sender: TObject);
 var
   LWatch: TStopWatch;
-  Ex7: TEx7;
+  Ex7: TDonut;
+  Donuts: TJX4List<TDonut>;
 begin
   Button.Enabled := False;
   LWatch := TStopWatch.StartNew;
   EX7 := Nil;
+  Donuts := Nil;
   try
 
-    var Json := '{"container":' + Memo1.Lines.Text + '}';     // << the provided json is an array, we enclose it with a TJXObject container
-    Ex7 := TJX4Obj.FromJSON<TEx7>(Json, [joRaiseOnMissingField, joRaiseOnException]);
+    Donuts := TJX4Obj.FromJSON< TJX4List<TDonut> >(Memo1.Lines.Text, [joRaiseOnMissingField, joRaiseOnException]);
+    Memo1.Text := Donuts.Format;
 
-    Memo1.Text := EX7.Format;
   finally
+    Donuts.Free;
     Ex7.Free;
   end;
 

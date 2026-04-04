@@ -31,7 +31,10 @@ uses
   , System.TypInfo
   ;
 
-{$DEFINE JX4RTTICACHE} // Highly recommended : 300% SpeedUp !
+{$DEFINE JX4RTTICACHE} // Highly recommended : 200% SpeedUp !
+
+const
+  cDefaultDictSize = 1021;
 
 type
   TxRTTI = class abstract
@@ -322,13 +325,13 @@ end;
 
 initialization
 {$IFDEF JX4RTTICACHE}
-  _RTTIFieldsCacheDic := TDictionary<TClass, TArray<TRttiField>>.Create;
-  _RTTIFieldsClassCacheDic := TDictionary<TClass, TArray<TRttiField>>.Create;
-  _RTTIPropsCacheDic := TDictionary<TClass, TArray<TRttiProperty>>.Create;
-  _RTTIMethsCacheDic := TDictionary<TClass, TArray<TRttiMEthod>>.Create;
-  _RTTIInstCacheDic := TDictionary<TRTTIField, TRttiInstanceType>.Create;
-  _RTTIInstMethsCacheDic := TDictionary<TRttiInstanceType, TRTTIMethod>.Create;
-  _RTTIMethObjCacheDic := TDictionary<NativeInt, TRTTIMethod>.Create;
+  _RTTIFieldsCacheDic := TDictionary<TClass, TArray<TRttiField>>.Create(cDefaultDictSize);
+  _RTTIFieldsClassCacheDic := TDictionary<TClass, TArray<TRttiField>>.Create(cDefaultDictSize);
+  _RTTIPropsCacheDic := TDictionary<TClass, TArray<TRttiProperty>>.Create(cDefaultDictSize);
+  _RTTIMethsCacheDic := TDictionary<TClass, TArray<TRttiMEthod>>.Create(cDefaultDictSize);
+  _RTTIInstCacheDic := TDictionary<TRTTIField, TRttiInstanceType>.Create(cDefaultDictSize);
+  _RTTIInstMethsCacheDic := TDictionary<TRttiInstanceType, TRTTIMethod>.Create(cDefaultDictSize);
+  _RTTIMethObjCacheDic := TDictionary<NativeInt, TRTTIMethod>.Create(cDefaultDictSize);
   _RTTILock1 := TCriticalSection.Create;
   _RTTILock2 := TCriticalSection.Create;
   _RTTILock3 := TCriticalSection.Create;

@@ -37,6 +37,13 @@ type
     NullStr: TValue;  // as a Null String Value
   end;
 
+  Tc = TJX4List<TPrimitives>;
+
+  TArr = class(TJX4Object)
+    a: TValue;
+    b: TJX4ListOfValues;
+  end;
+
 var
   Form4: TForm4;
 
@@ -53,20 +60,17 @@ var
   Json: string;
   LWatch: TStopWatch;
 begin
-
-  LWatch := TStopWatch.StartNew;
-
   caption := 'JsonX4 Version : ' + TJX4Object.Version;
-
   Memo1.Lines.Clear;
+  LWatch := TStopWatch.StartNew;
 
   Primitives := TPrimitives.Create;
   Primitives.Str := 'testing 😜';
   Primitives.Bool := True;
   Primitives.Int := -999;
-  Primitives.Dec := 2.2; // Make sure this is a decimal value not an Integer
-  Primitives.Cur := 22.0;
-  Primitives.NullStr := Nil;
+  Primitives.Dec := 2.0;  // Make sure this is a decimal value not an Integer
+  Primitives.Cur := 22.2;
+  Primitives.NullStr := Nil; // a "null" value
 
   // Raw Json
   Json := Primitives.ToJson([]);

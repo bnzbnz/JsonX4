@@ -28,6 +28,7 @@ uses
     uJX4Object
   , RTTI
   , Classes
+  , SysUtils
   ;
 
 type
@@ -97,10 +98,12 @@ type
 
   MyTThread = class(TThread);  //  TThread Protected Access
 
+var
+  GFormatSettings: TFormatSettings;
+
 implementation
 uses
     System.Generics.Collections
-  , Sysutils
   , DateUtils
   , uJX4Rtti
   , JSON
@@ -108,9 +111,9 @@ uses
 
 function TJX4TValueHelper.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
-  LName:  string;
-  LValue: string;
-  LAttr:  TCustomAttribute;
+  LName:      string;
+  LValue:     string;
+  LAttr:      TCustomAttribute;
 begin
   Result := Nil;
   TJX4Object.RaiseIfCanceled(AIOBlock.Options);
@@ -119,7 +122,9 @@ begin
     tkvString:  LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString, joSlashEncode in AIOBlock.Options) + '"';
     tkvBool:    LValue := cBoolToStr[Self.AsBoolean];
     tkvInteger: LValue := Self.AsInt64.ToString;
-    tkvFloat:   LValue := FormatFloat('.0', Self.AsExtended, TFormatSettings.Invariant);
+    tkvFloat:   begin
+      LValue := FormatFloat('0.0#########', Self.AsExtended, GFormatSettings);
+    end;
   else
     if joNullToEmpty in AIOBlock.Options then Exit;
     Self := Nil;
@@ -188,7 +193,11 @@ begin
       if LJPair.JsonValue.ToString.IndexOf(TFormatSettings.Invariant.DecimalSeparator) = -1 then
         Self := TJSONNumber(LJPair.JsonValue).AsInt64
       else
+        begin
         Self := TJSONNumber(LJPair.JsonValue).AsDouble;
+        var a := Self;
+        a:=a;
+        end;
   end else begin
     LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
     if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := Nil;
@@ -496,4 +505,8 @@ begin
   Result := DateTimeToStr(UnixToDateTime(x, True));
 end;
 
+initialization
+  GFormatSettings := TFormatSettings.Create;
+  GFormatSettings.DecimalSeparator := '.';
+  GFormatSettings.ThousandSeparator := #0;
 end.

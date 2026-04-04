@@ -32,10 +32,6 @@ type
     body: TValue; // string
   end;
 
-  TJPosts = class(TJX4Object)
-    ctnr: TJX4List<TJPost>;
-  end;
-
   // Comments:
    TJComment = class(TJX4Object)
     postId: TValue; // Integer
@@ -58,10 +54,6 @@ type
     thumbnailUrl: TValue; // string
   end;
 
-  TJPhotos = class(TJX4Object)
-    ctnr: TJX4List<TJPhoto>;
-  end;
-
   // Albums:
   TJAlbum = class(TJX4Object)
     userId: TValue; // Integer
@@ -71,20 +63,12 @@ type
     Photos: TJX4List<TJPhoto>;  // Generated
   end;
 
-  TJAlbums = class(TJX4Object)
-    ctnr: TJX4List<TJAlbum>;
-  end;
-
   // Todos
   TJTodo = class(TJX4Object)
     userId: TValue; // Integer
     id: TValue; // Integer
     title: TValue; // string
     completed: TValue; // Boolean
-  end;
-
-  TJTodos = class(TJX4Object)
-    ctnr: TJX4List<TJTodo>;
   end;
 
   // Users
@@ -123,11 +107,7 @@ type
 
   end;
 
-  TJUsers = class(TJX4Object)
-    ctnr: TJX4List<TJUser>;
-  end;
-
-var
+ var
   Form4: TForm4;
 
 implementation
@@ -148,12 +128,12 @@ var
   Res: IHTTPResponse;
   Http: THTTPClient;
   Json: string;
-  JPosts: TJPosts;
+  JPosts: TJX4List<TJPost>;
   JComments: TJComments;
-  JAlbums: TJAlbums;
-  JPhotos : TJPhotos;
-  JTodos: TJTodos;
-  JUSers: TJUsers;
+  JAlbums: TJX4List<TJAlbum>;
+  JPhotos : TJX4List<TJPhoto>;
+  JTodos: TJX4List<TJTodo>;
+  JUSers: TJX4List<TJUser>;
   Watch: TStopwatch;
   TimeProcess, TimeHTTP : Int64;
 
@@ -170,77 +150,62 @@ begin
   Res := Http.Get('https://jsonplaceholder.typicode.com/posts');
   JPosts := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
-  begin
-    Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
-    JPosts := TJX4Object.FromJSON<TJPosts>(Json);
-  end;
+    JPosts := TJX4Object.FromJSON< TJX4List<TJPost> >(Res.ContentAsString(TEncoding.UTF8));
 
     // Albums
   Res := Http.Get('https://jsonplaceholder.typicode.com/albums');
   JAlbums := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
-  begin
-    Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
-    JAlbums := TJX4Object.FromJSON<TJAlbums>(Json);
-  end;
+    JAlbums := TJX4Object.FromJSON< TJX4List<TJAlbum> >(Res.ContentAsString(TEncoding.UTF8));
 
   // Photos
   Res := Http.Get('https://jsonplaceholder.typicode.com/photos');
   JPhotos := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
-  begin
-    Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
-    JPhotos := TJX4Object.FromJSON<TJPhotos>(Json);
-  end;
+    JPhotos := TJX4Object.FromJSON<  TJX4List<TJPhoto> >(Res.ContentAsString(TEncoding.UTF8));
 
   // Todos
   Res := Http.Get('https://jsonplaceholder.typicode.com/todos');
   JTodos := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
-  begin
-    Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
-    JTodos := TJX4Object.FromJSON<TJTodos>(Json);
-  end;
+    JTodos := TJX4Object.FromJSON< TJX4List<TJToDo> >(Res.ContentAsString(TEncoding.UTF8));
 
   // Users
   Res := Http.Get('https://jsonplaceholder.typicode.com/users');
   JUsers := Nil;
   if Assigned(Res) and (Res.StatusCode = 200) then
-  begin
-    Json := '{"ctnr":' + Res.ContentAsString(TEncoding.UTF8) + '}';
-    JUsers := TJX4Object.FromJSON<TJUsers>(Json);
-  end;
+    JUsers := TJX4Object.FromJSON< TJX4List<TJUser> >(Res.ContentAsString(TEncoding.UTF8));
 
   HTTP.Free;
   TimeHTTP := Watch.ElapsedMilliseconds;
   Watch := TStopwatch.StartNew;
 
   if assigned(JPhotos) and assigned(JAlbums) then
-    for var Photo := 0 to JPhotos.ctnr.count - 1 do
-      for var Album := 0 to JAlbums.ctnr.count -1 do
-        if JPhotos.ctnr[Photo].albumId.AsInteger = JAlbums.ctnr[Album].id.AsInteger then
-           JAlbums.ctnr[Album].Photos.add( JPhotos.ctnr[Photo].Clone<TJPhoto> );
+    for var Photo := 0 to JPhotos.count - 1 do
+      for var Album := 0 to JAlbums.count -1 do
+        if JPhotos[Photo].albumId.AsInteger = JAlbums[Album].id.AsInteger then
+           JAlbums[Album].Photos.add( JPhotos[Photo].Clone<TJPhoto> );
   JPhotos.Free;
 
   if assigned(JAlbums) and assigned(JUsers) then
-    for var Album := 0 to JAlbums.ctnr.count - 1 do
-      for var User := 0 to JUsers.ctnr.count -1 do
-        if JAlbums.ctnr[Album].userId.AsInteger = JUsers.ctnr[User].id.AsInteger then
-           JUsers.ctnr[User].Albums.add( JAlbums.ctnr[Album].Clone<TJAlbum> );
+    for var Album := 0 to JAlbums.count - 1 do
+      for var User := 0 to JUsers.count -1 do
+        if JAlbums[Album].userId.AsInteger = JUsers[User].id.AsInteger then
+           JUsers[User].Albums.add( JAlbums[Album].Clone<TJAlbum> );
   JAlbums.Free;
 
   if assigned(JTodos) and assigned(JUsers) then
-    for var Todo := 0 to JTodos.ctnr.count - 1 do
-      for var User := 0 to JUsers.ctnr.count -1 do
-        if JTodos.ctnr[Todo].userId.AsInteger = JUsers.ctnr[User].id.AsInteger then
-          JUsers.ctnr[User].Todos.add( JTodos.ctnr[Todo].Clone<TJTodo> );
+    for var Todo := 0 to JTodos.count - 1 do
+      for var User := 0 to JUsers.count -1 do
+        if JTodos[Todo].userId.AsInteger = JUsers[User].id.AsInteger then
+          JUsers[User].Todos.add( JTodos[Todo].Clone<TJTodo> );
   JTodos.Free;
 
   if assigned(JPosts) and assigned(JUsers) then
-    for var Post := 0 to JPosts.ctnr.count - 1 do
-      for var User := 0 to JUsers.ctnr.count -1 do
-        if JPosts.ctnr[Post].userId.AsInteger = JUsers.ctnr[User].id.AsInteger then
-          JUsers.ctnr[User].Posts.add( JPosts.ctnr[Post].Clone<TJPost> );
+    for var Post := 0 to JPosts.count - 1 do
+      for var User := 0 to JUsers.count -1 do
+        if JPosts[Post].userId.AsInteger = JUsers[User].id.AsInteger then
+          JUsers[User].Posts.add( JPosts[Post].Clone<TJPost> );
   JPosts.Free;
 
   TimeProcess := Watch.ElapsedMilliseconds;

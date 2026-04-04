@@ -31,10 +31,6 @@ type
     BirthDate: TValue; // String
   end;
 
-  TUserArray = class( TJX4Object )
-    container: TJX4List<TUser>;  // >> Array of TUser
-  end;
-
   TAddress = class( TJX4Object )
     AddressType: TValue; // String
     Street: TValue; // String,
@@ -56,10 +52,6 @@ type
     Contacts: TJX4List<TContact>  // List of Contacts
   end;
 
-  TCustomerArray = class(TJX4Object)
-    container: TJX4List<TCustomer>;  // >> Array of TCustomer
-  end;
-
 var
   Form4: TForm4;
 
@@ -74,8 +66,8 @@ procedure TForm4.ButtonClick(Sender: TObject);
 var
   Size: TValue;
   JsonStr: string;
-  Json5K: TCustomerArray;
-  Json50K: TUserArray;
+  Json5K:  TJX4List<TCustomer>;
+  Json50K: TJX4List<TUser>;
   Sw: TStopWatch;
 begin
   Memo1.Lines.Clear;
@@ -83,18 +75,20 @@ begin
   begin
     // Deserialize
     Sw := TStopWatch.StartNew;
-    Json5K  := TJX4Obj.FromJSON<TCustomerArray>( '{"container":' + JsonStr + '}' , [joRaiseOnMissingField, joRaiseOnException]);
+    Json5K := TJX4Object.FromJSON< TJX4List<TCustomer> >(JsonStr, []);
     Size := JsonStr.Length;
     Memo1.Lines.Add('Neon 5K Cutomers json file : ' +  Size.ToKiBMiBGiBTiB);
     Memo1.Lines.Add('  Deserialization: ');
-    Memo1.Lines.Add('    Loaded Customers: ' + Json5K.container.Count.ToString);
+    Memo1.Lines.Add('    Loaded Customers: ' + Json5K.Count.ToString);
     Memo1.Lines.Add('    Duration:: ' + Sw.ElapsedMilliseconds.ToString + 'ms (vs Neon: 187ms)');
     // Serialize
     Sw := TStopWatch.StartNew;
-    JSonStr := TJX4Obj.ToJSON(Json5K.container);
+    JSonStr := TJX4Object.ToJSON(Json5K);
     Memo1.Lines.Add('  Serialization: ');
     Size := JSonStr.Length; Memo1.Lines.Add('    Compact Json File Size: ' + Size.ToKiBMiBGiBTiB);
     Memo1.Lines.Add('    Duration:: ' + Sw.ElapsedMilliseconds.ToString + 'ms (vs Neon: 173ms)');
+
+    Json5K.SaveToJSONFile('d:\json.json');
     Json5K.Free;
   end;
 
@@ -106,86 +100,21 @@ begin
   begin
     // Deserialize
     Sw := TStopWatch.StartNew;
-    Json50K := TJX4Obj.FromJSON<TUserArray>( '{"container":' + JsonStr + '}' , [joRaiseOnMissingField, joRaiseOnException]);
+    Json50K := TJX4Object.FromJSON< TJX4List<TUser> >(JsonStr, []);
     Size := JsonStr.Length;
     Memo1.Lines.Add('Neon 50K Users Json File : ' +  Size.ToKiBMiBGiBTiB);
     Memo1.Lines.Add('  Deserialization: ');
-    Memo1.Lines.Add('    Loaded Users: ' + Json50K.container.Count.ToString);
+    Memo1.Lines.Add('    Loaded Users: ' + Json50K.Count.ToString);
     Memo1.Lines.Add('    Duration:: ' + Sw.ElapsedMilliseconds.ToString + ' ms');
     // Serialize
     Sw := TStopWatch.StartNew;
-    JSonStr := TJX4Obj.ToJSON(Json50K.container);
+    JSonStr := TJX4Object.ToJSON(Json50K);
     Memo1.Lines.Add('  Serialization: ');
     Size := JSonStr.Length; Memo1.Lines.Add('    Compact Json File Size: ' + Size.ToKiBMiBGiBTiB);
     Memo1.Lines.Add('    Duration:: ' + Sw.ElapsedMilliseconds.ToString + ' ms');
     Json50K.Free;
   end;
 
-//users-50k.json
 end;
-
-
-(*
-procedure TForm4.ButtonClick(Sender: TObject);
-var
-  Primitives, NewPrimitives: TPrimitives;
-  Json: string;
-  LWatch: TStopWatch;
-begin
-
-  LWatch := TStopWatch.StartNew;
-
-  caption := 'JsonX4 Version : ' + TJX4Object.Version;
-
-  Memo1.Lines.Clear;
-
-  Primitives := TPrimitives.Create;
-  Primitives.Str := 'testing 😜';
-  Primitives.Bool := True;
-  Primitives.Int := -999;
-  Primitives.Dec := 2.2; // Make sure this is a decimal value not an Integer
-  Primitives.Cur := 22.0;
-  Primitives.NullStr := Nil;
-
-  // Raw Json
-  Json := Primitives.ToJson([]);
-  Memo1.lines.add('Serialized Object:');
-  Memo1.lines.add(Json);
-
-  // Optimized Json
-  Memo1.lines.add('');
-  Json := Primitives.ToJson([joNullToEmpty]);
-  Memo1.lines.add('Serialized and Optimized Object (null removed):');
-  Memo1.lines.add(Json);
-
-  // Converting back to a Primitives Object;
-  NewPrimitives := TJX4Object.FromJSON<TPrimitives>(Json);
-
-  // Serializing the New Object
-  Memo1.lines.add('');
-  Json := Primitives.ToJson;
-  Memo1.lines.add('Cloned Object:');
-  Memo1.lines.add(Json);
-
-  // Checking Values
-  Memo1.lines.add('');
-  Memo1.lines.add('Checking Cloned Object Values:');
-  Memo1.lines.add('Str: ' + NewPrimitives.Str.AsString);
-  Memo1.lines.add('Int64: ' + NewPrimitives.Int.AsOrdinal.ToString);
-  Memo1.lines.add('Decimal: ' + NewPrimitives.Dec.AsExtended .ToString);
-  Memo1.lines.add('Currency: ' + NewPrimitives.Cur.AsCurrency.ToString);
-
-  // Formatted Json
-  Memo1.lines.add('');
-  Memo1.lines.add('Formatted Serialized Object:');
-  Memo1.lines.add(NewPrimitives.Format);
-
-  NewPrimitives.Free;
-  Primitives.Free;
-
-  Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
-
-end;
-*)
 
 end.
