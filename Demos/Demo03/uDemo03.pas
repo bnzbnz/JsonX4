@@ -32,12 +32,13 @@ type
     UI: TValue; // as UInt
     Dble: TValue; // as Double
     Curr: TValue; // as Vurrency
-    NullStr: TValue;
     // ...
   end;
 
   TObjectDemo = class(TJX4Object)
-    Str:  TValue;
+    aStr:  TValue;                                        // string
+    aDate: TValue;                                        // Datetime
+    NullStr: TValue;
     Keys: TJX4ValList;                                    // an array(List) of strings : TArray<string>
     Nums: TJX4ValDict;                                    // An dictionary of Numbers (<string, number>)  *JSON allows only strings as key
     Primitives: TJX4List<TPrimitive>;                     // A list of TPrimitives
@@ -68,7 +69,8 @@ begin
   Memo1.Lines.Clear;
 
   Demo := TObjectDemo.Create;
-  Demo.Str := '~~😃~~'; // UTF8 Support
+  Demo.aStr := '~~😃~~'; // UTF8 Support
+  Demo.aDate.DateTime := Now;
 
   // TJX4List<TJX4Str> : Array<string>
   Memo1.lines.add('TJX4List<TJX4Str> : Array<string> :');
