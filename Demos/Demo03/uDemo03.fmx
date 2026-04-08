@@ -2,8 +2,8 @@ object Form4: TForm4
   Left = 0
   Top = 0
   Caption = 'Demo03: Lists & Dicts'
-  ClientHeight = 363
-  ClientWidth = 865
+  ClientHeight = 364
+  ClientWidth = 866
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
@@ -13,16 +13,16 @@ object Form4: TForm4
     DataDetectorTypes = []
     TextSettings.WordWrap = True
     Align = Client
-    Size.Width = 865.000000000000000000
-    Size.Height = 314.000000000000000000
+    Size.Width = 866.000000000000000000
+    Size.Height = 315.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
-    Viewport.Width = 865.000000000000000000
-    Viewport.Height = 314.000000000000000000
+    Viewport.Width = 862.000000000000000000
+    Viewport.Height = 311.000000000000000000
   end
   object Button: TButton
     Align = Top
-    Size.Width = 865.000000000000000000
+    Size.Width = 866.000000000000000000
     Size.Height = 49.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1

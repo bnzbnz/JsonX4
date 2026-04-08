@@ -38,11 +38,11 @@ type
 
   TObjectDemo = class(TJX4Object)
     Str:  TValue;
-    Keys: TJX4ValList;                            // an array(List) of strings : TArray<string>
-    Nums: TJX4ValDict;                             // An dictionary of Numbers (<string, number>)  *JSON allows only strings as key
-    Primitives: TJX4List<TPrimitive>;                   // A list of TPrimitives
-    SLists: TJX4List<TJX4ValList>;                // A list of string Lists
-    PDicList: TJX4List<TJX4Dic<TJX4List<TPrimitive>>>;  // ouch ! A List of dictionaries of TPrimitives Objects Lists !!!
+    Keys: TJX4ValList;                                    // an array(List) of strings : TArray<string>
+    Nums: TJX4ValDict;                                    // An dictionary of Numbers (<string, number>)  *JSON allows only strings as key
+    Primitives: TJX4List<TPrimitive>;                     // A list of TPrimitives
+    SLists: TJX4List< TJX4ListOfValues >;                 // A list of string Lists
+    PDicList: TJX4List<TJX4Dic<TJX4List<TPrimitive>>>;    // ouch ! A List of dictionaries of TPrimitives Objects Lists !!!
   end;
 
 var
@@ -59,7 +59,7 @@ procedure TForm4.ButtonClick(Sender: TObject);
 var
   Demo: TObjectDemo;
   Json: string;
-  s: TJX4ValList;
+  s: TJX4ListOfValues;
   LWatch: TStopWatch;
 begin
 
@@ -102,11 +102,11 @@ begin
   // TJX4List<TJX4List<TJX4Str>> : Array<Array<string>>>
   Memo1.lines.add('');
   Memo1.lines.add('TJX4List<TJX4List<TJX4Str>> : Array<Array<string>>> :');
-  S := TJX4ValList.Create;
+  S := TJX4ListOfValues.Create;
   S.Add('TTT');
   S.Add('OOO');
   Demo.SLists.Add(S);
-  S := TJX4ValList.Create;
+  S := TJX4ListOfValues.Create;
   S.AddRange(['XXX', 'YYY', 'ZZZ']);
   Demo.SLists.Add(S);
   Json := TJX4Object.ToJson(Demo, [joNullToEmpty]);
