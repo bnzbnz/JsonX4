@@ -2,34 +2,33 @@ Delphi JsonX4 (Json eXtended version 4.5) : JSON & YAML
 =================
 
 JsonX4 is a Delphi JSON/YAML to Objects, Objects to JSON/YAML parser. It is light still simple to use
-and, of course, the full JSON specification is supported...\ 
-Tested with Delphi 11.3 to 13.1 (+ Community Edition).
+and, of course, the full JSON specification is supported...
+Tested on Delphi 11.3 to 13.1 (All Community Edition).
 
-The Dilemma: JsonX4 or an other Framework ?
+The Dilemma: JsonX4(JX4) or another framework ?
 -
 - JsonX4 is fast but is limited by the speed of the default delphi JSON library. Though, the RTTI cache give it a big boost.
 - It is light but stil powerful
-- It fully support ALL json specifications
+- It fully supports ALL json specifications
 - It is not limited to JSON but understand YAML too
 - I know that it can be overwhelming at start, but, in fact, JsonX4 is really easy to use
 - It brings powerful function, like "cloning" and "merging" which can reduce greatly your network traffic and processing (just send deltas)
 - Sarting v4.50, all Jsonx4 releases will stay compatible. You work with it now, no new release will break your code. I will only fix or bring new functionalities to the stack
-- Finally, JsonX4 is used by REAL customers in REAL production. They simply care about ease of use, feature, update, or bug fix
+- (I am working on JsonX5... but that's another story... )
+- Finally, JsonX4 is used by REAL customers in REAL production environment. They simply care about ease of use, feature, update, or bug fix
 - The cherry on the top: if any issue arise, I am not only a username on GitIhub, you can contact me to this dedicated email address:
   jsonx4@lmeyer.fr
   I'll answer you ASAP to make JsonX4 better...
 - If, by now, there is no dilemma (or you are simply curious) : Enjoy!, Laurent
   
 The V4 version has been refactored, partially rewrote, a lot of fixes, add Interfaces support, new Demos and more. The speed gain is around 30%.\
-(I am too lazy to bump it up to V5 :) ).
 
-- This project is sponsored by EA4D "ebay Api 4 Delphi" (https://www.ea4d.com), and used in there products.
+- This project is sponsored by EA4D "ebay Api 4 Delphi" (https://www.ea4d.com), and used in their products.
 
 Projects using JsonX4
 --------------
-- qBit4DelphiV2 - qNOXifyV2 : https://github.com/bnzbnz/qBit4DelphiV2 a qBitTorrent API for Delphi.
-- ConsoAPI : (https://github.com/bnzbnz/ConsoAPI4Delphi) a Delphi API to get data from Enedis (French).
-- These projects are currently updated to V4.5 <<<<<<
+- qBit4DelphiV2 - qNOXifyV2 : https://github.com/bnzbnz/qBit4DelphiV2 a qBitTorrent API for Delphi.(Currently integrating v4.5 + latest qBittorrent API)
+- ConsoAPI : (https://github.com/bnzbnz/ConsoAPI4Delphi) a Delphi API to get data from Enedis - Linky (French).  (Has, already, been updated to v4.5)
 
 How to install
 --------------
@@ -341,7 +340,7 @@ Used Memory 135 MB
 Example 11 : Threaded JSON (LargeThreded)
 -
 JX4 as been design to be thread-safe : no-lock RTTI Cache and automatically Abort on thread destroy.\
-In this Demo, you will be able to start threads, tasks, and abort them through Exception.\
+In this Demo, you will be able to start threads, tasks, and abort them through Exception. \
 joRaiseOnAbort flag is Required.
 ```Delphi
    LJObj := TJX4Object.FromJSON< TJX4List<TPeople> >(LJsonStr, [ joRaiseOnAbort ] );
