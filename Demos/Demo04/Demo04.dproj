@@ -147,12 +147,17 @@
         <DCCReference Include="..\..\uJsonX4\uJX4Dict.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4List.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Object.pas"/>
-        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <DCCReference Include="uJSONableStringList.pas">
-            <Form>$R *.res</Form>
+            <Form>,
+  uJX4Value in &apos;..\..\uJsonX4\uJX4Value.pas&apos;,
+  uJX4YAML in &apos;..\..\uJsonX4\uJX4YAML.pas&apos;,
+  uJX4Rtti in &apos;..\..\uJsonX4\uJX4Rtti.pas&apos;;
+
+{$R *.res</Form>
         </DCCReference>
         <DCCReference Include="..\..\uJsonX4\uJX4Value.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4YAML.pas"/>
+        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

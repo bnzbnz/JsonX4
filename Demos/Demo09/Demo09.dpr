@@ -7,9 +7,9 @@ uses
   uJX4Dict in '..\..\uJsonX4\uJX4Dict.pas',
   uJX4List in '..\..\uJsonX4\uJX4List.pas',
   uJX4Object in '..\..\uJsonX4\uJX4Object.pas',
-  uJX4Rtti in '..\..\uJsonX4\uJX4Rtti.pas',
   uJX4Value in '..\..\uJsonX4\uJX4Value.pas',
-  uJX4YAML in '..\..\uJsonX4\uJX4YAML.pas';
+  uJX4YAML in '..\..\uJsonX4\uJX4YAML.pas',
+  uJX4Rtti in '..\..\uJsonX4\uJX4Rtti.pas';
 
 {$R *.res}
 

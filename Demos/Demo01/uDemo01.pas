@@ -37,7 +37,7 @@ type
     NullValue:  TValue; // as a Null String Value
   end;
 
-  // I'm seeing it coming.... Why use TValue's instead of the native types ?
+  // I'm seeing it coming.... Why use TValue's instead of native types ?
   // simply, because a json value can be null : for exemple, a json boolean can be True, False... or Null.
   // a pascal boolean can't!
   // So any json engine using native types is, basicaly, wrong ! (Delphi Rest, GBJSON, neon, etc...)

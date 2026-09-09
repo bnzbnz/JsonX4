@@ -26,14 +26,14 @@ type
     { Public declarations }
   end;
 
-  TQuestion = class(TJX4Object)
+  TQuestion = class(TJX4Object)                                     //  Simple YAML/JSON objects mapping
     question: TValue;
     options:  TJX4ValList;
     answer:   TValue;
   end;
 
   TGame = class(TJX4Object)
-    quiz: TJX4Dic<TJX4Dic<TQuestion>>;   // << Double dictionaries
+    quiz: TJX4Dic<TJX4Dic<TQuestion>>;                              // Double dictionaries
   end;
 
 var
@@ -56,12 +56,13 @@ end;
 
 var
   LWatch: TStopWatch;
+  GameStr, JsonStr: string;
 begin
-  Button.Enabled := False;
-
+  Memo1.ClearContent;
   LWatch := TStopWatch.StartNew;
-  // Random YAML found on the internet
-  var GameStr :=
+
+  // Random YAML...
+  GameStr :=
     '''
     quiz:
       sport:
@@ -93,13 +94,16 @@ begin
     ''';
 
   // YAML to JSON
+  Memo1.Lines.Add('--------------------> YAML :');
+  Memo1.Lines.Add(GameStr);
+  Memo1.Lines.Add('--------------------> YAML to JSON :');
   var Game := TJX4Object.FromYAML<TGame>(GameStr);                  // Get the Object from YAML
-  Memo1.Text := TJX4Object.FormatJSON(  TJX4Object.ToJSON(Game) );  // Get the Json string from the Object, and print the formated result
+  JSonStr := Game.Format;
+  Memo1.Lines.Add(JSonStr);                                         // Get the Json string from the Object, and print the formated result
 
-  //
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('Questions - Options :');
-  for var LPk1 in Game.quiz do                                      //Dump  Questions - Options
+  // Dump Data
+  Memo1.Lines.Add('--------------------> Extract Details :');
+  for var LPk1 in Game.quiz do
     for var LPk2 in LPk1.Value do
     begin
       Memo1.Lines.Add(LPk1.Key + ' - ' + LPk2.Value.question.AsString+' : ');
@@ -108,14 +112,14 @@ begin
       Memo1.Lines.Add('==> Answer : ' + LPk2.Value.answer.AsString);
     end;
 
-  Memo1.Lines.add('');
-  Memo1.Lines.add('JSON to YAML :');
-  Memo1.Lines.add(Game.ToYAML());
-  Game.Free;                                               // Cleanup
+    // JSON to YAML
+  Memo1.Lines.Add('--------------------> JSON to YAML :');
+  Memo1.Lines.add(Game.ToYAML(JSonStr));
 
+  Game.Free;                                                        // Cleanup
   Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 
-  end;
+end;
 
 {$ENDIF}
 

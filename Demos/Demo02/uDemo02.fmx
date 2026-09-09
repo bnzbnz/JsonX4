@@ -2,8 +2,8 @@ object Form4: TForm4
   Left = 0
   Top = 0
   Caption = 'Demo02: Inner Classes'
-  ClientHeight = 363
-  ClientWidth = 636
+  ClientHeight = 364
+  ClientWidth = 736
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
@@ -13,20 +13,20 @@ object Form4: TForm4
     DataDetectorTypes = []
     TextSettings.WordWrap = True
     Align = Client
-    Size.Width = 636.000000000000000000
-    Size.Height = 314.000000000000000000
+    Size.Width = 736.000000000000000000
+    Size.Height = 315.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
-    Viewport.Width = 632.000000000000000000
-    Viewport.Height = 310.000000000000000000
+    Viewport.Width = 732.000000000000000000
+    Viewport.Height = 311.000000000000000000
   end
   object Button: TButton
     Align = Top
-    Size.Width = 636.000000000000000000
+    Size.Width = 736.000000000000000000
     Size.Height = 49.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
-    Text = 'Start'
+    Text = 'Start / Refresh'
     OnClick = ButtonClick
   end
 end

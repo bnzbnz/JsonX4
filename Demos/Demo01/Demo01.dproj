@@ -147,9 +147,9 @@
         <DCCReference Include="..\..\uJsonX4\uJX4Dict.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4List.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Object.pas"/>
-        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Value.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4YAML.pas"/>
+        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -193,14 +193,14 @@
                 </DeployFile>
                 <DeployFile LocalName="..\Demo01.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="..\Demo01.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win64">
+                    <Platform Name="Win32">
                         <RemoteName>Demo01.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\Demo01.rsm" Configuration="Debug" Class="DebugSymbols">
+                <DeployFile LocalName="..\Demo01.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
-                        <RemoteName>Demo01.rsm</RemoteName>
+                        <RemoteName>Demo01.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

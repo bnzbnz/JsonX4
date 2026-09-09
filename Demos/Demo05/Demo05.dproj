@@ -5,7 +5,7 @@
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectName Condition="'$(ProjectName)'==''">Demo05</ProjectName>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -147,11 +147,15 @@
         <DCCReference Include="..\..\uJsonX4\uJX4Dict.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4List.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Object.pas"/>
-        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Value.pas">
-            <Form>$R *.res</Form>
+            <Form>,
+  uJX4YAML in &apos;..\..\uJsonX4\uJX4YAML.pas&apos;,
+  uJX4Rtti in &apos;..\..\uJsonX4\uJX4Rtti.pas&apos;;
+
+{$R *.res</Form>
         </DCCReference>
         <DCCReference Include="..\..\uJsonX4\uJX4YAML.pas"/>
+        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -320,14 +320,14 @@ begin
   Memo1.Lines.add( '' );
   Memo1.Lines.add( 'Convert Json String to JSX4 Objects (Deserialize):' );
   LWatch := TStopWatch.StartNew;
-  LGitHubExtract := TJX4Object.FromJSON<TGitHubExtract>(LJsonStr, [ joStats, joRaiseOnException] );
+  LGitHubExtract := TJX4Object.FromJSON<TGitHubExtract>(LJsonStr, [] );
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
 
   Memo1.Lines.add( '' );
   Memo1.Lines.add( 'Convert JSX4 Objects to Json String (Serialize):' );
   LWatch := TStopWatch.StartNew;
-  var JStr := LGitHubExtract.ToJSON;
+  var JStr := LGitHubExtract.ToJSON([joNullToEmpty]);
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
 
@@ -335,7 +335,7 @@ begin
   Memo1.Lines.add( 'Convert JSX4 Objects to YAML String' );
   LWatch := TStopWatch.StartNew;
   LGitHubExtract.ToYAML(JStr);
-  //LGitHubExtract.ToYAML; // Slower : need to be serialized again
+  //LGitHubExtract.ToYAML is slower (need to be serialized again)
   Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
   Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / 1024000) / (LWatch.ElapsedMilliseconds / 1000)]));
 

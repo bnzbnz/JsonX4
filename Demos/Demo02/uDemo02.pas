@@ -30,7 +30,7 @@ type
     c: TValue; // as UInt
     d: TValue; // as Int64
     e: TValue; // as UInt64
-    Null: TValue;
+    NullValue: TValue;
     // ...
   end;
 
@@ -62,12 +62,11 @@ var
 begin
 
   LWatch := TStopWatch.StartNew;
-
   Memo1.Lines.Clear;
 
   // PLease note that JSX4 owns all objects !
   // It handles construction and destruction of them for you...
-  // You may add any number of inner/classes.
+  // You may add any number of nested classes.
 
   Demo := TInnerObjectDemo.Create;
   Demo.S := '~~😃~~'; // UTF8 Support
@@ -78,38 +77,45 @@ begin
 
   Demo.SubClass.PClass.Str:= 'ABC';
 
-  // Raw Json
-  Json := Demo.ToJson([joRaiseOnException]);
-  Memo1.lines.add('Raw Original Object:');
+  // Serializing RawObject to Json string
+  Json := Demo.ToJson;
+  Memo1.lines.add('Serialized Raw Object to Json string :');
   Memo1.lines.add(Json);
 
-  // Optimized Json
-  Memo1.lines.add('');
+  // Serializing RawObject to OPTIMIZED Json string (remove "null" fields)
   Json := Demo.ToJson([joNullToEmpty]);
-  Memo1.lines.add('Optimized Original Object:');
+  Memo1.lines.add('');
+  Memo1.lines.add('Serialized RawObject to OPTIMIZED Json string (remove "null" fields) :');
   Memo1.lines.add(Json);
 
-  // Converting back to a Primitives Object;
-  NewDemo := TJX4Object.FromJSON<TInnerObjectDemo>(Json, [joRaiseOnException]);
-
-  // Serializing the New Object
+  // Deserializing Json string to NewObject of type
+  NewDemo := TJX4Object.FromJSON<TInnerObjectDemo>(Json, []);
   Memo1.lines.add('');
-  Json := NewDemo.ToJson([joNullToEmpty]);
-  Memo1.lines.add('Duplicate Object:');
-  Memo1.lines.add(Json);
+  Memo1.lines.add('Deserialized Json string to NewObject of type: ');
+  Memo1.lines.add(NewDemo.ClassName);
 
-  // Formatted Json
-  Memo1.lines.add('');
-  Memo1.lines.add('Formatted:');
-  Memo1.lines.add(TJX4Object.FormatJSON(Json));
-
-  // You may also cloned any JSX3 Objects.
+  // Cloning, Serializing and Optimizing NewObject to CloneObject
   CloneDemo := Demo.Clone<TInnerObjectDemo>;
+  Json := CloneDemo.ToJson([joNullToEmpty]);
+  Memo1.lines.add('');
+  Memo1.lines.add('Cloned, Serialized and Optimized NewObject to CloneObject: ');
+  Memo1.lines.add(Json);
+
+  // Fomatting CloneObject
+  Memo1.lines.add('');
+  Memo1.lines.add('Formatting CloneObject:');
+  Memo1.lines.add(CloneDemo.Format(True, 2));
+
+  // Fomatting optimized CloneObject
+  Memo1.lines.add('');
+  Memo1.lines.add('Formatted Optimized CloneObject:');
+  Memo1.lines.add(CloneDemo.Format(True, 2, [joNullToEmpty]));
 
   CloneDemo.Free;
   NewDemo.Free;
   Demo.Free;
 
+  // Caution with this value; FMX TMemo is extremly slow !!!
   Memo1.Lines.add(Format('Processing Duration ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
 
 end;

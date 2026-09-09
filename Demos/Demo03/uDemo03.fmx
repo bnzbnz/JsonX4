@@ -7,6 +7,8 @@ object Form4: TForm4
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   DesignerMasterStyle = 0
   object Memo1: TMemo
     Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
@@ -17,8 +19,8 @@ object Form4: TForm4
     Size.Height = 315.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
-    Viewport.Width = 862.000000000000000000
-    Viewport.Height = 311.000000000000000000
+    Viewport.Width = 866.000000000000000000
+    Viewport.Height = 315.000000000000000000
   end
   object Button: TButton
     Align = Top

@@ -27,7 +27,9 @@ object Form4: TForm4
       
         'Il will be copied, serialized, deserialized, cloned ,merged, sav' +
         'ed 5 times with different formats'
-      'Depending of your system, It may take a while !! (10s on mine)')
+      
+        'Depending of your system, It may take a while !! (8s on mine fro' +
+        'm 11s for the previous version)')
     Align = Client
     Size.Width = 520.000000000000000000
     Size.Height = 583.000000000000000000

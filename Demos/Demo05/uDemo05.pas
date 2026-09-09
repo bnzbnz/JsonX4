@@ -23,31 +23,30 @@ type
     { Public declarations }
   end;
 
-  // You may nedd additional porperty control attributes :
+  // You may nedd additional property control attributes :
 
   TDemo = class(TJX4Object)
     [TJX4Required]
-    Str:     TValue;                     // A value is required when serializing (Exception)
+    Str:     TValue;          // a value is required for serializisation
 
-    [TJX4Default('22')]                  // a defualt value to be used at deserialization, if the field is null
+    [Default('22')]       // a defualt value to be used at deserialization, if the field is null
     Num1:    TValue;
 
-    // Name encoding : because sometimes a Json Name may not eb caompatable with Delphi naming conventions
-    // In this case there is three way to "enocde" the json or Delphi name:
-    // Using & for Delphi property name
-    &type: TValue;            //  for Json Name "type"
+    // name encoding : sometimes a Json Name may not be compatible with Delphi naming conventions
+    // in this case there are three way to "encode" the json or Delphi name:
+    // using & for Delphi property name
+    &type: TValue;           //  for Json Name "type"
 
-    // Name Arribute:
-    [TJX4Name('#href')]       // The json name mathcing the property HrefVar : {"#href":"Test Value"}
+    // name Arribute:
+    [TJX4Name('#href')]  // The json name mathcing the property HrefVar : {"#href":"Test Value"}
     HrefVar: TValue;
 
-    // Inline encoding:
-    __23href2: TValue;      // name encoding :  __23href = #hef    ('_'+'_'+Hex('#')+'href')
-                            //                                       ^-- Header
+    // inline encoding:
+    __23href2: TValue;       // name encoding :  __23href = #hef    ('_'+'_'+Hex('#')+'href')
 
-    [TJX4Default('true')]   // Complexe Attributes Settings
+    // multiples attributes :
+    [TJX4Default(true)]
     [TJX4Name('NewMix')]
-    //[TJX4Required]
     Mix: TValue;
   end;
 
@@ -80,32 +79,34 @@ begin
 
     Memo1.Lines.Add('');
     Memo1.Lines.Add('JX4Name Attribute, Name conversion :');
-    JsonStr := '{"Str":"Needs a Value","#href":"http","Num1":22}';
-    JDemo := TJX4Object.FromJSON<TDemo>(JsonStr, [joRaiseOnException]);
+    JsonStr := '{"Str":"Needs a Value","#href":"http","Num1":22, "NewMix":true}';
+    JDemo := TJX4Object.FromJSON<TDemo>(JsonStr, []);
     Memo1.Lines.Add('Deserialization: #href value is : ' + JDemo.HrefVar.AsString);
     JDemo.HrefVar :='ftp';
     Memo1.Lines.Add('Serialization: ' + JDemo.ToJSON([joNulltoEmpty]));
 
     Memo1.Lines.Add('');
-    Demo.__23href2 := 'auto enc/decoding';       // Name encoding: start with '_' and special characters: '_'+Hex Value : # => _23
+    Demo.__23href2 := 'auto enc/decoding';          // Name encoding: start with '_' and special characters: '_'+Hex Value : # => _23
     Memo1.Lines.Add('Name encoding : ' +  JDemo.ToJSON([joNulltoEmpty]));
 
     //Cloning :
     Memo1.Lines.Add('');
-    Demo3 := Demo.Clone<TDemo>;
+    Demo3 := Demo.Clone<TDemo>;                     // new object Demo3 = Demo
     Memo1.Lines.Add('Clone : ' +  Demo3.ToJSON([joNulltoEmpty]));
 
     // Options flags:
     //  joNullToEmpty         : Remove null fields
-    //  joRaiseException      : Re-raise ecxceptions
+    //  joNoException         : do not raise ecxceptions (in this case, the function call will be Nil or Empty)
     //  joRaiseOnMissingField : Raise an exception when json field is missing in the delphi object; (Debug)
     //  joStats               : Calc. stats (see Large demo)
 
     Memo1.Lines.Add('');
-    Memo1.Lines.Add('JX4Required exception');
-    Demo3.Str := Nil;
-    //Demo.Str is null but required >> Exception;
-    JsonStr := Demo3.ToJSON([joRaiseOnException]);      // This flag will re-raise any internal exceptions
+    Memo1.Lines.Add('JX4Required : NO exception: joNoException');
+    Demo3.Str := Nil;                               // Demo.Str is null but required >> Exception;
+    JsonStr := Demo3.ToJSON([joNoException]);       // Exception but not raised, the result will be empt Ni or "" depending of the functiony
+    Memo1.Lines.Add((Format('Serialization Error : "%s"', [JSonStr])));
+    Memo1.Lines.Add('JX4Required : RAISE exception');
+    JsonStr := Demo3.ToJSON([]);                    // by default : raise exceptions
 
   finally
     Demo3.Free;

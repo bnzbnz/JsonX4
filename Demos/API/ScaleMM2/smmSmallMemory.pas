@@ -1124,7 +1124,6 @@ begin
   if FFirstThreadFreeBlock <> nil then
     FreeThreadFreedMem;
 
-  bm := nil;
   iNewSize := aSize + (SizeOf(TSmallMemHeader) - 1);
 
   if iNewSize <= ((length(FMiniMemoryBlocks)*32)-1) then

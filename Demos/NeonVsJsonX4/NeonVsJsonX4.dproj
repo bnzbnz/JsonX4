@@ -142,8 +142,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="uNeonVsJsonX4.pas">
-            <Form>r
-  uJX4Dict in &apos;..\..\uJsonX4\uJX4Dict.pas&apos;,
+            <Form>uJX4Dict in &apos;..\..\uJsonX4\uJX4Dict.pas&apos;,
   uJX4List in &apos;..\..\uJsonX4\uJX4List.pas&apos;,
   uJX4Object in &apos;..\..\uJsonX4\uJX4Object.pas&apos;,
   uJX4Rtti in &apos;..\..\uJsonX4\uJX4Rtti.pas&apos;,
@@ -155,9 +154,9 @@
         <DCCReference Include="..\..\uJsonX4\uJX4Dict.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4List.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Object.pas"/>
-        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Value.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4YAML.pas"/>
+        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

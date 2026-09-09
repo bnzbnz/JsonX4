@@ -367,6 +367,8 @@ var
   pm: PBaseMemHeader;
   ot: PBaseSizeManager;
 begin
+  {$HINTS OFF}
+  Result := nil;
   if FOtherThreadFreedMemory <> nil then
     ProcessFreedMemFromOtherThreads(True);
 
@@ -403,13 +405,14 @@ begin
   end
   else
   begin
-    Result := nil;
     Error(reInvalidPtr);  //double free?
   end;
 
   {$IFDEF SCALEMM_DEBUG}
   CheckMem(nil);
   {$ENDIF}
+
+  {$HINTS OFF}
 end;
 
 function TThreadMemManager.ReallocMemOfOtherThread(aMemory: Pointer;

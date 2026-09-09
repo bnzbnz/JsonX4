@@ -3,7 +3,6 @@ unit uLarge;
 interface
 
 
-
 uses
     System.SysUtils
   , System.Types
@@ -101,27 +100,29 @@ implementation
 
 uses
     System.Diagnostics
-    , uJX4YAML
-    , Windows
-    , PSApi
-    , ZLib
-    , uJX4RTTI
+  , uJX4YAML
+  , Windows
+  , PSApi
+  , ZLib
+  , uJX4RTTI
   ;
 
 {$R *.fmx}
 
 function GetMemoryUsed: SIZE_T;
+{$IFDEF MSWINDOWS}
 var
   pmc: PROCESS_MEMORY_COUNTERS;
 begin
-  {$IFDEF MSWINDOWS}
+  Result := 0;
   pmc.cb := SizeOf(pmc);
-  if GetProcessMemoryInfo(GetCurrentProcess, @pmc, pmc.cb) then
-    Result := pmc.WorkingSetSize
-  else
-  {$ENDIF}
+  if GetProcessMemoryInfo(GetCurrentProcess, @pmc, pmc.cb) then Result := pmc.WorkingSetSize;
+end;
+{$ELSE}
+begin
     Result := 0;
 end;
+{$ENDIF}
 
 procedure TForm4.ButtonClick( Sender : TObject );
   var
@@ -133,6 +134,8 @@ procedure TForm4.ButtonClick( Sender : TObject );
     LJSize: Int64;
 
 begin
+  // JX4 Operations
+    // Visual
 
     Memo1.Lines.Clear;
     LGWatch := TStopWatch.StartNew;
@@ -151,7 +154,7 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'Convert Json String to JSX4 Objects (Deserialize):' );
     LWatch := TStopWatch.StartNew;
-  LJObj := TJX4Object.FromJSON<TfetchItemAspectsContentType>(LJsonStr, [ joRaiseOnException] );
+  LJObj := TJX4Object.FromJSON<TfetchItemAspectsContentType>(LJsonStr, [ joNoException, joNullToEmpty] );
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
     MB := GetMemoryUsed div (1024*1024);
@@ -160,7 +163,7 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'JSX4 Object Cloning (by RTTI):' );
     LWatch := TStopWatch.StartNew;
-  LJObjClone := LJObj.Clone<TfetchItemAspectsContentType>;
+  LJObjClone := LJObj.Clone<TfetchItemAspectsContentType>([ joNoException, joNullToEmpty]);
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     Memo1.Lines.add(Format('==> %n MB/s', [(LJSize /  (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
     MB := GetMemoryUsed div (1024*1024);
@@ -179,7 +182,7 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'Revert JX4 Objects to Json String (Serialize)):' );
     LWatch := TStopWatch.StartNew;
-  LJsonStr := LJObj.ToJson([ joNullToEmpty ]);
+  LJsonStr := LJObj.ToJson([joNullToEmpty]);
     Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     Memo1.Lines.add(Format('==> %n MB/s', [(LJSize / (1024*1000)) / (LWatch.ElapsedMilliseconds / 1000)]));
     MB := GetMemoryUsed div (1024*1024);
@@ -188,8 +191,8 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'YAMLize' );
     LWatch := TStopWatch.StartNew;
-    LYAMLstr := LJObj.ToYAML(LJsonStr);
-    Memo1.Lines.add(Format('X ==> %d ms', [ LWatch.ElapsedMilliseconds ]));
+  LYAMLstr := LJObj.ToYAML(LJsonStr);
+    Memo1.Lines.add(Format('==> %d ms', [ LWatch.ElapsedMilliseconds ]));
     MB := GetMemoryUsed div (1024*1024);
     Memo1.Lines.add( Format( 'Used Memory %d MB', [ MB ] ) );
 
@@ -207,7 +210,7 @@ begin
     Memo1.Lines.add( '' );
     Memo1.Lines.add( 'Saving Cloned Object to jsx4-2.json' );
     LWatch := TStopWatch.StartNew;
-  LJSize := LJObjClone.SaveToJSONFile( 'jsx4-2.json', False);
+  LJSize := LJObjClone.SaveToJSONFile( 'jsx4-2.json', False, [ joNoException, joNullToEmpty]);
     Memo1.Lines.add( Format('jsx4-2.json: %n KB; %d ms', [(LJSize / 1024), LWatch.ElapsedMilliseconds]));
 
     Memo1.Lines.add( '' );
@@ -251,6 +254,4 @@ begin
   Memo1.Lines.add( Format( '==>  Total Time %d ms', [ LGWatch.ElapsedMilliseconds ] ) );
 end;
 
-initialization
-  xRTTIThreaded := False;
 end.

@@ -1,7 +1,7 @@
 ﻿(*****************************************************************************
 The MIT License (MIT)
 
-Copyright (c) 2020-2025 Laurent Meyer JsonX4@lmeyer.fr
+Copyright (c) 2020-2027 Laurent Meyer JsonX4@lmeyer.fr
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,8 @@ uses
   , RTTI
   , Classes
   , SysUtils
+  , TypInfo
+  , System.JSON
   ;
 
 type
@@ -37,25 +39,30 @@ type
 
   TJX4TValueHelper = record helper for TValue
   private
-    function  GetDateTime: TDateTime;
-    procedure SetDateTime(const AValue: TDateTime);
+    function    GetDateTime: TDateTime;
+    procedure   SetDateTime(const AValue: TDateTime);
   public
+
+    function  AsInterface<I: IInterface>: I;
+    function  IsInterface: Boolean;
+    function  TryAsInterface<I: IInterface>(out Intf: I): Boolean;
 
     function  JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
     procedure JSONDeserialize(AIOBlock: TJX4IOBlock);
     function  JSONClone(AOptions: TJX4Options = []): TValue;
-    function  JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
-    procedure JSONClear;
+    procedure JSONMerge(AMergedWith: TValue; AOptions: TJX4Options);
+    procedure JSONClear(AOptions: TJX4Options = []);
 
-    function  TypeKind:                           TJX4TValueKind;
-    function  IsString:                           Boolean;
-    function  ToString(Decimal: Integer = 2):     string;
-    function  IsInteger:                          Boolean;
-    function  ToInteger:                          int64;
-    function  IsFloat:                            Boolean;
-    function  ToFloat:                            Extended;
-    function  IsBoolean:                          Boolean;
-    function  ToBoolean:                          Boolean;
+    function  TypeKind:                               TJX4TValueKind;
+    function  IsString:                               Boolean;
+    function  ToString(const Decimal: Integer = 2):   string;
+    function  IsInteger:                              Boolean;
+    function  ToInteger:                              Int64;
+    function  IsFloat:                                Boolean;
+    function  ToFloat:                                Extended;
+    function  IsBoolean:                              Boolean;
+    function  ToBoolean:                              Boolean;
+    procedure FromJSONValue(const AJVal: TJSONValue);
 
     //Conversion Tools
 
@@ -82,71 +89,89 @@ type
   MyTThread = class(TThread);  //  TThread Protected Access
 
 var
-  GFormatSettings: TFormatSettings;
+  GFormatSettings: TFormatSettings; // Do not write : not Thread Safe !!!
 
 implementation
 uses
     System.Generics.Collections
   , DateUtils
   , uJX4Rtti
-  , JSON
+  , StrUtils
   ;
+
+function TJX4TValueHelper.IsInterface: Boolean;
+begin
+  Result := self.Kind = tkInterface;
+end;
+
+function TJX4TValueHelper.AsInterface<I>: I;
+begin
+  if not TryAsInterface<I>(Result) then
+    raise EInvalidCast.Create(' TValue is notan Interface.');
+end;
+
+function TJX4TValueHelper.TryAsInterface<I>(out Intf: I): Boolean;
+begin
+  Intf := Default(I);
+  if (Self.Kind = tkInterface) and (not Self.IsEmpty) then
+  begin
+    try
+      Intf := Self.AsType<I>;
+      Result := Assigned(Intf);
+    except
+      Result := False;
+    end;
+  end
+  else
+    Result := False;
+end;
 
 function TJX4TValueHelper.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
   LName:      string;
-  LValue:     string;
+  LValue:     TValue;
   LAttr:      TCustomAttribute;
 begin
-  Result := Nil;
-  TJX4Object.RaiseIfCanceled(AIOBlock.Options);
+  Result := TValue.Empty;
   if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
+
   case Self.TypeKind of
     tkvString:  LValue := '"' + TJX4Object.EscapeJSONStr(Self.AsString, joSlashEncode in AIOBlock.Options) + '"';
     tkvBool:    LValue := cBoolToStr[Self.AsBoolean];
     tkvInteger: LValue := Self.AsInt64.ToString;
-    tkvFloat:   begin
-      LValue := FormatFloat('0.0#########', Self.AsExtended, GFormatSettings);
-    end;
+    tkvFloat:   LValue := FormatFloat('0.0#########', Self.AsExtended, GFormatSettings);
+    tkvEmpty:   begin
+                  if (joNullToEmpty in AIOBlock.Options) then Exit;
+                  LName := TJX4Object.ExtractFieldName(AIOBlock.Field, AIOBlock.JsonName);
+                  if LName.IsEmpty then Result := 'null' else Result := '"' + LName + '":null';
+                  Exit;
+                end
   else
-    if joNullToEmpty in AIOBlock.Options then Exit;
-    Self := Nil;
+    raise Exception.Create('TJX4TValueHelper.JSONSerialize: Unknown Format');
   end;
+
+  LName := TJX4Object.ExtractFieldName(AIOBlock.Field, AIOBlock.JsonName);
   if Assigned(AIOBlock.Field) then
   begin
-    LName := AIOBlock.Field.Name;
-    LAttr := TJX4Name(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Name));
-    if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
-  end else
-    LName := AIOBlock.JsonName;
-  LName := TJX4Object.NameDecode(LName);
-
-  if Self.IsEmpty then
-  begin
-    LAttr := Nil;
-    if Assigned(AIOBlock.Field) then
+    if Self.IsEmpty then
     begin
       LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-      if Assigned(LAttr) then LValue := TJX4Default(LAttr).Value.ToString;
-    end;
-    if not Assigned(LAttr) then
-    begin
-      if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
+      if Assigned(LAttr) then
+      begin
+        LValue := TJX4Default(LAttr).Value.ToString;
+        if Assigned(AIOBlock) and AIOBlock.JsonName.IsEmpty then
+          Result := LValue else Result := '"' + LName + '":' + LValue.AsString;
+        Exit;
+      end;
+      if  Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
         raise Exception.Create(Format('"%s" : value required', [LName]));
-
       if joNullToEmpty in AIOBlock.Options then Exit;
-      if LName.IsEmpty then
-        Result := 'null'
-      else
-        Result := '"' + LName + '":null';
+      if LName.IsEmpty then Result := 'null' else Result := '"' + LName + '":null';
       Exit;
     end;
   end;
+  if LName.IsEmpty then Result := LValue else Result := '"' + LName + '":' + LValue.AsString;
 
-  if Assigned(AIOBlock) and AIOBlock.JsonName.IsEmpty then
-    Result := LValue
-  else
-    Result := '"' + LName + '":' + LValue;
 end;
 
 procedure TJX4TValueHelper.JSONDeserialize(AIOBlock: TJX4IOBlock);
@@ -154,47 +179,44 @@ var
   LJPair:         TJSONPair;
   LAttr:          TCustomAttribute;
 begin
-  Self := Nil;
-  TJX4Object.RaiseIfCanceled(AIOBlock.Options);
+  Self := TValue.Empty;
   if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Transient)) then Exit;
   LJPair := AIOBlock.JObj.Pairs[0];
-  if not(Assigned(LJPair) and  (not LJPair.null) and not (LJPair.JsonValue is TJSONNull) and not (LJPair.JsonValue.Value.IsEmpty)) then
+
+  if not(Assigned(LJPair) and (not LJPair.Null) and (not (LJPair.JsonValue is TJSONNull)) and (not LJPair.JsonValue.Value.IsEmpty)) then
   begin
-    LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := Nil;
+    if Assigned(AIOBlock.Field) then
+    begin
+      LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
+      if Assigned(LAttr) then
+      begin
+        Self := TJX4Default(LAttr).Value;
+      end else begin
+        LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required));
+        if Assigned(LAttr) then
+          raise Exception.Create(System.SysUtils.Format('"%s" (TValue) : a value is required', ['']));
+      end;
+    end;
     Exit;
   end;
-  if LJPair.JsonValue.Value.IsEmpty then
+
+  //System.Move(Value, Self, SizeOf(TValue));
+  //FillChar(Value, SizeOf(TValue), 0); // 💡 Essential to prevent the crash!
+
+  Self.FromJSONValue(LJPair.JsonValue);
+  if (Self.IsEmpty) then
   begin
-    LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
-    if Assigned(LAttr) then Self := TJX4Default(LAttr).Value;
-  end
-  else if LJPair.JsonValue.ClassType = TJSONString then Self := LJPair.JsonValue.Value
-  else if LJPair.JsonValue.ClassType = TJSONBool then Self := StrToBool(LJPair.JsonValue.Value)
-  else if LJPair.JsonValue.ClassType = TJSONNumber then
-  begin
-      if LJPair.JsonValue.ToString.IndexOf(TFormatSettings.Invariant.DecimalSeparator) = -1 then
-        Self := TJSONNumber(LJPair.JsonValue).AsInt64
-      else
-        begin
-        Self := TJSONNumber(LJPair.JsonValue).AsDouble;
-        var a := Self;
-        a:=a;
-        end;
-  end else begin
     LAttr := TJX4Default(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Default));
     if Assigned(LAttr) then Self := TJX4Default(LAttr).Value else Self := Nil;
   end;
 end;
 
-function TJX4TValueHelper.JSONMerge(AMergedWith: TValue; AOptions: TJX4Options): TValue;
+procedure TJX4TValueHelper.JSONMerge(AMergedWith: TValue; AOptions: TJX4Options);
 begin
-  if jmoUpdate in AOptions then
-     if (not AMergedWith.IsEmpty) then
-       Self := AMergedWith;
+  if (not AMergedWith.IsEmpty) then Self := AMergedWith;
 end;
 
-procedure TJX4TValueHelper.JSONClear;
+procedure TJX4TValueHelper.JSONClear(AOptions: TJX4Options = []);
 begin
   Self := Nil;
 end;
@@ -203,7 +225,6 @@ function TJX4TValueHelper.JSONClone(AOptions: TJX4Options): TValue;
 begin
   Result := Self;
 end;
-
 
 function TJX4TValueHelper.TypeKind: TJX4TValueKind;
 begin
@@ -227,7 +248,7 @@ begin
   Result := TypeKind = tkvString;
 end;
 
-function TJX4TValueHelper.ToString(Decimal: Integer): string;
+function TJX4TValueHelper.ToString(const Decimal: Integer): string;
 begin
   case self.TypeKind of
     tkvString: Result := Self.AsString;
@@ -237,6 +258,34 @@ begin
   else
     Result := '';
   end;
+end;
+
+procedure TJX4TValueHelper.FromJSONValue(const AJVal: TJSONValue);
+begin
+  if AJVal is TJSONNull then
+  begin
+    Self :=  TValue.Empty;
+    Exit;
+  end;
+  if AJVal is TJSONString then
+  begin
+    Self := TValue.From<string>(AJVal.AsType<string>);
+    Exit;
+  end;
+  if AJVal is TJSONNumber then
+  begin
+    if ContainsStr(AJVal.Value, GFormatSettings.Invariant.DecimalSeparator) then
+      Self := TValue.From<Double>(TJSONNumber(AJVal).AsDouble)
+    else
+      Self := TValue.From<Int64>(TJSONNumber(AJVal).AsInt64);
+    Exit;
+  end;
+  if AJVal is TJSONBool then
+  begin
+    Self := TValue.From<Boolean>(AJVal.AsType<Boolean>);
+    Exit;
+  end;
+  raise Exception.Create('TJX4TValueHelper.FromJSONValue : Unknown Format')
 end;
 
 function TJX4TValueHelper.IsInteger: Boolean;

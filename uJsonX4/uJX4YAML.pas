@@ -1,39 +1,38 @@
+(*****************************************************************************
+https://github.com/joao-m-costa/delphi-yaml-to-json
+YAML TOOLING
+------------
+Convert YAML to JSON
+Convert JSON to YAML
+
+License: MIT License
+Creator: Joao Costa, costate@sapo.pt
+Last update: 15-03-2024
+
+YAML to JSON Capabilities
+-------------------------
+- Multiline values support, including folder modifiers (| and >), and chomp modifiers (+ and -)
+- Anchor / reference support (&anchor, *anchor)
+- Merge elements support (<<: *anchor)
+- Tags for explicit type indicators on values only (!!map, !!seq, !!str, !!null, !!bool, !!int, !!float, !!binary, !!timestamp)
+- Text escaping for JSON
+- Option to translate yes/no to booleans true/false
+- Option to prevent duplicated keys in maps per level
+
+JSON to YAML Capabilities
+-------------------------
+- Multiline values support, including folder modifiers (| and >), and chomp modifiers (+ and -)
+- Text unescaping for YAML
+- Option to translate booleans true/false to yes/no
+
+Useful references
+-----------------
+- https://onlineyamltools.com/convert-yaml-to-json
+- https://onlinejsontools.com/convert-json-to-yaml
+- https://yaml-multiline.info
+******************************************************************************)
+
 unit uJX4YAML;
-
-// https://github.com/joao-m-costa/delphi-yaml-to-json
-// YAML TOOLING
-// ------------
-// Convert YAML to JSON
-// Convert JSON to YAML
-//
-// License: MIT License
-// Creator: Joao Costa, costate@sapo.pt
-// Last update: 15-03-2024
-//
-// YAML to JSON Capabilities
-// -------------------------
-// - Multiline values support, including folder modifiers (| and >), and chomp modifiers (+ and -)
-// - Anchor / reference support (&anchor, *anchor)
-// - Merge elements support (<<: *anchor)
-// - Tags for explicit type indicators on values only (!!map, !!seq, !!str, !!null, !!bool, !!int, !!float, !!binary, !!timestamp)
-// - Text escaping for JSON
-// - Option to translate yes/no to booleans true/false
-// - Option to prevent duplicated keys in maps per level
-//
-// JSON to YAML Capabilities
-// -------------------------
-// - Multiline values support, including folder modifiers (| and >), and chomp modifiers (+ and -)
-// - Text unescaping for YAML
-// - Option to translate booleans true/false to yes/no
-//
-// Useful references
-// -----------------
-// - https://onlineyamltools.com/convert-yaml-to-json
-// - https://onlinejsontools.com/convert-json-to-yaml
-// - https://yaml-multiline.info
-
-
-
 
 interface
 

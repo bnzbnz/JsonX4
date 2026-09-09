@@ -147,11 +147,14 @@
         <DCCReference Include="..\..\uJsonX4\uJX4Dict.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4List.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Object.pas"/>
-        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <DCCReference Include="..\..\uJsonX4\uJX4Value.pas">
-            <Form>$R *.res</Form>
+            <Form>,
+  uJX4YAML in &apos;..\..\uJsonX4\uJX4YAML.pas&apos;;
+
+{$R *.res</Form>
         </DCCReference>
         <DCCReference Include="..\..\uJsonX4\uJX4YAML.pas"/>
+        <DCCReference Include="..\..\uJsonX4\uJX4Rtti.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -195,6 +198,12 @@
                 </DeployFile>
                 <DeployFile LocalName="..\..\uJsonX4\uJX4Ver.inc" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="..\Demo06.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="..\Demo06.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>Demo06.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win64\Debug\Demo06.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">

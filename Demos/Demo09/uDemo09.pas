@@ -127,9 +127,7 @@ procedure TForm4.ButtonClick(Sender: TObject);
 var
   Res: IHTTPResponse;
   Http: THTTPClient;
-  Json: string;
   JPosts: TJX4List<TJPost>;
-  JComments: TJComments;
   JAlbums: TJX4List<TJAlbum>;
   JPhotos : TJX4List<TJPhoto>;
   JTodos: TJX4List<TJTodo>;

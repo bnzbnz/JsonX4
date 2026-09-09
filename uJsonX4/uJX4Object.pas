@@ -1,11 +1,12 @@
-﻿(*****************************************************************************
+﻿
+(*****************************************************************************
 The MIT License (MIT)
 
-Copyright (c) 2020-2025 Laurent Meyer JsonX4@lmeyer.fr
+Copyright (c) 2020-2027 Laurent Meyer JsonX4@lmeyer.fr
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
+in the Software withoForatut restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
@@ -29,32 +30,74 @@ uses
   Classes
   , System.Generics.Collections
   , RTTI
+  , TypInfo
   , JSON
   , SysUtils
-  , uJX4Rtti
   , zLib
   ;
 
 const
-  CJX4Version = $0405; // 04.05
+  CJX4Version = $0432; // 04.50
   CBoolToStr: array[Boolean] of string = ('false','true');
+  null = Nil;
 
 type
+
+
+  PValueRecord = ^TValueRecord;
+  TValueRecord = record
+    FData: TValueData;
+  end;
+
+  PStrRec = ^TStrRec;
+  TStrRec = packed record
+    {$IF Defined(CPUX64)}
+    _Padding: LongInt;    // Required for 16-byte CPU alignment layout on 64-bit
+    {$IFEnd}
+    codePage: Word;       // Offset -12: String encoding code page
+    elemSize: Word;       // Offset -10: Element size in bytes (2 for UnicodeString)
+    refCnt: Longint;      // Offset -8 : Reference count indicator
+    length: Longint;      // Offset -4 : Total string character length
+  end;
+
+  PValue = ^TValue;
+  PValueData = ^TValueData;
+
+  TValueTag = (vtEmpty, vtInteger, vtCardinal, vtInt64, vtFloat,
+               vtString, vtObject, vtInterface, vtPointer, vtRecord);
+
+  PValueHeader = ^TValueHeader;
+  TValueHeader = record
+    FData: Pointer;        // raw pointer to the value
+    FTag: TValueTag;       // small type discriminator
+    FExtra: NativeInt;     // optional: size, refcount pointer, etc.
+  end;
+
 
   sFormatType= (sftYAML, sftJSON);
 
   TJX4Option  = (
+      // Remove Null fields when serializing
         joNullToEmpty
-      , joRaiseOnException
+      // Do NOT Re-Raise internal exceptions
+      , joNoException
+      // Abort the current thread/task and raise this exception
       , joRaiseOnAbort
+      // Raise Exception when a JSON field is not define in the matching Delphi object
       , joRaiseOnMissingField
+      // Envode slash, usefull for use as HTML
       , joSlashEncode
-      , joStats
-      //Merge
-      , jmoDelete
+      // Merge Options
+      // Enable statistics lists: EleAdded, EleUpdated, EleDeleted
+      , jmoStat
+      // Add Merge Operation
       , jmoAdd
-      , jmoUpdate
-      , jmoStats
+      // Add Merge Operation :
+      , jmoUpdate, jmoByMoving
+      // Delete Merge Operation: [1,2,3] delete by ['2'] = [1,3]
+      , jmoDelete
+      // Purge Merge Operation : [1,2,3] purge by [2'] = [2]
+      , jmoPurge
   );
 
   TJX4Options = set of TJX4Option;
@@ -94,39 +137,64 @@ type
     procedure   SetVal(AJVal: TJSONValue);
     property    JVal: TJSONValue read FVal write SetVal;
     // Out
-    constructor Create(AJsonName: string = ''; AJVal: TJSONValue = Nil; AField: TRttiField = Nil; AOptions: TJX4Options = []);
-    procedure   Init(AJsonName: string; AJVal: TJSONValue; AField: TRttiField; AOptions: TJX4Options);
+    constructor Create(const AJsonName: string = ''; AJVal: TJSONValue = Nil; AField: TRttiField = Nil; AOptions: TJX4Options = []);
+    procedure   Init(const AJsonName: string; AJVal: TJSONValue; AField: TRttiField; AOptions: TJX4Options);
   end;
 
   TJX4ExceptionAborted = class(Exception);
 
-  TJX4Object = class(TObject)
+  IJX4Jsonable = interface(IInterface)
+    ['{08F124FF-EC83-40FC-BB7F-4C70379E08DE}']
+    procedure JX4Create(const AManaged: Boolean; AOptions: TJX4Options = []);
+    function  JX4Serialize(AIOBlock: TJX4IOBlock): TValue;
+    procedure JX4Deserialize(AIOBlock: TJX4IOBlock);
+    procedure JX4Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
+    procedure JX4Clone(ADestObj: TObject; AOptions: TJX4Options = []);
+    procedure JX4Clear(AOptions: TJX4Options = []);
+    function  JX4Destroy(AOptions: TJX4Options = []): Boolean;
+  end;
+
+  TJX4Object = class(TObject, IJX4Jsonable)
+  private
+    FRefCount:      Int64;
   protected
+    { IInterface }
+    function        QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+    function        _AddRef: Integer; stdcall;
+    function        _Release: Integer; stdcall;
+    { TJX4Object }
     class function  GetStreamEncoding(AStream: TStream): TEncoding;
   public
+    function  JX4Serialize(AIOBlock: TJX4IOBlock): TValue;
+    procedure JX4Deserialize(AIOBlock: TJX4IOBlock);
+    procedure JX4Create(const AManaged: Boolean; AOptions: TJX4Options = []);
+    procedure JX4Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
+    procedure JX4Clone(ADestObj: TObject; AOptions: TJX4Options = []);
+    function  JX4Destroy(AOptions: TJX4Options = []): Boolean;
+    procedure JX4Clear(AOptions: TJX4Options = []);
 
     constructor     Create;
     destructor      Destroy; override;
-    class procedure RaiseIfCanceled(AOptions: TJX4Options);
+    class procedure RaiseIfAborted(AOptions: TJX4Options); static; inline;
 
     function        JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
     procedure       JSONDeserialize(AIOBlock: TJX4IOBlock);
     procedure       JSONClone(ADestObj: TObject; AOptions: TJX4Options);
-    procedure       JSONMerge(AMergedWith: TObject; AOptions: TJX4Options);
+    procedure       JSONMerge(AMergedWith: TObject; AOptions: TJX4Options = []);
     procedure       JSONClear(AOptions: TJX4Options);
 
     class function  New<T:class, constructor>: T;
-    class function  ToJSON(AObj: TObject; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
-    function        ToJSON(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
+    class function  ToJSON(AObj: TObject; AOptions: TJX4Options = []): string; overload;
+    function        ToJSON(AOptions: TJX4Options = []): string; overload;
     class function  FromJSON<T:class, constructor>(const AJson: string; AOptions: TJX4Options = []): T; overload;
     class function  ToJSONStream(AObj: TObject; AOptions: TJX4Options = []): TStream; overload;
-    class function  ToYAML(const AStr: string; AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
-    function        ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string; overload;
+    class function  ToYAML(const AStr: string; AOptions: TJX4Options = []): string; overload;
+    function        ToYAML(AOptions: TJX4Options = []): string; overload;
     class function  FromYAML<T:class, constructor>(const AYaml: string; AOptions: TJX4Options = []): T;
 
     function        Clone<T:class, constructor>(AOptions: TJX4Options= []): T; overload;
-    procedure       Merge(AMergedWith: TObject; AOptions: TJX4Options = []);
-    function        Format(AIndentation: Integer = 2): string;
+    function        Merge(AMergedWith: TObject; AOptions: TJX4Options = []): Boolean;
+    function        Format(ABeautify: Boolean = True; AIndentation: Integer = 2; AOptions: TJX4Options = []): string;
     procedure       Clear(AOptions: TJX4Options);
 
     // Utils
@@ -135,14 +203,15 @@ type
     class function  Author: string;
     class function  Contact: string;
 
-    class function  NameDecode(const ToDecode: string): string; static;
-    class function  NameEncode(const ToEncode: string): string; static;
+    class function  NameDecode(const ToDecode: string): string; static; static;
+    class function  NameEncode(const ToEncode: string): string; static; static; inline;
+    class function  ExtractFieldName(const AField: TRttiField; ADefault: string = ''): string; static;
     class procedure VarEscapeJSONStr(var AStr: string; const SlashEncode: Boolean); overload; static;
     class function  EscapeJSONStr(const AStr: string; const SlashEncode: Boolean): string; overload; static;
-    class function  JsonListToJsonString(const AList: TList<string>): string; static;
+    class function  JoinStrings(const AArray: TArray<string>; const ADelimiter: string): string;
     class function  FormatJSON(const AJson: string; ABeautify: Boolean = True; AIndentation: Integer = 2): string; static;
 
-    class function  ValidateJSON(const AJson: string): string; static;
+    class function  Validate(const AJson: string): Boolean; static;
     class function  IsJSON(AStr: string): Boolean; static;
 
     // Common
@@ -153,17 +222,17 @@ type
     class function  LoadFromJSONFile<T:class, constructor>(const AFilename: string; AOptions: TJX4Options = []; AEncoding: TEncoding = Nil): T; overload;
     function        SaveToJSONFile(  const AFilename: string;
                       ABeautify: Boolean = False;
-                      AOptions: TJX4Options = [ joNullToEmpty ];
+                      AOptions: TJX4Options = [];
                       AEncoding: TEncoding = Nil;
                       AZip: TCompressionLevel = clNone
                     ): Int64; overload;
 
      // YAML
 
-    class function  LoadFromYAMLFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding = Nil; AOptions: TJX4Options = [ joNullToEmpty ]): T;
+    class function  LoadFromYAMLFile<T:class, constructor>(const AFilename: string; AEncoding: TEncoding = Nil; AOptions: TJX4Options = []): T;
     function        SaveToYAMLFile(
       const AFilename: string;
-      AOptions: TJX4Options = [ joNullToEmpty ];
+      AOptions: TJX4Options = [];
       AEncoding: TEncoding = Nil;
       AZip: TCompressionLevel = clNone
     ): Int64; overload;
@@ -182,12 +251,14 @@ type
 
 implementation
 uses
-    TypInfo
-  , StrUtils
+    StrUtils
   , uJX4Value
   , uJX4YAML
   , uJX4List
   , Threading
+  , windows
+  , Diagnostics
+  , uJX4RTTI
   ;
 
 constructor TJX4Name.Create(const AName: string);
@@ -220,12 +291,12 @@ begin
   Value := Nil;
 end;
 
-constructor TJX4IOBlock.Create(AJsonName: string; AJVal: TJSONValue; AField: TRttiField; AOptions: TJX4Options);
+constructor TJX4IOBlock.Create(const AJsonName: string; AJVal: TJSONValue; AField: TRttiField; AOptions: TJX4Options);
 begin
   Init(AJsonName, AJVal, AField, AOptions);
 end;
 
-procedure TJX4IOBlock.Init(AJsonName: string; AJVal: TJSONValue; AField: TRttiField; AOptions: TJX4Options);
+procedure TJX4IOBlock.Init(const AJsonName: string; AJVal: TJSONValue; AField: TRttiField; AOptions: TJX4Options);
 begin
   JVal :=       AJVal;
   JsonName :=   AJsonName;
@@ -236,22 +307,22 @@ end;
 procedure TJX4IOBlock.SetVal(AJVal: TJSONValue);
 begin
   FVal := AJVal;
+  if AJVal is TJSONArray then
+  begin
+    JObj := nil;
+    JArr := AJVal as TJSONArray;
+    Exit;
+  end;
+
   if AJVal is TJSONObject then
   begin
     JObj := AJVal as TJSONObject;
     JArr := nil;
-  end
-    else
-    if AJVal is TJSONArray then
-    begin
-      JObj := nil;
-      JArr := AJVal as TJSONArray;
-    end
-      else
-    begin
-      JObj := nil;
-      JArr := nil;
-    end;
+    Exit;
+  end;
+
+  JObj := nil;
+  JArr := nil;
 end;
 
 { TJX4Object }
@@ -259,11 +330,14 @@ end;
 constructor TJX4Object.Create;
 var
   LField:     TRTTIField;
+  LFields:    TArray<TRttiField>;
   LNewObj:    TObject;
   LAttr:      TCustomAttribute;
+  LIntf:      IJX4Jsonable;
 begin
   inherited Create;
-  for LField in TxRTTI.GetFields(Self) do
+  LFields :=  TxRTTI.GetFields(Self);
+  for LField in LFields do
   begin
     if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Transient)) then Continue;
     if  (LField.Visibility in [mvPublic]) then
@@ -273,17 +347,20 @@ begin
         LAttr := TxRTTI.GetFieldAttribute(LField, TJX4Default);
         if Assigned(LAttr) then LField.SetValue(Self, TJX4Default(LAttr).Value);
       end else
-      if (LField.FieldType.TypeKind in [tkClass]) then
-      begin
-        if not Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Unmanaged)) then
+        if (LField.FieldType.TypeKind in [tkClass]) then
         begin
-          LNewObj := TxRTTI.CreateObject(LField.FieldType.AsInstance);
-          if not Assigned(LNewObj) then Continue;
-          TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
-          LField.SetValue(Self, LNewObj);
-        end else
-          LField.SetValue(Self, Nil);
-      end;
+          if not Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Unmanaged)) then
+          begin
+            LNewObj := TxRTTI.CreateObject(LField.FieldType.AsInstance);
+             if not Assigned(LNewObj) then Continue;
+            if Supports(LNewObj, IJX4Jsonable, LIntf) then
+              LIntf.JX4Create(True)
+            else
+              TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
+            LField.SetValue(Self, LNewObj);
+          end else
+            LField.SetValue(Self, Nil);
+        end;
     end;
   end;
 end;
@@ -293,6 +370,8 @@ var
   LField:   TRTTIField;
   LFields:  TArray<TRttiField>;
   LObj:     TOBject;
+  LIntf:    IJX4Jsonable;
+  LRes:     Boolean;
 begin
   LFields := TxRTTI.GetFields(Self);
   for LField in LFields do
@@ -304,7 +383,11 @@ begin
       if not Assigned(LObj) then Continue;
       if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Unmanaged)) then
       begin
-        if TxRTTI.CallMethodFunc('JSONDestroy', LObj, []).AsBoolean then
+        if Supports(LObj, IJX4Jsonable, LIntf) then
+          LRes := LIntf.JX4Destroy
+        else
+          LRes := TxRTTI.CallMethodFunc('JSONDestroy', LObj, []).AsBoolean;
+        if LRes then
         begin
           FreeAndNil(LObj);
           LField.SetValue(Self, Nil);
@@ -319,14 +402,20 @@ begin
 end;
 
 function TJX4Object.Clone<T>(AOptions: TJX4Options): T;
+var
+  LIntf: IJX4Jsonable;
 begin
-  Result := Nil;
+  Result := T.Create;
   try
-    RaiseIfCanceled(AOptions);
-    if not Assigned(Self) then exit;
-    Result := T.Create;
-    TxRTTI.CallMethodProc('JSONCreate', Result, [True]);
-    TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
+    RaiseIfAborted(AOptions);
+    if Supports(Result, IJX4Jsonable, LIntf) then
+    begin
+      LIntf.JX4Create(True, AOptions);
+      Self.JX4Clone(Result, AOptions);
+    end else begin
+      TxRTTI.CallMethodProc('JSONCreate', Result, [True,TValue.From<TJX4Options>(AOptions)]);
+      TxRTTI.CallMethodProc('JSONClone', Self, [Result, TValue.From<TJX4Options>(AOptions)]);
+    end;
   except
     on TJX4ExceptionAborted do
     begin
@@ -337,74 +426,89 @@ begin
     on Ex: Exception do
     begin
       FreeAndNil(Result);
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
 
+function TJX4Object.JX4Serialize(AIOBlock: TJX4IOBlock):TValue;
+begin
+  Result := JSONSerialize(AIOBlock);
+end;
+
 function TJX4Object.JSONSerialize(AIOBlock: TJX4IOBlock): TValue;
 var
+  LParts:     TArray<string>;
+  LPartsIdx:  Integer;
   LField:     TRTTIField;
   LFields:    TArray<TRTTIField>;
-  LParts:     TList<string>;
   LRes:       string;
   LIOBlock:   TJX4IOBlock;
   LObj:       TOBject;
   LTValue:    TValue;
   LTValueRec: TValue;
+  LIntf:      IJX4Jsonable;
+  LName:      string;
+  LAttr:      TCustomAttribute;
 begin
   Result := TValue.Empty;
-  RaiseIfCanceled(AIOBlock.Options);
+  RaiseIfAborted(AIOBlock.Options);
 
+  LPartsIdx := 0;
   LIOBlock := TJX4IOBlock.Create;
-  LParts := TList<string>.Create;
   try
-
     LFields := TxRTTI.GetFields(Self);
-    LParts.Capacity := Length(LFields);
+    SetLength(LParts, Length(LFields));
     for LField in LFields do
     begin
-      RaiseIfCanceled(AIOBlock.Options);
       if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Transient)) then Continue;
       if TxRTTI.FieldAsTObject(Self, LField, LObj, [mvPublic]) then
       begin
         if not Assigned(LObj) then Continue; // Unmanaged
         LIOBlock.Init(LField.Name, Nil, LField, AIOBlock.Options);
-        LTValue := TxRTTI.CallMethodFunc('JSONSerialize', LObj, [LIOBlock]);
-        if not LTValue.IsEmpty then LParts.Add(LTValue.AsString);
+        if Supports(LObj, IJX4Jsonable, LIntf) then
+          LTValue := LIntf.JX4Serialize(LIOBlock)
+        else
+          LTValue := TxRTTI.CallMethodFunc('JSONSerialize', LObj, [LIOBlock]);
+        if not LTValue.IsEmpty then
+        begin
+          LPArts[LPartsIdx] := LTValue.AsString;
+          Inc(LPartsIdx);
+        end;
         Continue;
       end
       else if TxRTTI.FieldAsTValue(Self, LField, LTValue, [mvPublic]) then
       begin
+        if LTValue.IsEmpty and Assigned((TxRTTI.GetFieldAttribute(LField, TJX4Required))) then
+          raise Exception.Create(SysUtils.Format('TJX4Object.JSONSerialize : "%s" : a value is required', [LField.Name]));
         if not ((joNullToEmpty in AIOBlock.Options) and LTValue.IsEmpty) then
         begin
           LIOBlock.Init(LField.Name, Nil, LField, AIOBlock.Options);
           LTValueRec := LTValue.JSONSerialize(LIOBlock);
-          if not LTValueRec.IsEmpty then LParts.Add(LTValueRec.AsString);
+          if not LTValueRec.IsEmpty then
+          begin
+            LParts[LPartsIdx] := LTValueRec.AsString;
+            Inc(LPartsIdx);
+          end;
         end;
       end;
     end;
 
-    LRes := JsonListToJsonString(LParts);
-    if not AIOBlock.JsonName.IsEmpty then
-    begin
-      if LRes.IsEmpty then
-      begin
-        if Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
-          raise Exception.Create(SysUtils.Format('"%s" (TJX3Object) : a value is required', [AIOBlock.JsonName]));
+    LName := ExtractFieldName(AIOBlock.Field, AIOBlock.JsonName);
 
-        if joNullToEmpty in AIOBlock.Options then Exit;
-        Result := '"' + AIOBlock.JsonName + '":null';
-      end else begin
-        Result := '"' + AIOBlock.JsonName + '":{' + LRes + '}';
-      end;
-    end
-    else begin
-      Result := '{' + LRes + '}';
+    if (LPartsIdx = 0) then
+    begin
+      if Assigned(AIOBlock.Field) and Assigned(TxRTTI.GetFieldAttribute(AIOBlock.Field, TJX4Required)) then
+        raise Exception.Create(SysUtils.Format('TJX4Object.JSONSerialize : "%s" : a value is required', [LName]));
+      if (joNullToEmpty in AIOBlock.Options) then Exit;
+      if LName.IsEmpty then Result := 'null' else Result := '"' + LName + '":null';
+      Exit;
     end;
 
+    SetLength(LParts, LPartsIdx);
+    LRes := TJX4Object.JoinStrings(LParts, ',');
+    if LName.IsEmpty then Result := '{' + LRes + '}' else Result := '"' + LName + '":{' + LRes + '}';
   finally
-    LParts.Free;
     LIOBlock.Free;
   end;
 end;
@@ -416,32 +520,35 @@ var
   LNewObj:    TObject;
   LSrc:       TArray<TRTTIField>;
   LTValue:    TValue;
+  LIntf:      IJX4Jsonable;
 begin
+  RaiseIfAborted(AOptions);
   LSrc := TxRTTI.GetFields(Self);
   for LDestField in TxRTTI.GetFields(ADestObj) do
     begin
     if Assigned(TxRTTI.GetFieldAttribute(LDestField, TJX4Transient)) then Continue;
     for LSrcField in LSrc do
     begin
-      RaiseIfCanceled(AOptions);
       if LSrcField.Name = LDestField.Name then
       begin
-        if MyTThread(TThread.Current).Terminated then Exit;
-        if TxRtti.FieldAsTValue(Self, LSrcField, LTValue, [mvPublic]) then
+        if TxRtti.FieldAsTValue(Self, LSrcField, LTValue) then
         begin
           LDestField.SetValue(ADestObj, LTValue.JSONClone(AOptions));
           Break
         end
-        else if TxRtti.FieldAsTObject(ADestObj, LDestField, LNewObj, [mvPublic]) then
+        else if TxRtti.FieldAsTObject(ADestObj, LDestField, LNewObj) then
         begin
           if not Assigned(LNewObj) then // Unmanaged
           begin
             LNewObj := TxRTTI.CreateObject(LDestField.FieldType.AsInstance);
-            TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
+            if Supports(LNewObj, IJX4Jsonable, LIntf) then LIntf.JX4Create(True) else TxRTTI.CallMethodProc('JSONCreate', LNewObj, [True]);
             LDestField.SetValue(ADestObj, LNewObj);
           end;
-          TxRTTI.CallMethodProc('JSONClone',  LSrcField.GetValue(Self).AsObject, [LNewObj,  TValue.From<TJX4Options>(AOptions)]);
-          Break;
+          if Supports(LSrcField.GetValue(Self).AsObject, IJX4Jsonable, LIntf) then
+            LIntf.JX4Clone(LNewObj, AOptions)
+          else
+            TxRTTI.CallMethodProc('JSONClone',  LSrcField.GetValue(Self).AsObject, [LNewObj,  TValue.From<TJX4Options>(AOptions)]);
+        Break;
         end;
       end;
       Continue;
@@ -449,9 +556,97 @@ begin
   end;
 end;
 
+procedure TJX4Object.JX4Clone(ADestObj: TObject; AOptions: TJX4Options);
+begin
+  JSONClone(TJX4Object(ADestObj), AOptions);
+end;
+
+procedure TJX4Object.JX4Create(const AManaged: Boolean; AOptions: TJX4Options = []);
+begin
+ //
+end;
+
+procedure TJX4Object.JX4Deserialize(AIOBlock: TJX4IOBlock);
+begin
+  JSONDeserialize(AIOBlock);
+end;
+
+function TJX4Object.JX4Destroy(AOptions: TJX4Options = []): Boolean;
+begin
+  Result := True;
+end;
+
+procedure TJX4Object.JX4Merge(AMergedWith: TObject; AOptions: TJX4Options);
+begin
+  JSONMerge(TJX4Object(AMergedWith), AOptions);
+end;
+
+procedure RawTValueToTValueField(const [ref] ASrcTValue: TValue; const AField: TRttiField; const AInstance: Pointer);
+var
+    LSrcFieldPtr: Pointer;
+    LDestStrPtr: Pointer;
+    LSrcStrPtr: Pointer;
+    LSrcValHdrPtr: PValueData;
+    LSrcStrHdrPtr: PStrRec;
+    LSrcStr: string;
+    LDestFieldPtr: Pointer;
+    LDestValHdrPtr: PValueData;
+    DestVal : PValueData;
+    SrcVal : PValueData;
+    LDestStrHdrPtr : PStrRec;
+
+begin
+  {$IF not Defined(MSWINDOWS)}
+    AField.SetValue(AInstance, ASrcTValue);
+    Exit;
+  {$IFEND}
+
+  if not Assigned(AField) or not Assigned(AInstance) then Exit;
+  LSrcValHdrPtr := PValueData(@ASrcTValue);
+  if (not ASrcTValue.IsString) or (LSrcValHdrPtr = nil ) then
+  begin
+    AField.SetValue(AInstance, ASrcTValue);
+    Exit;
+  end;
+
+  // LSrcFieldPtr  := ASrcTValue.GetReferenceToRawData;
+  LSrcValHdrPtr := PValueData(@ASrcTValue);
+  if LSrcValHdrPtr = nil then
+  begin
+    AField.SetValue(AInstance, ASrcTValue);
+    Exit;
+  end;
+  // LSrcStrPtr    := Pointer(LSrcFieldPtr);
+  // LSrcStr       := PString(LSrcStrPtr)^;
+  // LSrcStrHdrPtr := PStrRec(PByte(LSrcStrPtr^) - SizeOf(TStrRec));
+  LDestFieldPtr := Pointer(NativeInt(AInstance) + AField.Offset);
+  LDestValHdrPtr:= PValueData(LDestFieldPtr);
+
+  if  (LDestValHdrPtr^.FValueData) = nil then
+  begin
+    // FillChar(LDestFieldPtr, SizeOf(TValue), 0);
+   // PFastData(LDestFieldPtr)^.TypeInfo  := _RTTITTypeInfoString;
+   // PFastData(LDestFieldPtr)^.ValueData := Nil;
+    LDestValHdrPtr := PValueData(LDestFieldPtr);
+  end else begin
+    LDestStrPtr := Pointer(IValueData(LDestValHdrPtr^.FValueData).GetReferenceToRawData);
+    LDestStrHdrPtr := PStrRec(PByte(LDestStrPtr^) - SizeOf(TStrRec));
+  end;
+
+  DestVal := LDestValHdrPtr;
+  SrcVal := LSrcValHdrPtr;
+
+  DestVal^.FTypeInfo := TypeInfo(string);
+  Pointer(DestVal^.FValueData) := Pointer(IValueData(SrcVal^.FValueData));
+  // if LDestValHdrPtr^.FValueData<> nil then LDestValHdrPtr^.FValueData._AddRef;
+  // LSrcValHdrPtr^.FValueData._Release;
+  FillChar(SrcVal^, SizeOf(TValue), 0);
+end;
+
 procedure TJX4Object.JSONDeserialize(AIOBlock: TJX4IOBlock);
 var
   LField:       TRTTIField;
+  LFields:      TArray<TRTTIField>;
   LJPair:       TJSONPAir;
   LJObj:        TJSONObject;
   LIOBlock:     TJX4IOBlock;
@@ -460,64 +655,47 @@ var
   LFieldFound:  Boolean;
   LAttr:        TCustomAttribute;
   LTValue:      TValue;
-
-  LEle: TJSONValue;
-  LList: TJX4List<TJX4Object>;
+  LIntf:        IJX4Jsonable;
+  LVal:         TValue;
 begin
 
-  ///
-    if (AIOBlock.JVal is TJSONArray) then
-    begin
-    LIOBlock := TJX4IOBlock.Create;
-    LList := TJX4List<TJX4Object>.Create;
-    LIOBlock.Init('', nil, nil, AIOBlock.Options);
-    LList.JSONDeserialize(LIOBlock);
-    end;
+  RaiseIfAborted(AIOBlock.Options);
 
-  ///
-  RaiseIfCanceled(AIOBlock.Options);
   LIOBlock := TJX4IOBlock.Create;
   try
     if (JoRaiseOnMissingField in AIOBlock.Options) and Assigned(AIOBlock.JVal) and (AIOBlock.JVal is TJSONObject) then
     begin
-    for LJPair in (AIOBlock.JVal as TJSONObject) do
-    begin
-      RaiseIfCanceled(AIOBlock.Options);
-      LFieldFound := False;
-      for LField in TxRTTI.GetFields(Self) do
+      for LJPair in (AIOBlock.JVal as TJSONObject) do
       begin
-        if Assigned(TJX4Transient(TxRTTI.GetFieldAttribute(LField, TJX4Transient))) then Continue;
-        LName := NameDecode(LField.Name);
-        LAttr := TJX4Name(TxRTTI.GetFieldAttribute(LField, TJX4Name));
-        if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
-        if LName = LJPair.JsonString.Value then
+        RaiseIfAborted(AIOBlock.Options);
+        LFieldFound := False;
+        for LField in TxRTTI.GetFields(Self) do
         begin
-          LFieldFound := True;
-          Break;
+          if Assigned(TJX4Transient(TxRTTI.GetFieldAttribute(LField, TJX4Transient))) then Continue;
+          LName := ExtractFieldName(LField, AIOBlock.JsonName);
+          if LName = LJPair.JsonString.Value then
+          begin
+            LFieldFound := True;
+            Break;
+          end;
         end;
-       end;
        if not LFieldFound then raise Exception.Create(SysUtils.Format('Missing Property "%s" in Class "%s"', [LJPair.JsonString.Value, Self.ClassName]));
+      end;
     end;
-  end;
 
-    for LField in TxRTTI.GetFields(Self) do
+    LFields := TxRTTI.GetFields(Self);
+    for LField in LFields do
     begin
-      RaiseIfCanceled(AIOBlock.Options);
       if not (TXRtti.FieldIsTValue(LField, [mvPublic]) or (TXRtti.FieldIsTObject(LField, [mvPublic]))) then Continue;
       if Assigned(TJX4Transient(TxRTTI.GetFieldAttribute(LField, TJX4Transient))) then Continue;
-
-      LName := NameDecode(LField.Name);
-      LAttr := TJX4Name(TxRTTI.GetFieldAttribute(LField, TJX4Name));
-      if Assigned(LAttr) then LName := TJX4Name(LAttr).Name;
-
+      LName := ExtractFieldName(LField);
       LFieldFound := False;
+      if Assigned(AIOBlock.JObj) then
       for LJPair in  AIOBlock.JObj do
       begin
-        RaiseIfCanceled(AIOBlock.Options);;
         if LName = LJPair.JsonString.Value then
         begin
           LFieldFound := True;
-          if LJPair.JsonValue is TJSONNull then Break;
           LJPair.Owned := False;
           LJPair.JsonString.Owned := False;
           LJPair.JsonValue.Owned := False;
@@ -525,33 +703,36 @@ begin
             LJObj := (LJPair.JsonValue as TJSONObject)
           else
             LJObj := TJSONObject.Create(LJPair);
-
           try
-             LIOBlock.Init(LField.Name, LJObj, LField, AIOBlock.Options);
+            LIOBlock.Init(LField.Name, LJObj, LField, AIOBlock.Options);
             if TxRtti.FieldAsTValue(Self, LField, LTValue) then
             begin
               LTValue.JSONDeserialize(LIOBlock);
               if LTValue.IsEmpty then
-              begin
-                LAttr := TJX4Default(TxRTTI.GetFieldAttribute(LField, TJX4Default));
-                if Assigned(LAttr) then LTValue := TJX4Default(LAttr).Value else LTValue := Nil;
-              end;
-              LField.SetValue(Self, LTValue);
+                LField.SetValue(Self, Nil)
+              else
+                LField.SetValue(Self, LTValue);
+                //RawTValueToTValueField(LTValue, LField, Self);
             end else begin
-
               LObj := LField.GetValue(Self).AsObject;
-              if not Assigned(LObj) then
-              begin
-                LObj := TxRTTI.CreateObject(LField.FieldType.AsInstance);
-                TxRTTI.CallMethodProc('JSONCreate', LObj, [True]);
-              end;
               try
-                TxRTTI.CallMethodProc('JSONDeserialize', LObj, [LIOBlock]);
-              except
-                FreeAndNil(LObj);
-                LField.SetValue(Self, Nil);
-                Raise;
-              end;
+                if not Assigned(LObj) then
+                begin
+                  LObj := TxRTTI.CreateObject(LField.FieldType.AsInstance);
+                  if Supports(LObj, IJX4Jsonable, LIntf) then
+                    LIntf.JX4Create(True)
+                  else
+                    TxRTTI.CallMethodProc('JSONCreate', LObj, [True]);
+                end;
+                if Supports(LObj, IJX4Jsonable, LIntf) then
+                  LIntf.JX4Deserialize(LIOBlock)
+                else
+                  TxRTTI.CallMethodProc('JSONDeserialize', LObj, [LIOBlock]);
+                except
+                  FreeAndNil(LObj);
+                  LField.SetValue(Self, Nil);
+                  Raise;
+                end;
               LField.SetValue(Self, LObj);
             end;
           finally
@@ -581,17 +762,26 @@ class function TJX4Object.ToJSON(AObj: TObject; AOptions: TJX4Options): string;
 var
   LIOBlock: TJX4IOBlock;
   LResult: TValue;
+  LIntf: IJX4Jsonable;
 begin
   LIOBlock := Nil;
-  RaiseIfCanceled(AOptions);
   try
-  try
-    LIOBlock := TJX4IOBlock.Create('', nil, nil, AOptions);
-    LResult := TxRTTI.CallMethodFunc('JSONSerialize', AObj, [LIOBlock]);
-    if not LResult.IsEmpty then Result := LResult.AsString;
-  finally
-    FreeAndNil(LIOBlock);
-  end;
+    try
+      RaiseIfAborted(AOptions);
+      LIOBlock := TJX4IOBlock.Create('', nil, nil, AOptions);
+      if Supports(AObj, IJX4Jsonable, LIntf) then
+        LResult := LIntf.JX4Serialize(LIOBlock)
+      else
+        LResult := TxRTTI.CallMethodFunc('JSONSerialize', AObj, [LIOBlock]);
+      if LResult.IsEmpty then
+      begin
+        if (AObj is TJX4ListOfValues) or (AObj is TList) then Result := '[]' else Result := '{}';
+      end else begin
+        Result := LResult.AsString
+      end;
+    finally
+      FreeAndNil(LIOBlock);
+    end;
   except
     on TJX4ExceptionAborted do
     begin
@@ -602,34 +792,53 @@ begin
     on Ex: Exception do
     begin
       Result := '';
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
 
 function TJX4Object.ToJSON(AOptions: TJX4Options): string;
 begin
-  Result := ToJSON(Self, AOptions);
+  try
+    if Self = Nil then raise Exception.Create('TJX4Object.ToJSON, JSON Object is undefined');
+    Result := ToJSON(Self, AOptions);
+  except
+    on TJX4ExceptionAborted do
+    begin
+      Result := '';
+      if joRaiseOnAbort in AOptions then raise;
+      Exit;
+    end;
+    on Ex: Exception do
+    begin
+      Result := '';
+      if not (joNoException in AOptions) then raise;
+    end;
+  end;
 end;
 
 class function TJX4Object.FromJSON<T>(const AJson: string; AOptions: TJX4Options): T;
 var
   LIOBlock: TJX4IOBlock;
   LJVal:    TJSONValue;
-  Tick: Cardinal;
+  Tick:     Cardinal;
+  LIntf:    IJX4Jsonable;
 begin
   Result := Nil;
   LIOBlock := Nil;
   LJVal := Nil;
-  RaiseIfCanceled(AOptions);
   try
+    RaiseIfAborted(AOptions);
     if AJson.Trim.IsEmpty then Exit;
     try
-      LJVal := TJSONValue.ParseJSONValue(AJson, True, joRaiseOnException in AOptions);
+      LJVal := TJSONValue.ParseJSONValue(AJson, True, not (joNoException in AOptions));
       if not Assigned(LJVal) then Exit;
       Result := T.Create;
       LIOBlock := TJX4IOBlock.Create('', LJVal, Nil, AOptions);
-      TxRTTI.CallMethodProc('JSONDeserialize', Result, [LIOBlock]);
+      if Supports(Result, IJX4Jsonable, LIntf) then
+        LIntf.JX4Deserialize(LIOBlock)
+      else
+        TxRTTI.CallMethodProc('JSONDeserialize', Result, [LIOBlock]);
     except
       on TJX4ExceptionAborted do
       begin
@@ -640,7 +849,7 @@ begin
       on Ex: Exception do
       begin
         FreeAndNil(Result);
-        if joRaiseOnException in AOptions then raise;
+        if not (joNoException in AOptions) then raise;
       end;
     end;
    finally
@@ -652,12 +861,16 @@ end;
 class function TJX4Object.ToJSONStream(AObj: TObject; AOptions: TJX4Options): TStream;
 var
   LIOBlock: TJX4IOBlock;
+  LIntf: IJX4Jsonable;
 begin
   LIOBlock := Nil;
   try
     try
       LIOBlock := TJX4IOBlock.Create('', nil, nil, AOptions);
-      Result := TStringStream.Create( TxRTTI.CallMethodFunc('JSONSerialize', AObj, [LIOBlock]).AsString );
+      if Supports(AObj, IJX4Jsonable, LIntf) then
+        LIntf.JX4Deserialize(LIOBlock)
+      else
+        TxRTTI.CallMethodProc('JSONDeserialize', AObj, [LIOBlock]);
       if Assigned(Result) then Result.Position := 0;
     finally
       LIOBlock.Free;
@@ -672,7 +885,7 @@ begin
     on Ex: Exception do
     begin
       FreeAndNil(Result);
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
@@ -691,7 +904,7 @@ begin
     on Ex: Exception do
     begin
       FreeAndNil(Result);
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
@@ -770,21 +983,20 @@ begin
   Result := T.Create;
 end;
 
-class procedure TJX4Object.RaiseIfCanceled(AOptions: TJX4Options);
+function TJX4Object.QueryInterface(const IID: TGUID; out Obj): HResult;
 begin
+  if GetInterface(IID, Obj) then Result := S_OK else Result := E_NOINTERFACE;
+end;
+function TJX4Object._AddRef: Integer; begin Result := -1; end;
+function TJX4Object._Release: Integer; begin Result := -1; end;
 
+class procedure TJX4Object.RaiseIfAborted(AOptions: TJX4Options);
+begin
   if not( joRaiseOnAbort in AOptions ) then Exit;
-  try
-
-    if Assigned(TThread.CurrentThread) and (MyTThread(TThread.CurrentThread).Terminated) then
-      raise TJX4ExceptionAborted.Create('Operation Aborted');
-
-    if (TTask.CurrentTask <> nil) and (TTaskStatus.Canceled = TTask.CurrentTask.Status) then
-      raise TJX4ExceptionAborted.Create('Operation Aborted');
-
-  except
-    raise TJX4ExceptionAborted.Create('Operation Aborted');
-  end;
+  if Assigned(TThread.CurrentThread) and (MyTThread(TThread.CurrentThread).Terminated) then
+    raise TJX4ExceptionAborted.Create('JSON: Operation Aborted');
+  if (TTask.CurrentTask <> nil) and (TTaskStatus.Canceled = TTask.CurrentTask.Status) then
+    raise TJX4ExceptionAborted.Create('JSON: Operation Aborted');
 end;
 
 class procedure TJX4Object.VarEscapeJSONStr(var AStr: string; const SlashEncode: Boolean);
@@ -850,11 +1062,12 @@ var
   LFields:  TArray<TRttiField>;
   LObj:     TOBject;
   LValue:   TValue;
+  LIntf:    IJX4Jsonable;
 begin
   LFields := TxRTTI.GetFields(Self);
+  RaiseIfAborted(AOptions);
   for LField in LFields do
   begin
-    RaiseIfCanceled(AOptions);
     if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Transient)) then Continue;
     if Assigned(TxRTTI.GetFieldAttribute(LField, TJX4Unmanaged)) then Continue;
     if TxRTTI.FieldAsTValue(Self, LField, LValue, [mvPublic]) then
@@ -863,10 +1076,18 @@ begin
     if TxRTTI.FieldAsTObject(Self, LField, LObj, [mvPublic]) then
     begin
       if not Assigned(LObj) then Continue;
-       TxRTTI.CallMethodProc('JSONClear', LObj, [TValue.From<TJX4Options>(AOptions)]);
-      Continue;
+
+    if Supports(LObj, IJX4Jsonable, LIntf) then
+      LIntf.JX4Clear(AOptions)
+    else
+      TxRTTI.CallMethodProc('JSONClear', LObj, [TValue.From<TJX4Options>(AOptions)]);
     end;
   end;
+end;
+
+procedure TJX4Object.JX4Clear(AOptions: TJX4Options);
+begin
+  JSONClear(AOptions);
 end;
 
 procedure TJX4Object.Clear(AOptions: TJX4Options);
@@ -880,16 +1101,59 @@ begin
   VarEscapeJSONStr(Result, SlashEncode);
 end;
 
-class function TJX4Object.JsonListToJsonString(const AList: TList<string>): string;
+class function TJX4Object.ExtractFieldName(const AField: TRttiField; ADefault: string): string;
+var
+  LAttr: TCustomAttribute;
 begin
-  case AList.Count of
-    0: Exit('');
-    1: Exit(AList[0]);
-    2: Exit(AList[0] + ',' + AList[1]);
-    3: Exit(AList[0] + ',' + AList[1] + ',' + AList[2]);
-    4: Exit(AList[0] + ',' + AList[1] + ',' + AList[2]+ ',' + AList[3]);
+  Result := ADefault;
+  if not Assigned(AField) then Exit;
+  LAttr  := TJX4Name(TxRTTI.GetFieldAttribute(AField, TJX4Name));
+  if Assigned(LAttr) then
+    Result := NameDecode(TJX4Name(LAttr).Name)
   else
-    Result := Result.Join(',', AList.ToArray, 0, AList.Count);
+    Result := NameDecode(AField.Name);
+end;
+
+class function TJX4Object.JoinStrings(const AArray: TArray<string>; const ADelimiter: string): string;
+var
+  TotalChars: Integer;
+  DelimLen: Integer;
+  I: Integer;
+  SrcLen: Integer;
+  DestPtr: PChar;
+begin
+  if Length(AArray) = 0 then Exit('');
+
+  DelimLen := Length(ADelimiter);
+  TotalChars := 0;
+
+  // PASS 1: Calculate raw character length needed (No assignment)
+  for I := 0 to length(AArray) - 1 do
+    Inc(TotalChars, Length(AArray[I]));
+
+  Inc(TotalChars, DelimLen * (Length(AArray) - 1));
+
+  // Single atomic heap allocation allocation for the output string buffer
+  SetLength(Result, TotalChars);
+  DestPtr := PChar(Result);
+
+  // PASS 2: Blit memory blocks directly using PChar arithmetic offsets
+  for I := 0 to length(AArray) - 1 do
+  begin
+    SrcLen := Length(AArray[I]);
+    if SrcLen > 0 then
+    begin
+      // Direct hardware block transfer: copies character memory without touching ref counts
+      System.Move(PChar(AArray[I])^, DestPtr^, SrcLen * SizeOf(Char));
+      Inc(DestPtr, SrcLen);
+    end;
+
+    // Inject the delimiter text block
+    if (I < Length(AArray) - 1) and (DelimLen > 0) then
+    begin
+      System.Move(PChar(ADelimiter)^, DestPtr^, DelimLen * SizeOf(Char));
+      Inc(DestPtr, DelimLen);
+    end;
   end;
 end;
 
@@ -906,33 +1170,46 @@ begin
     Result := TYamlUtils.JsonMinify(AJson);
 end;
 
-function TJX4Object.Format(AIndentation: Integer): string;
+function TJX4Object.Format(ABeautify: Boolean; AIndentation: Integer; AOptions: TJX4Options): string;
+var
+  TmpVal: TJSONAncestor;
+  LJson: string;
 begin
-  Result := TJX4Object.FormatJSON(Self.ToJSON, True, AIndentation);
+  LJson := ToJSON(Self, AOptions);
+  Result := FormatJSON( ToJSON(Self, AOptions), ABeautify, 2 );
 end;
 
-class function TJX4Object.ValidateJSON(const AJson: string): string;
+class function TJX4Object.Validate(const AJson: string): Boolean;
 var
-  LJObj: TJSONObject;
+  LJVal: TJSONValue;
 begin
-  LJObj := Nil;
+  Result := False;
+  LJVal := Nil;
   try
-    LJObj := TJSONObject.ParseJSONValue(AJson, True, True) as TJSONObject;
+    LJVal := TJSONValue.ParseJSONValue(AJson, True, True);
+    Result := True;
   except
     on Ex:Exception do
     begin
-      Result := Ex.Message;
+      Result := False;
     end;
   end;
-  LJObj.Free;
+  LJVal.Free;
 end;
 
-procedure TJX4Object.Merge(AMergedWith: TObject; AOptions: TJX4Options);
+function TJX4Object.Merge(AMergedWith: TObject; AOptions: TJX4Options): Boolean;
+var
+  LIntf: IJX4JSonable;
 begin
+  Result := False;
   try
-    RaiseIfCanceled(AOptions);
-    TxRTTI.CallMethodProc('JSONMerge', Self, [ AMergedWith, TValue.From<TJX4Options>(AOptions) ]);
-    except
+    RaiseIfAborted(AOptions);
+    if Supports(Self, IJX4Jsonable, LIntf) then
+      LIntf.JX4Merge(AMergedWith, AOptions)
+    else
+      TxRTTI.CallMethodProc('JSONMerge', Self, [ AMergedWith, TValue.From<TJX4Options>(AOptions) ]);
+    Result := True;
+  except
     on TJX4ExceptionAborted do
     begin
       if joRaiseOnAbort in AOptions then raise;
@@ -940,7 +1217,7 @@ begin
     end;
     on Ex: Exception do
     begin
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
@@ -953,26 +1230,32 @@ var
   LMgrValue:  TValue;
   LSrcObj:    TObject;
   LMrgObj:    TObject;
+  LIntf:      IJX4Jsonable;
 begin
+  if not Assigned(AMergedWith) then Exit;
+  RaiseIfAborted(AOptions);
   for LSrcField in TxRTTI.GetFields(Self) do
   begin
     for LMrgField in TxRTTI.GetFields(AMergedWith) do
     begin
-      RaiseIfCanceled(AOptions);
       if Assigned(TxRTTI.GetFieldAttribute(LMrgField, TJX4Transient)) then Continue;
       if (LSrcField.Name = LMrgField.Name) then
       begin
-        if TxRtti.FieldAsTValue(Self, LSrcField, LSrcValue) and  TxRtti.FieldAsTValue(AMergedWith, LMrgField, LMgrValue) then
+        if TxRtti.FieldAsTValue(Self, LSrcField, LSrcValue) and TxRtti.FieldAsTValue(AMergedWith, LMrgField, LMgrValue) then
         begin
           LSrcValue.JSONMerge(LMgrValue, AOptions);
-          if LSrcValue.IsEmpty then LSrcValue  := '';
-          LSrcField.SetValue(self, LSrcValue);
+          if LSrcValue.IsEmpty then LSrcField.SetValue(self, Nil) else LSrcField.SetValue(self, LSrcValue);
           Break;
         end;
-        if TxRtti.FieldAsTObject(Self, LSrcField, LSrcObj) and  TxRtti.FieldAsTObject(AMergedWith, LMrgField, LMrgObj) then
+        if TxRtti.FieldAsTObject(Self, LSrcField, LSrcObj) and TxRtti.FieldAsTObject(AMergedWith, LMrgField, LMrgObj) then
         begin
           if Assigned(LSrcObj) and Assigned(LMrgObj) then
-             TxRTTI.CallMethodProc('JSONMerge', LSrcObj, [ LMrgObj, TValue.From<TJX4Options>(AOptions)]);
+          begin
+            if Supports(LSrcObj, IJX4Jsonable, LIntf) then
+              LIntf.JX4Merge(LMrgObj, AOptions)
+            else
+              TxRTTI.CallMethodProc('JSONMerge', LSrcObj, [ LMrgObj, TValue.From<TJX4Options>(AOptions)]);
+          end;
           Break;
         end;
       end;
@@ -1168,10 +1451,10 @@ begin
   end;
 end;
 
-class function TJX4Object.ToYAML(const AStr: string; AOptions: TJX4Options = [ joNullToEmpty ]): string;
+class function TJX4Object.ToYAML(const AStr: string; AOptions: TJX4Options): string;
 begin
   try
-    RaiseIfCanceled(AOptions);
+    RaiseIfAborted(AOptions);
     Result := TYAMLUtils.JsonToYaml(AStr);
   except
   on TJX4ExceptionAborted do
@@ -1183,12 +1466,12 @@ begin
     on Ex: Exception do
     begin
       Result := '';
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
 
-function TJX4Object.ToYAML(AOptions: TJX4Options = [ joNullToEmpty ]): string;
+function TJX4Object.ToYAML(AOptions: TJX4Options): string;
 begin
   Result := ToYAML(TJX4Object.ToJSON(Self, AOptions));
 end;
@@ -1196,13 +1479,13 @@ end;
 function TJX4Object.SaveToJSONFile(
   const AFilename: string;
   ABeautify: Boolean = False;
-  AOptions: TJX4Options = [ joNullToEmpty ];
+  AOptions: TJX4Options = [];
   AEncoding: TEncoding = Nil;
   AZip: TCompressionLevel = clNone
 ): Int64;
 begin
   Result := 0;
-  RaiseIfCanceled(AOptions);
+  RaiseIfAborted(AOptions);
   if ABeautify then
     Result := TJX4Object.SaveToFile(AFilename,  TJX4Object.FormatJSON( TJX4Object.ToJSON(Self, AOptions) ) , AEncoding, AZip, False)
   else
@@ -1211,13 +1494,13 @@ end;
 
 function TJX4Object.SaveToYAMLFile(
   const AFilename: string;
-  AOptions: TJX4Options = [ joNullToEmpty ];
+  AOptions: TJX4Options = [];
   AEncoding: TEncoding = Nil;
   AZip: TCompressionLevel = clNone
 ): Int64;
 begin
   try
-    RaiseIfCanceled(AOptions);
+    RaiseIfAborted(AOptions);
     Result := TJX4Object.SaveToFile(AFilename, Self.ToYAML, AEncoding, AZip, False);
   except
     on TJX4ExceptionAborted do
@@ -1229,7 +1512,7 @@ begin
     on Ex: Exception do
     begin
       Result := -1;
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
@@ -1240,7 +1523,7 @@ var
 begin
   Result := Nil;
   try
-    RaiseIfCanceled(AOptions);
+    RaiseIfAborted(AOptions);
     LoadFromFile(AFilename, LJStr, AEncoding);
     Result := TJX4Object.FromJSON<T>(TYAMLUtils.YAMLToJSON(LJStr,0));
   except
@@ -1253,7 +1536,7 @@ begin
     on Ex: Exception do
     begin
       FreeAndNil(Result);
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
@@ -1261,9 +1544,9 @@ end;
 class function TJX4Object.JSONStrtoYAMLStr(const AJson: string; AOptions: TJX4Options): string;
 begin
   try
-    RaiseIfCanceled(AOptions);
+    RaiseIfAborted(AOptions);
     Result := TYAMLUtils.JsonToYaml(AJson);
- except
+  except
     on TJX4ExceptionAborted do
     begin
       Result := '';
@@ -1273,7 +1556,7 @@ begin
     on Ex: Exception do
     begin
       Result := '';
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
@@ -1281,7 +1564,7 @@ end;
 class function TJX4Object.YAMLStrtoJSONStr(const AYaml: string; AOptions: TJX4Options): string;
 begin
   try
-    RaiseIfCanceled(AOptions);
+    RaiseIfAborted(AOptions);
     Result := TYAMLUtils.YamlToJson(AYaml);
  except
     on TJX4ExceptionAborted do
@@ -1293,12 +1576,12 @@ begin
     on Ex: Exception do
     begin
       Result := '';
-      if joRaiseOnException in AOptions then raise;
+      if not (joNoException in AOptions) then raise;
     end;
   end;
 end;
 
 initialization
-
+finalization
 end.
 

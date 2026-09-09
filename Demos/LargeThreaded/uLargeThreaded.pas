@@ -2,8 +2,6 @@ unit uLargeThreaded;
 
 interface
 
-
-
 uses
     System.SysUtils
   , System.Types
@@ -57,6 +55,7 @@ type
       { Public declarations }
       TaskList: TList<ITask>;
       ThreadList: TList<TJsonThread>;
+      procedure MainLog(AText: string);
   end;
 
   TPeople = class(TJX4Object)
@@ -89,6 +88,11 @@ begin
   end;
 end;
 
+procedure TForm4.MainLog(AText: string);
+begin
+  Memo1.Lines.Add(AText);
+end;
+
 procedure TForm4.TaskBtnClick( Sender : TObject );
 var
   Task: ITask;
@@ -99,50 +103,58 @@ begin
       LJsonStr : string;
       LJObj, LJObjClone, LJObjMerge: TJX4List<TPeople>;
       LWatch, LWatchAll: TStopWatch;
-      procedure Log(Text: string);
+
+      procedure Log(AText: string);
       begin
-        Form4.Memo1.Lines.Add(Text); // ???
+        TThread.Queue(nil,
+          procedure
+          begin
+            Form4.Memo1.Lines.Add(AText);
+          end);
       end;
+
     begin
-    try
       LJObj:= Nil;
       LJObjClone := Nil;
       LJObjMerge := Nil;
       try
-        Log('Starting a New Task : ' + Task.Id.ToString );
-        TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
-        LWatchAll := TStopWatch.StartNew;
+        try
+          var TaskId := TTask.CurrentTask.Id.ToString;
+          Log('Starting New Task : ' + TaskId );
 
-        LWatch := TStopWatch.StartNew;
-          LJObj := TJX4Object.FromJSON< TJX4List<TPeople> >(LJsonStr, [ joRaiseOnAbort ] );
-        Log( Task.Id.ToString + ' FromJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+          TJX4Object.LoadFromFile('Peoples.json', LJsonStr);
+          LWatchAll := TStopWatch.StartNew;
 
-        LWatch := TStopWatch.StartNew;
-          LJObjClone := LJObj.Clone< TJX4List<TPeople> >( [ joRaiseOnAbort ] );
-        Log( Task.Id.ToString + ' Clone:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+          LWatch := TStopWatch.StartNew;
+            LJObj := TJX4Object.FromJSON< TJX4List<TPeople> >(LJsonStr, [ joRaiseOnAbort ] );
+          Log( 'Task : ' + TaskId + ' FromJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
 
-        LWatch := TStopWatch.StartNew;
-          LJObjMerge := TJX4List<TPeople>.Create;
-          LJObjMerge.Merge(LJObjClone, [ jmoUpdate, joRaiseOnAbort ]);
-        Log( Task.Id.ToString + ' Merge:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+          LWatch := TStopWatch.StartNew;
+            LJObjClone := LJObj.Clone< TJX4List<TPeople> >( [ joRaiseOnAbort ] );
+         Log( 'Task : ' + TaskId + ' Clone:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
 
-        LWatch := TStopWatch.StartNew;
-          LJsonStr := LJObjMerge.ToJSON([ joNullToEmpty, joRaiseOnAbort ]);
-        Log( Task.Id.ToString + ' ToJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+          LWatch := TStopWatch.StartNew;
+            LJObjMerge := TJX4List<TPeople>.Create;
+            LJObjMerge.Merge(LJObjClone, [ jmoAdd, joRaiseOnAbort ]);
+          Log( 'Task : ' + TaskId + ' Merge:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
 
-        Log( Task.Id.ToString + ' Done Task ' + ' in ' + LWatchAll.ElapsedMilliseconds.ToString + ' ms');
-        Log('Peoples : (' + Task.Id.ToString + ') : ' + LJObjClone.Count.ToString);
+          LWatch := TStopWatch.StartNew;
+            LJsonStr := LJObjMerge.ToJSON([ joNullToEmpty, joRaiseOnAbort ]);
+          Log( 'Task : ' + TaskId + ' ToJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
 
-      finally
-        FreeAndNIl(LJObjMerge);
-        FreeAndNIl(LJObjClone);
-        FreeAndNIl(LJObj);
+          Log( 'Task : ' + TaskId + ' Done ' + ' in ' + LWatchAll.ElapsedMilliseconds.ToString + ' ms');
+          Log( 'Task : ' + TaskId + ' Peoples : ' + LJObjClone.Count.ToString);
+
+        finally
+          FreeAndNIl(LJObjMerge);
+          FreeAndNIl(LJObjClone);
+          FreeAndNIl(LJObj);
+        end;
+      except
+        on Ex: TJX4ExceptionAborted do
+          Log( 'Task : ' + TTask.CurrentTask.Id.ToString + ' ABORTED ');
       end;
-    except
-      on Ex: TJX4ExceptionAborted do
-        Log( Task.Id.ToString + ' Abort Task ');
-    end;
-  end
+    end
   );
   TaskList.Add(Task);
   Task.Start;
@@ -155,9 +167,13 @@ var
   LJsonStr : string;
   LJObj, LJObjClone, LJObjMerge: TJX4List<TPeople>;
   LWatch, LWatchAll: TStopWatch;
-  procedure Log(Text: string);
+  procedure Log(AText: string);
   begin
-    TThread.CurrentThread.Synchronize(TThread.Current, procedure begin Form4.Memo1.Lines.Add(Text); end);
+    TThread.Synchronize(nil,
+      procedure
+      begin
+        Form4.Memo1.Lines.Add(AText);
+      end);
   end;
 begin
 try
@@ -165,29 +181,34 @@ try
     LJObjClone := Nil;
     LJObjMerge := Nil;
     try
-      Log('Starting a New Thread : ' + ThreadId.ToString);
+      Log('Starting New Thread : ' + ThreadId.ToString);
         TJX4Object.LoadFromFile('Peoples.json', LJsonStr, TEncoding.UTF8);
       LWatchAll := TStopWatch.StartNew;
       LWatch := TStopWatch.StartNew;
         LJObj := TJX4Object.FromJSON< TJX4List<TPeople> >(LJsonStr, [ joRaiseOnAbort ] );
-      Log( ThreadId.ToString + ' FromJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+      Log( 'Thread : ' + ThreadId.ToString + ' FromJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+
       LWatch := TStopWatch.StartNew;
         LJObjClone := LJObj.Clone< TJX4List<TPeople> >( [ joRaiseOnAbort ] );
-        Log( ThreadId.ToString + ' Clone:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+        Log( 'Thread : ' + ThreadId.ToString + ' Clone:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+
       LWatch := TStopWatch.StartNew;
         LJObjMerge := TJX4List<TPeople>.Create;
-        LJObjMerge.Merge(LJObjClone, [ jmoUpdate, joRaiseOnAbort ]);
-      Log( ThreadId.ToString + ' Merge:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+        LJObjMerge.Merge(LJObjClone, [ jmoAdd, joRaiseOnAbort ]);
+      Log( 'Thread : ' + ThreadId.ToString  + ' Merge:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+
       LWatch := TStopWatch.StartNew;
         LJsonStr := LJObj.ToJson([ joNullToEmpty, joRaiseOnAbort ]);
-      Log( ThreadId.ToString + ' ToJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
-      Log( Format('%d Thread Done in %d ms, (ppl %d)', [ ThreadId, LWatchAll.ElapsedMilliseconds, LJObjClone. Count ]) );
+      Log(  'Thread : ' + ThreadId.ToString + ' ToJSON:  ' + LWatch.ElapsedMilliseconds.ToString + ' ms');
+
+      Log( Format('Thread : %s Done in %d ms, (ppl %d)', [ThreadId.ToString, LWatchAll.ElapsedMilliseconds, LJObjClone. Count ]));
 
     finally
       FreeAndNIl(LJObjMerge);
       FreeAndNIl(LJObjClone);
       FreeAndNIl(LJObj);
     end;
+
   except
     on Ex: TJX4ExceptionAborted do
       Log( ThreadId.ToString + ' Abort Thread ');
@@ -202,18 +223,16 @@ end;
 
 procedure TForm4.CancelBtnClick(Sender: TObject);
 begin
-  if TaskList.Count > 0 then
-  begin
-    for var I := TaskList.Count -1  downto 0 do TaskList[I].Cancel;
-    try TTask.WaitForAll(TaskList.ToArray); except end;
-    TaskList.Clear;
-  end;
-  for var Thread in ThreadList do Thread.Terminate;
+  if not Assigned(TaskList) and not Assigned(ThreadList) then Exit;
+  if TaskList.Count > 0 then for var I := TaskList.Count -1  downto 0 do TaskList[I].Cancel;
+  if ThreadList.Count > 0 then for var Thread in ThreadList do Thread.Terminate;
+  if TaskList.Count > 0 then try TTask.WaitForAll(TaskList.ToArray); except end;
   for var Thread in ThreadList do
   begin
     Thread.WaitFor;
     Thread.Free;
   end;
+  TaskList.Clear;
   ThreadList.Clear;
 end;
 
@@ -230,6 +249,5 @@ begin
   ThreadList.Free;
 end;
 
-initialization
-  xRTTIThreaded := True;
+initialization;
 end.
